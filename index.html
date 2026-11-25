@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>ChatPro</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#075E54">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+      appId: "de3c0523-8122-471c-bd11-a7c0dd6e3efe",
+      serviceWorkerParam: { scope: "/chatpro/" },
+      serviceWorkerPath: "chatpro/OneSignalSDKWorker.js"
+    });
+    if (window.currentUidForOS) {
+      OneSignal.login(window.currentUidForOS);
+    }
+  });
+</script>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#e5ddd5}
+.dark body{background:#0b141a;color:#e9edef}
+.chat-bg{background-color:#efeae2;background-image:radial-gradient(#d4cdc4 1px,transparent 1px);background-size:20px 20px}
+.dark .chat-bg{background-color:#0b141a;background-image:radial-gradient(#1f2c34 1px,transparent 1px)}
+@keyframes pulseRing{0%{transform:scale(0.95);box-shadow:0 0 0 0 rgba(37,211,102,0.7)}70%{transform:scale(1);box-shadow:0 0 0 20px rgba(37,211,102,0)}100%{transform:scale(0.95);box-shadow:0 0 0 0 rgba(37,211,102,0)}}
+.ring-anim{animation:pulseRing 1.5s infinite}
+.ludo-cell{border:1px solid #cbd5e1;display:flex;align-items:center;justify-content:center;font-size:10px;position:relative;aspect-ratio:1}
+</style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+
+<!-- AUTH SCREEN -->
+<div id="authScreen" class="fixed inset-0 z-50 bg-[#075E54] flex items-center justify-center p-4">
+  <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl">
+    <div class="flex flex-col items-center mb-5">
+      <div class="w-16 h-16 rounded-2xl bg-[#25D366] flex items-center justify-center text-white text-3xl shadow-lg mb-2"><i class="fas fa-phone"></i></div>
+      <h1 class="text-2xl font-bold text-[#075E54]">ChatPro</h1>
+      <p class="text-xs text-gray-500">Chat • Calls • Ludo • Watch Party</p>
+    </div>
+    <div id="nameBox" class="hidden mb-3">
+      <input id="authName" type="text" placeholder="Your Full Name" class="w-full px-4 py-3 border rounded-xl outline-none focus:border-[#075E54]">
+    </div>
+    <input id="authEmail" type="email" placeholder="Email Address" class="w-full px-4 py-3 border rounded-xl mb-3 outline-none focus:border-[#075E54]">
+    <input id="authPass" type="password" placeholder="Password (min 6 chars)" class="w-full px-4 py-3 border rounded-xl mb-4 outline-none focus:border-[#075E54]">
+    <button id="authBtn" onclick="handleAuth()" class="w-full py-3 bg-[#075E54] text-white font-bold rounded-xl shadow active:scale-95">Login</button>
+    <p id="authErr" class="text-red-500 text-xs text-center mt-2"></p>
+    <p class="text-center text-sm text-gray-600 mt-4">
+      <span id="authToggleTxt">Don't have an account?</span>
+      <button onclick="toggleAuthMode()" id="authToggleBtn" class="text-[#075E54] font-bold ml-1">Sign Up</button>
+    </p>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="mainApp" class="hidden flex-1 flex flex-col h-full max-w-2xl w-full mx-auto bg-white dark:bg-[#111b21] shadow-xl">
+  <div class="bg-[#075E54] dark:bg-[#202c33] text-white px-3 pt-3 pb-2 shadow">
+    <div class="flex items-center justify-between mb-3 px-1">
+      <div class="flex items-center gap-2">
+        <span class="font-bold text-xl tracking-wide">ChatPro</span>
+        <span class="w-2.5 h-2.5 rounded-full bg-[#25D366]" title="Online"></span>
+      </div>
+      <div class="flex items-center gap-4 text-lg">
+        <button onclick="enablePush()" title="Enable Ring & Notifications"><i class="fas fa-bell"></i></button>
+        <button onclick="openGroupModal()" title="New Group"><i class="fas fa-users"></i></button>
+        <button onclick="toggleDark()" title="Dark Mode"><i class="fas fa-moon"></i></button>
+        <button onclick="logoutUser()" title="Logout"><i class="fas fa-sign-out-alt"></i></button>
+      </div>
+    </div>
+    <div class="flex text-[11px] font-bold tracking-wider">
+      <button onclick="switchTab('chats')" id="tab-chats" class="flex-1 pb-2 border-b-2 border-white">CHATS</button>
+      <button onclick="switchTab('ludo')" id="tab-ludo" class="flex-1 pb-2 border-b-2 border-transparent opacity-75">🎮 LUDO</button>
+      <button onclick="switchTab('movie')" id="tab-movie" class="flex-1 pb-2 border-b-2 border-transparent opacity-75">🎬 MOVIE</button>
+      <button onclick="switchTab('status')" id="tab-status" class="flex-1 pb-2 border-b-2 border-transparent opacity-75">STATUS</button>
+      <button onclick="switchTab('calls')" id="tab-calls" class="flex-1 pb-2 border-b-2 border-transparent opacity-75">CALLS</button>
+    </div>
+  </div>
+
+  <div id="searchWrap" class="p-2 bg-gray-50 dark:bg-[#111b21] border-b dark:border-gray-800">
+    <input id="searchBox" oninput="renderLists()" type="text" placeholder="Search contacts or groups..." class="w-full px-4 py-2 rounded-full bg-white dark:bg-[#202c33] text-sm outline-none border dark:border-gray-700">
+  </div>
+
+  <div id="listArea" class="flex-1 overflow-y-auto divide-y dark:divide-gray-800"></div>
+</div>
+
+<!-- CHAT ROOM SCREEN -->
+<div id="chatScreen" class="hidden fixed inset-0 z-30 flex flex-col max-w-2xl w-full mx-auto bg-[#efeae2] dark:bg-[#0b141a]">
+  <div class="bg-[#075E54] dark:bg-[#202c33] text-white px-3 py-2.5 flex items-center justify-between shadow">
+    <div class="flex items-center gap-2.5 overflow-hidden">
+      <button onclick="closeChat()" class="p-1 text-lg"><i class="fas fa-arrow-left"></i></button>
+      <div id="chatAvatar" class="w-9 h-9 rounded-full bg-[#25D366] flex items-center justify-center font-bold text-white shrink-0">U</div>
+      <div class="truncate">
+        <div id="chatTitle" class="font-bold text-base truncate">User</div>
+        <div id="chatSub" class="text-[11px] text-green-200 truncate">online</div>
+      </div>
+    </div>
+    <div id="callBtns" class="flex items-center gap-4 text-lg pr-1">
+      <button onclick="startCall('video')" class="p-1.5 hover:bg-white/10 rounded-full"><i class="fas fa-video"></i></button>
+      <button onclick="startCall('audio')" class="p-1.5 hover:bg-white/10 rounded-full"><i class="fas fa-phone"></i></button>
+    </div>
+  </div>
+
+  <div id="replyBar" class="hidden bg-white dark:bg-[#202c33] px-4 py-2 border-l-4 border-[#25D366] flex justify-between items-center text-xs">
+    <div class="truncate"><span class="font-bold text-[#075E54] dark:text-[#25D366]">Replying:</span> <span id="replyText"></span></div>
+    <button onclick="cancelReply()" class="text-gray-500 text-base ml-2">&times;</button>
+  </div>
+
+  <div id="msgBox" class="flex-1 overflow-y-auto p-3 space-y-2 chat-bg"></div>
+
+  <div class="p-2 bg-[#f0f2f5] dark:bg-[#202c33] flex items-center gap-2">
+    <label class="w-10 h-10 rounded-full bg-white dark:bg-[#2a3942] flex items-center justify-center text-gray-600 dark:text-gray-300 cursor-pointer shadow-sm shrink-0">
+      <i class="fas fa-photo-video text-lg text-[#075E54] dark:text-[#25D366]"></i>
+      <input id="mediaInput" type="file" accept="image/*,video/*" class="hidden" onchange="sendMedia(event)">
+    </label>
+    <input id="msgInput" onkeypress="if(event.key==='Enter')sendMsg()" type="text" placeholder="Type a message..." class="flex-1 px-4 py-2.5 rounded-full bg-white dark:bg-[#2a3942] text-sm outline-none shadow-sm">
+    <button onclick="sendMsg()" class="w-11 h-11 rounded-full bg-[#075E54] text-white flex items-center justify-center shadow active:scale-95 shrink-0">
+      <i class="fas fa-paper-plane"></i>
+    </button>
+  </div>
+</div>
+
+<!-- INCOMING RINGING CALL MODAL -->
+<div id="incomingModal" class="hidden fixed inset-0 z-50 bg-[#0b141a]/95 text-white flex flex-col items-center justify-between py-16 px-6">
+  <div class="text-center">
+    <p id="inCallType" class="text-sm uppercase tracking-widest text-[#25D366] mb-2">Incoming Call...</p>
+    <div class="w-24 h-24 rounded-full bg-[#075E54] mx-auto flex items-center justify-center text-4xl font-bold mb-4 ring-anim"><i class="fas fa-user"></i></div>
+    <h2 id="inCallerName" class="text-2xl font-bold">Caller</h2>
+    <p class="text-gray-400 text-sm mt-1">ChatPro Encrypted Call</p>
+  </div>
+  <div class="flex gap-12">
+    <button onclick="rejectIncomingCall()" class="w-16 h-16 rounded-full bg-red-600 flex items-center justify-center text-2xl shadow-lg active:scale-90"><i class="fas fa-phone-slash"></i></button>
+    <button onclick="acceptIncomingCall()" class="w-16 h-16 rounded-full bg-[#25D366] flex items-center justify-center text-2xl shadow-lg active:scale-90 ring-anim"><i class="fas fa-phone"></i></button>
+  </div>
+</div>
+
+<!-- ACTIVE CALL SCREEN -->
+<div id="activeCallScreen" class="hidden fixed inset-0 z-50 bg-black text-white flex flex-col">
+  <div class="relative flex-1 flex items-center justify-center overflow-hidden">
+    <video id="remoteVideo" autoplay playsinline class="w-full h-full object-cover"></video>
+    <div id="audioOnlyOverlay" class="hidden absolute inset-0 bg-[#075E54] flex flex-col items-center justify-center">
+      <div class="w-24 h-24 rounded-full bg-white/20 flex items-center justify-center text-4xl mb-3"><i class="fas fa-user"></i></div>
+      <h3 id="callPeerName" class="text-2xl font-bold">Connected</h3>
+      <p id="callStatusTxt" class="text-green-200 mt-1">Ringing...</p>
+    </div>
+    <video id="localVideo" autoplay muted playsinline class="w-28 h-40 object-cover rounded-xl border-2 border-white absolute top-4 right-4 bg-gray-900 shadow-lg"></video>
+  </div>
+  <div class="bg-gray-900/90 py-5 flex justify-center gap-8">
+    <button id="muteBtn" onclick="toggleMute()" class="w-14 h-14 rounded-full bg-gray-700 flex items-center justify-center text-xl"><i class="fas fa-microphone"></i></button>
+    <button onclick="endActiveCall()" class="w-14 h-14 rounded-full bg-red-600 flex items-center justify-center text-xl"><i class="fas fa-phone-slash"></i></button>
+  </div>
+</div>
+
+<!-- GROUP MODAL -->
+<div id="groupModal" class="hidden fixed inset-0 z-40 bg-black/60 flex items-center justify-center p-4">
+  <div class="bg-white dark:bg-[#202c33] w-full max-w-sm rounded-2xl p-5">
+    <h3 class="font-bold text-lg mb-3">Create New Group</h3>
+    <input id="grpName" type="text" placeholder="Group Name" class="w-full px-3 py-2 border dark:border-gray-700 dark:bg-[#2a3942] rounded-xl mb-3 outline-none">
+    <div id="grpMembers" class="max-h-40 overflow-y-auto space-y-2 mb-4 text-sm"></div>
+    <div class="flex justify-end gap-2">
+      <button onclick="$('groupModal').classList.add('hidden')" class="px-4 py-2 text-gray-500">Cancel</button>
+      <button onclick="createGroup()" class="px-4 py-2 bg-[#075E54] text-white rounded-xl font-bold">Create</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getFirestore, collection, doc, setDoc, getDoc, addDoc, updateDoc, deleteDoc, query, orderBy, onSnapshot, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBp1RrU7qLYUzQqgnO-s7CyUzLmFNgyUVY",
+  authDomain: "chatpro-ad693.firebaseapp.com",
+  projectId: "chatpro-ad693",
+  storageBucket: "chatpro-ad693.firebasestorage.app",
+  messagingSenderId: "615128115099",
+  appId: "1:615128115099:web:a32d012cc8018eb77ba33e",
+  measurementId: "G-V31RJGQMYK"
+};
+const OS_APP_ID = "de3c0523-8122-471c-bd11-a7c0dd6e3efe";
+const OS_API_KEY = "os_v2_app_" + "3y6aki4bejdrzpiru7an23r67yxkn2ajmmluv75wn7yldmiy2okq324aamxf3jawfduydmdzylithoukkth6gfzoewemumo7fosnc6a";
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+window.$ = id => document.getElementById(id);
+let isSignup = false, currentUser = null, allUsers = [], allGroups = [], activeTab = 'chats';
+let activeChat = null, unsubMsgs = null, replyData = null;
+let peer = null, myPeerId = null, localStream = null, currentCallObj = null, currentCallDocId = null, ringInterval = null, audioCtx = null, isMuted = false;
+
+// Ludo & Movie state
+let ludoRoomId = null, unsubLudo = null, ludoMicStream = null, ludoMicMuted = false;
+let movieRoomId = null, unsubMovie = null, movieCallStream = null, isSyncingVideo = false;
+
+async function sendPushAlert(targetUid, title, body, isCall = false) {
+  try {
+    await fetch("https://api.onesignal.com/notifications", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Key " + OS_API_KEY },
+      body: JSON.stringify({
+        app_id: OS_APP_ID,
+        include_aliases: { external_id: [targetUid] },
+        target_channel: "push",
+        headings: { en: title },
+        contents: { en: body },
+        url: "https://saruparam945-sudo.github.io/chatpro/",
+        priority: isCall ? 10 : 8
+      })
+    });
+  } catch (e) {}
+}
+
+window.enablePush = () => {
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.Notifications.requestPermission();
+    if (currentUser) await OneSignal.login(currentUser.uid);
+    alert("Background Ring & Message Alerts Activated!");
+  });
+};
+
+window.toggleAuthMode = () => {
+  isSignup = !isSignup;
+  $('nameBox').classList.toggle('hidden', !isSignup);
+  $('authBtn').textContent = isSignup ? 'Create Account' : 'Login';
+  $('authToggleTxt').textContent = isSignup ? 'Already have an account?' : "Don't have an account?";
+  $('authToggleBtn').textContent = isSignup ? 'Login' : 'Sign Up';
+};
+
+window.handleAuth = async () => {
+  const email = $('authEmail').value.trim(), pass = $('authPass').value.trim(), name = $('authName').value.trim();
+  $('authErr').textContent = '';
+  try {
+    if (isSignup) {
+      if (!name) return $('authErr').textContent = 'Enter your name';
+      const cred = await createUserWithEmailAndPassword(auth, email, pass);
+      await updateProfile(cred.user, { displayName: name });
+      await setDoc(doc(db, 'users', cred.user.uid), { uid: cred.user.uid, name, email, online: true });
+    } else {
+      await signInWithEmailAndPassword(auth, email, pass);
+    }
+  } catch (e) { $('authErr').textContent = e.message; }
+};
+
+window.logoutUser = () => signOut(auth);
+window.toggleDark = () => document.documentElement.classList.toggle('dark');
+
+onAuthStateChanged(auth, async user => {
+  if (user) {
+    currentUser = user;
+    window.currentUidForOS = user.uid;
+    $('authScreen').classList.add('hidden');
+    $('mainApp').classList.remove('hidden');
+    await setDoc(doc(db, 'users', user.uid), { uid: user.uid, name: user.displayName || user.email.split('@')[0], email: user.email, online: true }, { merge: true });
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+      await OneSignal.login(user.uid);
+      await OneSignal.Notifications.requestPermission();
+    });
+    initPeer();
+    listenUsersAndGroups();
+    listenIncomingCalls();
+  } else {
+    $('authScreen').classList.remove('hidden');
+    $('mainApp').classList.add('hidden');
+  }
+});
+
+function initPeer() {
+  peer = new Peer('cp_' + currentUser.uid.slice(0, 12) + '_' + Math.floor(Math.random()*900+100));
+  peer.on('open', id => { myPeerId = id; updateDoc(doc(db, 'users', currentUser.uid), { peerId: id }).catch(()=>{}); });
+  peer.on('call', call => {
+    currentCallObj = call;
+    const streamToUse = localStream || ludoMicStream || movieCallStream;
+    if (streamToUse) {
+      call.answer(streamToUse);
+      call.on('stream', rem => {
+        if ($('remoteVideo')) $('remoteVideo').srcObject = rem;
+        if ($('ludoRemoteAudio')) $('ludoRemoteAudio').srcObject = rem;
+        if ($('movieRemoteAudio')) $('movieRemoteAudio').srcObject = rem;
+        if ($('callStatusTxt')) $('callStatusTxt').textContent = 'Connected';
+      });
+    }
+  });
+}
+
+function listenUsersAndGroups() {
+  onSnapshot(collection(db, 'users'), snap => {
+    allUsers = snap.docs.map(d => d.data()).filter(u => u.uid !== currentUser.uid);
+    if (activeTab === 'chats') renderLists();
+  });
+  onSnapshot(collection(db, 'groups'), snap => {
+    allGroups = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(g => g.members?.includes(currentUser.uid));
+    if (activeTab === 'chats') renderLists();
+  });
+}
+
+window.switchTab = t => {
+  activeTab = t;
+  ['chats','ludo','movie','status','calls'].forEach(x => {
+    $('tab-'+x).classList.toggle('border-white', x===t);
+    $('tab-'+x).classList.toggle('border-transparent', x!==t);
+    $('tab-'+x).classList.toggle('opacity-75', x!==t);
+  });
+  $('searchWrap').classList.toggle('hidden', t !== 'chats');
+  renderLists();
+};
+
+window.renderLists = () => {
+  const box = $('listArea');
+  if (activeTab === 'chats') {
+    const q = $('searchBox').value.toLowerCase();
+    let html = '';
+    allGroups.filter(g => g.name.toLowerCase().includes(q)).forEach(g => {
+      html += `<div onclick="openChat('${g.id}','${g.name}',true)" class="flex items-center gap-3 p-3.5 hover:bg-gray-100 dark:hover:bg-[#202c33] cursor-pointer">
+        <div class="w-12 h-12 rounded-full bg-[#075E54] text-white flex items-center justify-center font-bold"><i class="fas fa-users"></i></div>
+        <div class="flex-1"><div class="font-bold">${g.name}</div><div class="text-xs text-gray-500">Group • ${g.members.length} members</div></div>
+      </div>`;
+    });
+    allUsers.filter(u => u.name.toLowerCase().includes(q)).forEach(u => {
+      html += `<div onclick="openChat('${u.uid}','${u.name}',false)" class="flex items-center gap-3 p-3.5 hover:bg-gray-100 dark:hover:bg-[#202c33] cursor-pointer">
+        <div class="w-12 h-12 rounded-full bg-[#25D366] text-white flex items-center justify-center font-bold text-lg">${u.name[0].toUpperCase()}</div>
+        <div class="flex-1"><div class="font-bold">${u.name}</div><div class="text-xs text-gray-500">${u.email}</div></div>
+      </div>`;
+    });
+    box.innerHTML = html || '<p class="text-center text-gray-400 p-8 text-sm">No contacts found. Ask friends to sign up on ChatPro!</p>';
+  } else if (activeTab === 'ludo') {
+    renderLudoUI(box);
+  } else if (activeTab === 'movie') {
+    renderMovieUI(box);
+  } else if (activeTab === 'status') {
+    box.innerHTML = `<div class="p-4"><button onclick="postStatus()" class="w-full py-3 bg-[#25D366] text-white rounded-xl font-bold mb-4 shadow">+ Post Text Status</button><div id="statusFeed" class="space-y-3"></div></div>`;
+    onSnapshot(query(collection(db, 'statuses'), orderBy('createdAt', 'desc')), snap => {
+      if ($('statusFeed')) $('statusFeed').innerHTML = snap.docs.map(d => {
+        const s = d.data();
+        return `<div class="p-4 rounded-xl bg-[#075E54] text-white shadow"><div class="text-xs opacity-75 mb-1">${s.name}</div><div class="text-base font-medium">${s.text}</div></div>`;
+      }).join('');
+    });
+  } else if (activeTab === 'calls') {
+    box.innerHTML = `<div id="callLogs" class="divide-y dark:divide-gray-800"></div>`;
+    onSnapshot(query(collection(db, 'calls'), orderBy('createdAt', 'desc')), snap => {
+      if ($('callLogs')) $('callLogs').innerHTML = snap.docs.map(d => d.data()).filter(c => c.callerId===currentUser.uid || c.receiverId===currentUser.uid).map(c => `
+        <div class="p-3.5 flex justify-between items-center">
+          <div><div class="font-bold">${c.callerId===currentUser.uid ? 'Outgoing to '+c.receiverName : 'Incoming from '+c.callerName}</div><div class="text-xs text-gray-500 uppercase">${c.type} • ${c.status}</div></div>
+          <i class="fas fa-${c.type==='video'?'video':'phone'} text-[#075E54]"></i>
+        </div>`).join('');
+    });
+  }
+};
+
+// ================= LUDO + LIVE MIC =================
+function renderLudoUI(box) {
+  if (!ludoRoomId) {
+    box.innerHTML = `<div class="p-5 space-y-4">
+      <div class="bg-gradient-to-r from-[#075E54] to-[#128C7E] text-white p-5 rounded-2xl shadow-lg text-center">
+        <div class="text-4xl mb-2">🎲</div>
+        <h2 class="text-xl font-bold">ChatPro Live Ludo + Mic</h2>
+        <p class="text-xs text-green-100 mt-1">Play 2-4 Players Online with Live Voice Chat!</p>
+      </div>
+      <button onclick="createLudoRoom()" class="w-full py-3.5 bg-[#25D366] text-white font-bold rounded-xl shadow active:scale-95">+ Create New Ludo Room</button>
+      <div class="flex gap-2">
+        <input id="joinLudoInput" type="text" placeholder="Enter 4-Digit Room Code" class="flex-1 px-4 py-3 border rounded-xl uppercase font-bold text-center tracking-widest outline-none dark:bg-[#202c33] dark:border-gray-700">
+        <button onclick="joinLudoRoom()" class="px-6 py-3 bg-[#075E54] text-white font-bold rounded-xl shadow">Join</button>
+      </div>
+    </div>`;
+    return;
+  }
+  box.innerHTML = `<div class="p-3 space-y-3">
+    <div class="flex items-center justify-between bg-[#075E54] text-white px-4 py-2.5 rounded-xl">
+      <div><span class="text-xs opacity-75">ROOM CODE:</span> <span class="font-bold text-lg tracking-widest">${ludoRoomId}</span></div>
+      <div class="flex items-center gap-2">
+        <button id="ludoMicBtn" onclick="toggleLudoMic()" class="px-3 py-1.5 bg-[#25D366] rounded-lg text-xs font-bold"><i class="fas fa-microphone"></i> Mic On</button>
+        <button onclick="leaveLudoRoom()" class="px-2.5 py-1.5 bg-red-600 rounded-lg text-xs font-bold">Exit</button>
+      </div>
+    </div>
+    <audio id="ludoRemoteAudio" autoplay></audio>
+    <div id="ludoPlayersList" class="grid grid-cols-2 gap-2 text-xs"></div>
+    <div class="bg-white dark:bg-[#202c33] p-3 rounded-2xl shadow border dark:border-gray-700">
+      <div class="flex justify-between items-center mb-3">
+        <div id="ludoTurnBanner" class="font-bold text-sm text-[#075E54] dark:text-[#25D366]">Waiting for players...</div>
+        <button id="rollDiceBtn" onclick="rollLudoDice()" class="px-5 py-2.5 bg-amber-500 text-white font-bold rounded-xl shadow active:scale-90 text-base">🎲 Roll: <span id="diceVal">-</span></button>
+      </div>
+      <div id="ludoTrack" class="grid grid-cols-8 gap-1 bg-gray-100 dark:bg-[#111b21] p-2 rounded-xl"></div>
+    </div>
+  </div>`;
+  listenLudoRoom();
+}
+
+window.createLudoRoom = async () => {
+  const code = Math.floor(1000 + Math.random() * 9000).toString();
+  const colors = ['red', 'green', 'yellow', 'blue'];
+  await setDoc(doc(db, 'ludo_rooms', code), {
+    code,
+    players: [{ uid: currentUser.uid, name: currentUser.displayName || 'Player 1', color: colors[0], pos: 0, peerId: myPeerId || '' }],
+    turnIndex: 0,
+    dice: 0,
+    winner: ''
+  });
+  ludoRoomId = code;
+  startLudoMic();
+  renderLists();
+};
+
+window.joinLudoRoom = async () => {
+  const code = $('joinLudoInput').value.trim();
+  if (!code) return alert('Enter Room Code!');
+  const ref = doc(db, 'ludo_rooms', code);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return alert('Room not found!');
+  const data = snap.data();
+  const colors = ['red', 'green', 'yellow', 'blue'];
+  if (!data.players.some(p => p.uid === currentUser.uid)) {
+    if (data.players.length >= 4) return alert('Room is full (Max 4 players)');
+    data.players.push({ uid: currentUser.uid, name: currentUser.displayName || 'Player', color: colors[data.players.length], pos: 0, peerId: myPeerId || '' });
+    await updateDoc(ref, { players: data.players });
+  }
+  ludoRoomId = code;
+  startLudoMic(data.players[0]?.peerId);
+  renderLists();
+};
+
+async function startLudoMic(hostPeerId) {
+  try {
+    ludoMicStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    if (hostPeerId && peer) {
+      const call = peer.call(hostPeerId, ludoMicStream);
+      call.on('stream', rem => { if ($('ludoRemoteAudio')) $('ludoRemoteAudio').srcObject = rem; });
+    }
+  } catch (e) {}
+}
+
+window.toggleLudoMic = () => {
+  if (!ludoMicStream) return;
+  ludoMicMuted = !ludoMicMuted;
+  ludoMicStream.getAudioTracks().forEach(t => t.enabled = !ludoMicMuted);
+  $('ludoMicBtn').innerHTML = ludoMicMuted ? '<i class="fas fa-microphone-slash"></i> Muted' : '<i class="fas fa-microphone"></i> Mic On';
+  $('ludoMicBtn').classList.toggle('bg-red-600', ludoMicMuted);
+};
+
+window.leaveLudoRoom = () => {
+  if (unsubLudo) unsubLudo();
+  if (ludoMicStream) { ludoMicStream.getTracks().forEach(t => t.stop()); ludoMicStream = null; }
+  ludoRoomId = null;
+  renderLists();
+};
+
+function listenLudoRoom() {
+  if (unsubLudo) unsubLudo();
+  unsubLudo = onSnapshot(doc(db, 'ludo_rooms', ludoRoomId), snap => {
+    if (!snap.exists()) return;
+    const d = snap.data();
+    const colorMap = { red: 'bg-red-500', green: 'bg-green-500', yellow: 'bg-yellow-400 text-black', blue: 'bg-blue-500' };
+    if ($('ludoPlayersList')) {
+      $('ludoPlayersList').innerHTML = d.players.map((p, idx) => `
+        <div class="p-2 rounded-xl border dark:border-gray-700 flex items-center justify-between ${idx === d.turnIndex ? 'ring-2 ring-amber-400 bg-amber-50 dark:bg-[#2a3942]' : ''}">
+          <span class="font-bold truncate">${p.name}</span>
+          <span class="px-2 py-0.5 rounded-full text-white text-[10px] font-bold ${colorMap[p.color]}">Pos: ${p.pos}/32</span>
+        </div>`).join('');
+    }
+    const curPlayer = d.players[d.turnIndex];
+    if ($('ludoTurnBanner')) {
+      $('ludoTurnBanner').textContent = d.winner ? `🏆 Winner: ${d.winner}!` : `Turn: ${curPlayer?.name || ''}`;
+    }
+    if ($('diceVal')) $('diceVal').textContent = d.dice || '-';
+    if ($('ludoTrack')) {
+      let cells = '';
+      for (let i = 1; i <= 32; i++) {
+        const here = d.players.filter(p => p.pos === i);
+        const isSafe = [1, 9, 17, 25, 32].includes(i);
+        cells += `<div class="ludo-cell rounded ${isSafe ? 'bg-green-100 dark:bg-green-900/40 font-bold' : 'bg-white dark:bg-[#202c33]'}">
+          ${i === 32 ? '🏠' : (isSafe ? '★' : i)}
+          <div class="absolute inset-0 flex flex-wrap items-center justify-center gap-0.5">
+            ${here.map(p => `<span class="w-3.5 h-3.5 rounded-full border border-white shadow ${colorMap[p.color]}"></span>`).join('')}
+          </div>
+        </div>`;
+      }
+      $('ludoTrack').innerHTML = cells;
+    }
+  });
+}
+
+window.rollLudoDice = async () => {
+  const ref = doc(db, 'ludo_rooms', ludoRoomId);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return;
+  const d = snap.data();
+  if (d.winner) return;
+  const cur = d.players[d.turnIndex];
+  if (cur.uid !== currentUser.uid) return alert(`Wait for ${cur.name}'s turn!`);
+  const roll = Math.floor(1 + Math.random() * 6);
+  let nextPos = cur.pos + roll;
+  if (nextPos > 32) nextPos = cur.pos;
+  d.players[d.turnIndex].pos = nextPos;
+  const win = nextPos === 32 ? cur.name : '';
+  const nextTurn = roll === 6 ? d.turnIndex : (d.turnIndex + 1) % d.players.length;
+  await updateDoc(ref, { players: d.players, dice: roll, turnIndex: nextTurn, winner: win });
+};
+
+// ================= WATCH PARTY (LIVE MOVIE) =================
+function renderMovieUI(box) {
+  if (!movieRoomId) {
+    box.innerHTML = `<div class="p-5 space-y-4">
+      <div class="bg-gradient-to-r from-purple-700 to-indigo-800 text-white p-5 rounded-2xl shadow-lg text-center">
+        <div class="text-4xl mb-2">🎬</div>
+        <h2 class="text-xl font-bold">ChatPro Watch Party</h2>
+        <p class="text-xs text-purple-200 mt-1">Watch Movies Together in Sync with Live Voice Call!</p>
+      </div>
+      <input id="movieUrlInput" type="text" placeholder="Paste Direct Video (.mp4) Link (or leave blank for Demo)" class="w-full px-4 py-3 border rounded-xl text-sm outline-none dark:bg-[#202c33] dark:border-gray-700">
+      <button onclick="createMovieRoom()" class="w-full py-3.5 bg-[#075E54] text-white font-bold rounded-xl shadow active:scale-95">+ Start Watch Party Room</button>
+      <div class="flex gap-2">
+        <input id="joinMovieInput" type="text" placeholder="4-Digit Room Code" class="flex-1 px-4 py-3 border rounded-xl uppercase font-bold text-center tracking-widest outline-none dark:bg-[#202c33] dark:border-gray-700">
+        <button onclick="joinMovieRoom()" class="px-6 py-3 bg-purple-700 text-white font-bold rounded-xl shadow">Join</button>
+      </div>
+    </div>`;
+    return;
+  }
+  box.innerHTML = `<div class="p-3 space-y-3">
+    <div class="flex items-center justify-between bg-purple-800 text-white px-4 py-2.5 rounded-xl">
+      <div><span class="text-xs opacity-75">PARTY CODE:</span> <span class="font-bold text-lg tracking-widest">${movieRoomId}</span></div>
+      <button onclick="leaveMovieRoom()" class="px-3 py-1 bg-red-600 rounded-lg text-xs font-bold">Leave</button>
+    </div>
+    <audio id="movieRemoteAudio" autoplay></audio>
+    <div class="bg-black rounded-2xl overflow-hidden shadow-lg">
+      <video id="partyVideo" controls playsinline class="w-full max-h-60 bg-black"></video>
+    </div>
+    <div class="flex gap-2">
+      <input id="changeMovieUrl" type="text" placeholder="Paste new .mp4 video link..." class="flex-1 px-3 py-2 border rounded-xl text-xs dark:bg-[#202c33] dark:border-gray-700">
+      <button onclick="updateMovieUrl()" class="px-4 py-2 bg-[#075E54] text-white rounded-xl text-xs font-bold">Load</button>
+    </div>
+    <p class="text-[11px] text-gray-500 text-center">Play, Pause, or Seek — both phones stay synced automatically!</p>
+  </div>`;
+  listenMovieRoom();
+}
+
+window.createMovieRoom = async () => {
+  const code = Math.floor(1000 + Math.random() * 9000).toString();
+  const url = $('movieUrlInput').value.trim() || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
+  await setDoc(doc(db, 'movie_rooms', code), {
+    code, url, playing: false, currentTime: 0, hostPeerId: myPeerId || '', updatedBy: currentUser.uid
+  });
+  movieRoomId = code;
+  startMovieAudio();
+  renderLists();
+};
+
+window.joinMovieRoom = async () => {
+  const code = $('joinMovieInput').value.trim();
+  if (!code) return alert('Enter Watch Party Code!');
+  const snap = await getDoc(doc(db, 'movie_rooms', code));
+  if (!snap.exists()) return alert('Party room not found!');
+  movieRoomId = code;
+  startMovieAudio(snap.data().hostPeerId);
+  renderLists();
+};
+
+async function startMovieAudio(hostPeerId) {
+  try {
+    movieCallStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    if (hostPeerId && peer) {
+      const call = peer.call(hostPeerId, movieCallStream);
+      call.on('stream', rem => { if ($('movieRemoteAudio')) $('movieRemoteAudio').srcObject = rem; });
+    }
+  } catch (e) {}
+}
+
+window.updateMovieUrl = async () => {
+  const url = $('changeMovieUrl').value.trim();
+  if (url && movieRoomId) await updateDoc(doc(db, 'movie_rooms', movieRoomId), { url, playing: false, currentTime: 0, updatedBy: currentUser.uid });
+};
+
+window.leaveMovieRoom = () => {
+  if (unsubMovie) unsubMovie();
+  if (movieCallStream) { movieCallStream.getTracks().forEach(t => t.stop()); movieCallStream = null; }
+  movieRoomId = null;
+  renderLists();
+};
+
+function listenMovieRoom() {
+  if (unsubMovie) unsubMovie();
+  const ref = doc(db, 'movie_rooms', movieRoomId);
+  unsubMovie = onSnapshot(ref, snap => {
+    if (!snap.exists() || !$('partyVideo')) return;
+    const d = snap.data(), vid = $('partyVideo');
+    if (vid.src !== d.url) vid.src = d.url;
+    if (d.updatedBy !== currentUser.uid) {
+      isSyncingVideo = true;
+      if (Math.abs(vid.currentTime - d.currentTime) > 1.5) vid.currentTime = d.currentTime;
+      if (d.playing && vid.paused) vid.play().catch(()=>{});
+      if (!d.playing && !vid.paused) vid.pause();
+      setTimeout(() => { isSyncingVideo = false; }, 500);
+    }
+  });
+  setTimeout(() => {
+    const vid = $('partyVideo');
+    if (!vid) return;
+    vid.onplay = () => { if (!isSyncingVideo) updateDoc(ref, { playing: true, currentTime: vid.currentTime, updatedBy: currentUser.uid }); };
+    vid.onpause = () => { if (!isSyncingVideo) updateDoc(ref, { playing: false, currentTime: vid.currentTime, updatedBy: currentUser.uid }); };
+    vid.onseeked = () => { if (!isSyncingVideo) updateDoc(ref, { currentTime: vid.currentTime, updatedBy: currentUser.uid }); };
+  }, 300);
+}
+
+// ================= CHAT, MEDIA & RINGING CALLS =================
+window.postStatus = async () => {
+  const txt = prompt("Type your status update:");
+  if (txt) await addDoc(collection(db, 'statuses'), { uid: currentUser.uid, name: currentUser.displayName || 'User', text: txt, createdAt: serverTimestamp() });
+};
+
+window.openChat = (id, name, isGroup) => {
+  const roomId = isGroup ? 'grp_' + id : [currentUser.uid, id].sort().join('_');
+  activeChat = { id, name, isGroup, roomId };
+  $('chatTitle').textContent = name;
+  $('chatAvatar').textContent = name[0].toUpperCase();
+  $('callBtns').classList.toggle('hidden', isGroup);
+  $('chatScreen').classList.remove('hidden');
+  if (unsubMsgs) unsubMsgs();
+  unsubMsgs = onSnapshot(query(collection(db, 'rooms', roomId, 'messages'), orderBy('createdAt', 'asc')), snap => {
+    const box = $('msgBox');
+    box.innerHTML = snap.docs.map(d => {
+      const m = d.data(), me = m.senderId === currentUser.uid;
+      let mediaHtml = '';
+      if (m.mediaType === 'image') mediaHtml = `<img src="${m.mediaUrl}" class="max-w-full rounded-lg mb-1 max-h-64 object-cover">`;
+      if (m.mediaType === 'video') mediaHtml = `<video src="${m.mediaUrl}" controls playsinline class="max-w-full rounded-lg mb-1 max-h-64 bg-black"></video>`;
+      return `<div class="flex ${me?'justify-end':'justify-start'}">
+        <div class="max-w-[80%] px-3 py-2 rounded-xl shadow-sm text-sm ${me?'bg-[#d9fdd3] dark:bg-[#005c4b]':'bg-white dark:bg-[#202c33]'}">
+          ${!me && isGroup ? `<div class="text-[11px] font-bold text-[#075E54] dark:text-[#25D366]">${m.senderName}</div>` : ''}
+          ${m.reply ? `<div class="text-[11px] bg-black/10 p-1.5 rounded mb-1 border-l-2 border-[#075E54] truncate">${m.reply}</div>` : ''}
+          ${mediaHtml}
+          ${m.text ? `<div class="break-words">${m.text}</div>` : ''}
+          <div class="flex justify-end items-center gap-2 mt-1 text-[10px] opacity-60">
+            <button onclick="setReply('${(m.text||m.mediaType||'Media').replace(/'/g,'')}')">Reply</button>
+            ${me ? `<button onclick="delMsg('${d.id}')" class="text-red-500">Del</button>` : ''}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+    box.scrollTop = box.scrollHeight;
+  });
+};
+
+window.closeChat = () => { $('chatScreen').classList.add('hidden'); cancelReply(); };
+window.setReply = txt => { replyData = txt; $('replyText').textContent = txt; $('replyBar').classList.remove('hidden'); };
+window.cancelReply = () => { replyData = null; $('replyBar').classList.add('hidden'); };
+window.delMsg = id => deleteDoc(doc(db, 'rooms', activeChat.roomId, 'messages', id));
+
+window.sendMsg = async () => {
+  const txt = $('msgInput').value.trim();
+  if (!txt || !activeChat) return;
+  $('msgInput').value = '';
+  const rep = replyData; cancelReply();
+  const senderName = currentUser.displayName || 'ChatPro User';
+  await addDoc(collection(db, 'rooms', activeChat.roomId, 'messages'), {
+    senderId: currentUser.uid, senderName, text: txt, reply: rep, createdAt: serverTimestamp()
+  });
+  if (!activeChat.isGroup) sendPushAlert(activeChat.id, senderName, txt, false);
+};
+
+window.sendMedia = e => {
+  const file = e.target.files[0];
+  if (!file || !activeChat) return;
+  if (file.size > 900 * 1024) {
+    alert("Tip: Select a photo or short video under 1 MB for instant chat delivery!");
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = async () => {
+    const isVid = file.type.startsWith('video'), senderName = currentUser.displayName || 'ChatPro User';
+    await addDoc(collection(db, 'rooms', activeChat.roomId, 'messages'), {
+      senderId: currentUser.uid, senderName,
+      mediaUrl: reader.result, mediaType: isVid ? 'video' : 'image', text: '', createdAt: serverTimestamp()
+    });
+    if (!activeChat.isGroup) sendPushAlert(activeChat.id, senderName, isVid ? '📹 Sent a video' : '📷 Sent a photo', false);
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+};
+
+function playRingtone() {
+  stopRingtone();
+  try {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const beep = () => {
+      const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+      osc.type = 'sine'; osc.frequency.setValueAtTime(520, audioCtx.currentTime);
+      osc.frequency.setValueAtTime(660, audioCtx.currentTime + 0.25);
+      gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+    };
+    beep();
+    ringInterval = setInterval(beep, 1200);
+  } catch(e){}
+}
+function stopRingtone() {
+  if (ringInterval) clearInterval(ringInterval);
+  if (audioCtx) { audioCtx.close().catch(()=>{}); audioCtx = null; }
+}
+
+window.startCall = async type => {
+  if (!activeChat || activeChat.isGroup) return;
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: type === 'video' });
+    $('localVideo').srcObject = localStream;
+    $('localVideo').classList.toggle('hidden', type !== 'video');
+    $('audioOnlyOverlay').classList.toggle('hidden', type === 'video');
+    $('callPeerName').textContent = activeChat.name;
+    $('callStatusTxt').textContent = 'Ringing...';
+    $('activeCallScreen').classList.remove('hidden');
+
+    const callerName = currentUser.displayName || 'ChatPro User';
+    const callRef = await addDoc(collection(db, 'calls'), {
+      callerId: currentUser.uid, callerName,
+      receiverId: activeChat.id, receiverName: activeChat.name,
+      callerPeerId: myPeerId, type, status: 'ringing', createdAt: serverTimestamp()
+    });
+    currentCallDocId = callRef.id;
+
+    sendPushAlert(
+      activeChat.id,
+      `Incoming ${type === 'video' ? 'Video' : 'Voice'} Call`,
+      `${callerName} is calling you on ChatPro... Tap to answer!`,
+      true
+    );
+
+    const unsub = onSnapshot(doc(db, 'calls', callRef.id), snap => {
+      const data = snap.data();
+      if (!data) return;
+      if (data.status === 'accepted' && data.receiverPeerId && !currentCallObj) {
+        $('callStatusTxt').textContent = 'Connected';
+        currentCallObj = peer.call(data.receiverPeerId, localStream);
+        currentCallObj.on('stream', rem => { $('remoteVideo').srcObject = rem; });
+      } else if (data.status === 'rejected' || data.status === 'ended') {
+        unsub(); cleanupCall();
+      }
+    });
+  } catch (err) { alert('Allow Camera & Microphone permissions to call!'); }
+};
+
+function listenIncomingCalls() {
+  onSnapshot(query(collection(db, 'calls'), where('receiverId', '==', currentUser.uid), where('status', '==', 'ringing')), snap => {
+    snap.docChanges().forEach(chg => {
+      if (chg.type === 'added') {
+        const c = chg.doc.data();
+        currentCallDocId = chg.doc.id;
+        window.pendingCall = c;
+        $('inCallerName').textContent = c.callerName;
+        $('inCallType').textContent = `Incoming ${c.type} Call...`;
+        $('incomingModal').classList.remove('hidden');
+        playRingtone();
+      }
+    });
+  });
+}
+
+window.acceptIncomingCall = async () => {
+  stopRingtone();
+  $('incomingModal').classList.add('hidden');
+  const c = window.pendingCall;
+  if (!c) return;
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: c.type === 'video' });
+    $('localVideo').srcObject = localStream;
+    $('localVideo').classList.toggle('hidden', c.type !== 'video');
+    $('audioOnlyOverlay').classList.toggle('hidden', c.type === 'video');
+    $('callPeerName').textContent = c.callerName;
+    $('callStatusTxt').textContent = 'Connecting...';
+    $('activeCallScreen').classList.remove('hidden');
+
+    await updateDoc(doc(db, 'calls', currentCallDocId), { status: 'accepted', receiverPeerId: myPeerId });
+    onSnapshot(doc(db, 'calls', currentCallDocId), snap => {
+      if (snap.data()?.status === 'ended') cleanupCall();
+    });
+  } catch (e) { alert('Camera/Mic permission needed'); rejectIncomingCall(); }
+};
+
+window.rejectIncomingCall = async () => {
+  stopRingtone();
+  $('incomingModal').classList.add('hidden');
+  if (currentCallDocId) await updateDoc(doc(db, 'calls', currentCallDocId), { status: 'rejected' }).catch(()=>{});
+};
+
+window.endActiveCall = async () => {
+  if (currentCallDocId) await updateDoc(doc(db, 'calls', currentCallDocId), { status: 'ended' }).catch(()=>{});
+  cleanupCall();
+};
+
+function cleanupCall() {
+  stopRingtone();
+  $('activeCallScreen').classList.add('hidden');
+  $('incomingModal').classList.add('hidden');
+  if (currentCallObj) { currentCallObj.close(); currentCallObj = null; }
+  if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+  currentCallDocId = null;
+}
+
+window.toggleMute = () => {
+  if (!localStream) return;
+  isMuted = !isMuted;
+  localStream.getAudioTracks().forEach(t => t.enabled = !isMuted);
+  $('muteBtn').innerHTML = isMuted ? '<i class="fas fa-microphone-slash text-red-400"></i>' : '<i class="fas fa-microphone"></i>';
+};
+
+window.openGroupModal = () => {
+  $('grpMembers').innerHTML = allUsers.map(u => `<label class="flex items-center gap-2"><input type="checkbox" value="${u.uid}" class="grpChk"> ${u.name}</label>`).join('');
+  $('groupModal').classList.remove('hidden');
+};
+
+window.createGroup = async () => {
+  const name = $('grpName').value.trim();
+  const members = [currentUser.uid, ...Array.from(document.querySelectorAll('.grpChk:checked')).map(c => c.value)];
+  if (!name || members.length < 2) return alert('Enter group name & pick members');
+  await addDoc(collection(db, 'groups'), { name, members, createdAt: serverTimestamp() });
+  $('groupModal').classList.add('hidden');
+};
+</script>
+</body>
+</html>
