@@ -1,8 +1,8 @@
 {
   "name": "ChatPro",
   "short_name": "ChatPro",
-  "start_url": "/",
-  "display": "standalone",
+"start_url": "/chatpro/",
+"scope": "/chatpro/",
   "background_color": "#075E54",
   "theme_color": "#075E54",
   "description": "Fast, private messaging, voice and video calling app.",
