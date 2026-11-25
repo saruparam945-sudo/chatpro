@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ChatPro</title>
+  <link rel="manifest" href="manifest.json">
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}</script>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class' };</script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+  <style>
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
+  </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 h-screen overflow-hidden select-none">
+  <!-- AUTH SCREEN -->
+  <div id="authScreen" class="flex items-center justify-center h-full p-4 bg-emerald-600 dark:bg-gray-950">
+    <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-xl w-full max-w-sm">
+      <div class="flex items-center gap-2 justify-center mb-4 text-emerald-600 dark:text-emerald-400">
+        <i class="fab fa-whatsapp text-4xl"></i>
+        <h1 class="text-2xl font-bold">ChatPro</h1>
+      </div>
+      <div id="authErr" class="hidden mb-3 p-2 text-xs bg-red-100 text-red-700 rounded"></div>
+      <form id="authForm" class="space-y-3">
+        <input id="authName" type="text" placeholder="Full Name" class="hidden w-full p-2.5 rounded-lg border dark:bg-gray-700 dark:border-gray-600 outline-none" />
+        <input id="authEmail" type="email" required placeholder="Email" class="w-full p-2.5 rounded-lg border dark:bg-gray-700 dark:border-gray-600 outline-none" />
+        <input id="authPass" type="password" required placeholder="Password (min 6 chars)" class="w-full p-2.5 rounded-lg border dark:bg-gray-700 dark:border-gray-600 outline-none" />
+        <button id="authSubmit" type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-lg font-semibold">Login</button>
+      </form>
+      <p class="text-center text-sm mt-4 text-gray-500 dark:text-gray-400">
+        <span id="authToggleText">New here?</span>
+        <button id="authToggleBtn" class="text-emerald-600 dark:text-emerald-400 font-semibold ml-1">Create Account</button>
+      </p>
+    </div>
+  </div>
+
+  <!-- MAIN APP -->
+  <div id="appScreen" class="hidden h-full flex">
+    <!-- SIDEBAR -->
+    <aside id="sidebar" class="w-full md:w-96 flex flex-col border-r dark:border-gray-700 bg-white dark:bg-gray-800 h-full">
+      <div class="p-3 bg-emerald-600 dark:bg-gray-900 text-white flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div id="myAvatar" class="w-9 h-9 rounded-full bg-emerald-800 flex items-center justify-center font-bold"></div>
+          <div>
+            <div id="myName" class="font-semibold text-sm leading-tight"></div>
+            <div class="text-[11px] text-emerald-200">Online</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 text-lg">
+          <button onclick="openGroupModal()" title="New Group"><i class="fas fa-users"></i></button>
+          <button onclick="toggleTheme()" title="Toggle Theme"><i id="themeIcon" class="fas fa-moon"></i></button>
+          <button onclick="logout()" title="Logout"><i class="fas fa-sign-out-alt"></i></button>
+        </div>
+      </div>
+      <div class="flex border-b dark:border-gray-700 text-sm font-semibold bg-emerald-600 dark:bg-gray-900 text-emerald-100">
+        <button onclick="switchTab('chats')" id="tab-chats" class="flex-1 py-2.5 border-b-2 border-white text-white">CHATS</button>
+        <button onclick="switchTab('status')" id="tab-status" class="flex-1 py-2.5 border-b-2 border-transparent">STATUS</button>
+        <button onclick="switchTab('calls')" id="tab-calls" class="flex-1 py-2.5 border-b-2 border-transparent">CALLS</button>
+      </div>
+      <div id="searchWrap" class="p-2 border-b dark:border-gray-700">
+        <input id="searchInput" oninput="renderSidebar()" type="text" placeholder="Search users or groups..." class="w-full px-3 py-1.5 text-sm rounded-full bg-gray-100 dark:bg-gray-700 outline-none" />
+      </div>
+      <div id="sidebarList" class="flex-1 overflow-y-auto divide-y dark:divide-gray-700"></div>
+    </aside>
+
+    <!-- CHAT AREA -->
+    <main id="chatArea" class="hidden md:flex flex-1 flex-col h-full bg-[#efeae2] dark:bg-gray-950 relative">
+      <div id="emptyChat" class="flex-1 flex flex-col items-center justify-center text-gray-400">
+        <i class="fab fa-whatsapp text-6xl mb-3 text-emerald-500"></i>
+        <p class="text-lg font-medium">Select a chat or group to start messaging</p>
+      </div>
+      <div id="activeChatWrap" class="hidden flex-1 flex flex-col h-full">
+        <div class="p-3 bg-white dark:bg-gray-800 border-b dark:border-gray-700 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <button onclick="backToSidebar()" class="md:hidden text-lg"><i class="fas fa-arrow-left"></i></button>
+            <div id="chatAvatar" class="w-9 h-9 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold"></div>
+            <div>
+              <div id="chatTitle" class="font-semibold text-sm"></div>
+              <div id="chatSub" class="text-xs text-gray-500 dark:text-gray-400"></div>
+            </div>
+          </div>
+          <div id="callBtns" class="flex items-center gap-4 text-emerald-600 dark:text-emerald-400 text-lg">
+            <button onclick="startCall('audio')" title="Audio Call"><i class="fas fa-phone"></i></button>
+            <button onclick="startCall('video')" title="Video Call"><i class="fas fa-video"></i></button>
+          </div>
+        </div>
+        <div id="messagesBox" class="flex-1 overflow-y-auto p-4 space-y-2"></div>
+        <div id="replyBar" class="hidden px-4 py-2 bg-gray-100 dark:bg-gray-800 border-t dark:border-gray-700 flex justify-between items-center text-xs">
+          <div class="border-l-4 border-emerald-500 pl-2 truncate"><span id="replySender" class="font-bold block"></span><span id="replyText"></span></div>
+          <button onclick="clearReply()" class="text-gray-500"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="emojiPicker" class="hidden p-2 bg-white dark:bg-gray-800 border-t dark:border-gray-700 flex flex-wrap gap-2 text-xl"></div>
+        <form id="msgForm" class="p-2.5 bg-white dark:bg-gray-800 border-t dark:border-gray-700 flex items-center gap-2">
+          <button type="button" onclick="toggleEmoji()" class="text-xl text-gray-500 px-1"><i class="far fa-smile"></i></button>
+          <label class="text-xl text-gray-500 px-1 cursor-pointer"><i class="fas fa-image"></i><input id="photoInput" type="file" accept="image/*" class="hidden" onchange="sendPhoto(this)" /></label>
+          <input id="msgInput" type="text" placeholder="Type a message..." class="flex-1 px-4 py-2 rounded-full bg-gray-100 dark:bg-gray-700 outline-none text-sm" />
+          <button type="submit" class="bg-emerald-600 text-white w-10 h-10 rounded-full flex items-center justify-center"><i class="fas fa-paper-plane"></i></button>
+        </form>
+      </div>
+    </main>
+  </div>
+
+  <!-- MODALS -->
+  <div id="groupModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-5 w-full max-w-sm space-y-3">
+      <h3 class="font-bold text-lg">Create Group</h3>
+      <input id="groupNameInput" type="text" placeholder="Group Name" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 outline-none" />
+      <div id="groupMembersList" class="max-h-48 overflow-y-auto space-y-1 text-sm"></div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeModal('groupModal')" class="px-4 py-1.5 rounded bg-gray-200 dark:bg-gray-700">Cancel</button>
+        <button onclick="createGroup()" class="px-4 py-1.5 rounded bg-emerald-600 text-white">Create</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="statusModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-5 w-full max-w-sm space-y-3">
+      <h3 class="font-bold text-lg">Add 24h Status</h3>
+      <textarea id="statusTextInput" rows="3" placeholder="What's on your mind?" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 outline-none"></textarea>
+      <label class="block text-sm text-emerald-600 cursor-pointer"><i class="fas fa-camera mr-1"></i>Attach Photo (optional)<input id="statusImgInput" type="file" accept="image/*" class="hidden" /></label>
+      <div class="flex justify-end gap-2">
+        <button onclick="closeModal('statusModal')" class="px-4 py-1.5 rounded bg-gray-200 dark:bg-gray-700">Cancel</button>
+        <button onclick="postStatus()" class="px-4 py-1.5 rounded bg-emerald-600 text-white">Post</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="viewStatusModal" onclick="closeModal('viewStatusModal')" class="hidden fixed inset-0 bg-black/90 flex flex-col items-center justify-center p-6 z-50 text-white text-center">
+    <div id="viewStatusUser" class="font-bold text-lg mb-2"></div>
+    <img id="viewStatusImg" class="hidden max-h-[65vh] rounded-lg mb-3" />
+    <p id="viewStatusText" class="text-xl max-w-md"></p>
+    <span class="text-xs text-gray-400 mt-4">Tap anywhere to close</span>
+  </div>
+
+  <!-- INCOMING CALL MODAL -->
+  <div id="incomingModal" class="hidden fixed inset-0 bg-black/75 flex items-center justify-center p-4 z-50">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 text-center w-full max-w-xs space-y-4">
+      <div class="w-16 h-16 mx-auto rounded-full bg-emerald-600 text-white flex items-center justify-center text-2xl animate-pulse"><i class="fas fa-phone-volume"></i></div>
+      <div>
+        <h3 id="incCallerName" class="font-bold text-lg"></h3>
+        <p id="incCallType" class="text-sm text-gray-500"></p>
+      </div>
+      <div class="flex justify-center gap-6">
+        <button onclick="rejectCall()" class="w-14 h-14 rounded-full bg-red-600 text-white text-xl"><i class="fas fa-phone-slash"></i></button>
+        <button onclick="acceptCall()" class="w-14 h-14 rounded-full bg-emerald-600 text-white text-xl"><i class="fas fa-phone"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTIVE CALL OVERLAY -->
+  <div id="callOverlay" class="hidden fixed inset-0 bg-gray-900 text-white flex flex-col items-center justify-between p-6 z-50">
+    <div class="text-center">
+      <h3 id="callPeerName" class="text-xl font-bold"></h3>
+      <p id="callStatusTxt" class="text-sm text-emerald-400">Connecting...</p>
+    </div>
+    <div class="relative w-full max-w-2xl flex-1 my-4 flex items-center justify-center bg-black rounded-2xl overflow-hidden">
+      <video id="remoteVideo" autoplay playsinline class="w-full h-full object-cover"></video>
+      <video id="localVideo" autoplay muted playsinline class="w-32 h-24 object-cover rounded-lg border-2 border-white absolute bottom-3 right-3 bg-gray-800"></video>
+    </div>
+    <div class="flex gap-6">
+      <button onclick="toggleMute()" id="muteBtn" class="w-14 h-14 rounded-full bg-gray-700 text-xl"><i class="fas fa-microphone"></i></button>
+      <button onclick="endCall()" class="w-14 h-14 rounded-full bg-red-600 text-xl"><i class="fas fa-phone-slash"></i></button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, updateDoc, addDoc, collection, query, orderBy, where, onSnapshot, arrayUnion, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyB6ZQGTrXS6Eqp4Za2y993Vnja5FNU_HRA",
+  authDomain: "chatpro-ad693.firebaseapp.com",
+  projectId: "chatpro-ad693",
+  storageBucket: "chatpro-ad693.firebasestorage.app",
+  messagingSenderId: "615128115099",
+  appId: "1:615128115099:web:a32d012cc8018eb77ba33e",
+  measurementId: "G-V31RJGQMYK"
+};
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+ //Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let isSignup = false, me = null, users = [], groups = [], statuses = [], calls = [];
+    let currentTab = 'chats', activeChat = null, replyTo = null;
+    let unsubMsgs = null, unsubCallDoc = null, peer = null, localStream = null, activeCall = null, incomingCall = null, currentCallId = null, isMuted = false;
+
+    const $ = id => document.getElementById(id);
+    const esc = s => String(s || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    const fmtTime = ts => ts ? new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+
+    // EMOJIS
+    ['😀','😂','😍','🥳','😎','👍','❤️','🔥','🙏','😭','🎉','🤝','💯','🚀'].forEach(e => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.textContent = e;
+      b.onclick = () => { $('msgInput').value += e; $('msgInput').focus(); };
+      $('emojiPicker').appendChild(b);
+    });
+
+    // AUTH TOGGLE & SUBMIT
+    $('authToggleBtn').onclick = () => {
+      isSignup = !isSignup;
+      $('authName').classList.toggle('hidden', !isSignup);
+      $('authName').required = isSignup;
+      $('authSubmit').textContent = isSignup ? 'Sign Up' : 'Login';
+      $('authToggleText').textContent = isSignup ? 'Already have an account?' : 'New here?';
+      $('authToggleBtn').textContent = isSignup ? 'Login' : 'Create Account';
+      $('authErr').classList.add('hidden');
+    };
+
+    $('authForm').onsubmit = async e => {
+      e.preventDefault();
+      const email = $('authEmail').value.trim(), pass = $('authPass').value, name = $('authName').value.trim();
+      $('authErr').classList.add('hidden');
+      try {
+        if (isSignup) {
+          if (!name) throw new Error('Please enter your name.');
+          const res = await createUserWithEmailAndPassword(auth, email, pass);
+          await setDoc(doc(db, 'users', res.user.uid), { uid: res.user.uid, name, email, online: true });
+        } else {
+          const res = await signInWithEmailAndPassword(auth, email, pass);
+          await updateDoc(doc(db, 'users', res.user.uid), { online: true }).catch(() => {});
+        }
+      } catch (err) {
+        $('authErr').textContent = err.message;
+        $('authErr').classList.remove('hidden');
+        alert(err.message);
+      }
+    };
+
+    onAuthStateChanged(auth, async user => {
+      if (!user) {
+        me = null;
+        $('authScreen').classList.remove('hidden');
+        $('appScreen').classList.add('hidden');
+        if (peer) { peer.destroy(); peer = null; }
+        return;
+      }
+      const snap = await getDoc(doc(db, 'users', user.uid));
+      me = snap.exists() ? snap.data() : { uid: user.uid, name: user.email.split('@')[0], email: user.email, online: true };
+      if (!snap.exists()) await setDoc(doc(db, 'users', user.uid), me);
+      else await updateDoc(doc(db, 'users', user.uid), { online: true });
+
+      $('myName').textContent = me.name;
+      $('myAvatar').textContent = me.name[0].toUpperCase();
+      $('authScreen').classList.add('hidden');
+      $('appScreen').classList.remove('hidden');
+      initPeer();
+      listenData();
+    });
+
+    window.logout = async () => {
+      if (me) await updateDoc(doc(db, 'users', me.uid), { online: false }).catch(() => {});
+      await signOut(auth);
+    };
+
+    window.toggleTheme = () => {
+      const dark = document.documentElement.classList.toggle('dark');
+      $('themeIcon').className = dark ? 'fas fa-sun' : 'fas fa-moon';
+    };
+
+    function listenData() {
+      onSnapshot(collection(db, 'users'), snap => {
+        users = snap.docs.map(d => d.data()).filter(u => u.uid !== me.uid);
+        renderSidebar();
+        if (activeChat && activeChat.type === 'dm') {
+          const u = users.find(x => x.uid === activeChat.id);
+          if (u) $('chatSub').textContent = u.online ? 'Online' : 'Offline';
+        }
+      });
+      onSnapshot(query(collection(db, 'groups'), where('members', 'array-contains', me.uid)), snap => {
+        groups = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderSidebar();
+      });
+      onSnapshot(query(collection(db, 'statuses'), orderBy('ts', 'desc')), snap => {
+        const now = Date.now();
+        statuses = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(s => s.expiresAt > now);
+        if (currentTab === 'status') renderSidebar();
+      });
+      onSnapshot(query(collection(db, 'calls'), orderBy('ts', 'desc')), snap => {
+        calls = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(c => c.callerId === me.uid || c.calleeId === me.uid);
+        if (currentTab === 'calls') renderSidebar();
+      });
+    }
+
+    window.switchTab = tab => {
+      currentTab = tab;
+      ['chats','status','calls'].forEach(t => {
+        $(`tab-${t}`).className = `flex-1 py-2.5 border-b-2 ${t === tab ? 'border-white text-white' : 'border-transparent'}`;
+      });
+      $('searchWrap').classList.toggle('hidden', tab !== 'chats');
+      renderSidebar();
+    };
+
+    window.renderSidebar = () => {
+      const list = $('sidebarList');
+      list.innerHTML = '';
+      if (currentTab === 'chats') {
+        const q = $('searchInput').value.toLowerCase();
+        groups.filter(g => g.name.toLowerCase().includes(q)).forEach(g => {
+          list.innerHTML += `<div onclick="openChat('group','${g.id}')" class="p-3 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+            <div class="w-11 h-11 rounded-full bg-teal-600 text-white flex items-center justify-center font-bold"><i class="fas fa-users"></i></div>
+            <div class="flex-1 min-w-0"><div class="font-semibold truncate">${esc(g.name)}</div><div class="text-xs text-gray-500">${g.members.length} members</div></div>
+          </div>`;
+        });
+        users.filter(u => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)).forEach(u => {
+          list.innerHTML += `<div onclick="openChat('dm','${u.uid}')" class="p-3 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+            <div class="relative w-11 h-11 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold">${esc(u.name[0].toUpperCase())}
+              <span class="w-3 h-3 rounded-full border-2 border-white absolute bottom-0 right-0 ${u.online ? 'bg-green-400' : 'bg-gray-400'}"></span>
+            </div>
+            <div class="flex-1 min-w-0"><div class="font-semibold truncate">${esc(u.name)}</div><div class="text-xs text-gray-500 truncate">${u.online ? 'Online' : 'Offline'}</div></div>
+          </div>`;
+        });
+      } else if (currentTab === 'status') {
+        list.innerHTML = `<div onclick="$('statusModal').classList.remove('hidden')" class="p-3 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+          <div class="w-11 h-11 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xl"><i class="fas fa-plus"></i></div>
+          <div><div class="font-semibold">My Status</div><div class="text-xs text-gray-500">Tap to add 24h status update</div></div>
+        </div>`;
+        statuses.forEach(s => {
+          list.innerHTML += `<div onclick="viewStatus('${s.id}')" class="p-3 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-700 cu
