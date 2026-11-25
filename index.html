@@ -10,6 +10,7 @@
 <script src="https://unpkg.com"></script>
 <link rel="stylesheet" href="https://cloudflare.com">
 <script src="https://onesignal.com" defer></script>
+  
 <script>
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   OneSignalDeferred.push(async function(OneSignal) {
@@ -153,7 +154,6 @@ body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#e5ddd5}
   </div>
 </div>
 
-<script type="module">
 import { initializeApp } from "https://gstatic.com";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile } from "https://gstatic.com";
 import { getFirestore, collection, doc, setDoc, addDoc, updateDoc, deleteDoc, query, orderBy, onSnapshot, where, serverTimestamp } from "https://gstatic.com";
@@ -174,6 +174,7 @@ window.$ = id => document.getElementById(id);
 let isSignup = false, currentUser = null, allUsers = [], allGroups = [], activeTab = 'chats';
 let activeChat = null, unsubMsgs = null, replyData = null;
 let peer = null, myPeerId = null, localStream = null, currentCallObj = null, currentCallDocId = null, ringInterval = null, audioCtx = null, isMuted = false;
+
 async function sendPushAlert(targetUid, title, body, isCall = false) {
   try {
     await fetch("https://onesignal.com", {
@@ -186,7 +187,7 @@ async function sendPushAlert(targetUid, title, body, isCall = false) {
         headings: { en: title },
         contents: { en: body },
         url: "https://github.io",
-        priority: isCall ? 10 : 8
+  
       })
     });
   } catch (e) {}
