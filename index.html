@@ -322,7 +322,7 @@ window.$ = id => document.getElementById(id);
 let isSignup = false, currentUser = null, allUsers = [], allGroups = [], activeTab = 'chats';
 let activeChat = null, unsubMsgs = null, replyData = null;
 let peer = null, myPeerId = null, localStream = null, ludoStream = null, ludoCalls = [], currentCallObj = null, currentCallDocId = null, ringInterval = null, audioCtx = null, isMuted = false;
-let roomVoiceStream = null, roomVoiceCalls = [], roomVoiceAudio = new Map(), roomVoiceMode = null, roomVoiceRoomId = null, roomVoicePeerIds = new Set();
+let roomVoiceStream = null, roomVoiceCalls = [], roomVoiceAudio = new Map(), roomVoiceMode = null, roomVoiceRoomId = null, roomVoicePeerIds = new Set(), roomVoicePendingCalls = [];
 let callTimerInterval = null, callStartedAt = 0;
 let statusMediaData = null, statusMediaType = null;
 
@@ -402,8 +402,14 @@ function initPeer() {
   peer.on('call', call => {
     const meta = call.metadata || {};
     if (meta.kind === 'roomvoice') {
-      if (!roomVoiceStream || roomVoiceMode !== meta.roomType || roomVoiceRoomId !== meta.roomId) return;
-      call.answer(roomVoiceStream); attachRoomVoiceCall(call, meta.peerId || 'friend'); return;
+      const expectedRoom = meta.roomType === 'ludo' ? ludoRoomId : watchRoomId;
+      if (meta.roomId !== expectedRoom) return;
+      if (roomVoiceStream && roomVoiceMode === meta.roomType && roomVoiceRoomId === meta.roomId) {
+        call.answer(roomVoiceStream); attachRoomVoiceCall(call, meta.peerId || 'friend');
+      } else {
+        roomVoicePendingCalls.push({ call, meta });
+      }
+      return;
     }
     if (!localStream) return;
     currentCallObj = call; call.answer(localStream);
@@ -564,6 +570,7 @@ function attachRoomVoiceCall(call, peerLabel) {
 }
 function stopRoomVoice() {
   roomVoiceCalls.forEach(c=>{try{c.close();}catch(e){}}); roomVoiceCalls=[];
+  roomVoicePendingCalls.forEach(p=>{try{p.call.close();}catch(e){}}); roomVoicePendingCalls=[];
   roomVoiceAudio.forEach(a=>{a.srcObject=null;a.remove();}); roomVoiceAudio.clear();
   if(roomVoiceStream) roomVoiceStream.getTracks().forEach(t=>t.stop());
   roomVoiceStream=null; ludoStream=null; ludoCalls=[];
@@ -577,8 +584,11 @@ async function startRoomVoice(mode, roomId, players) {
     catch(e) { alert('Microphone permission is needed for voice chat.'); return; }
     roomVoiceMode=mode; roomVoiceRoomId=roomId; ludoStream=roomVoiceStream;
   }
+  const pending = roomVoicePendingCalls.filter(p=>p.meta.roomType===mode&&p.meta.roomId===roomId);
+  roomVoicePendingCalls = roomVoicePendingCalls.filter(p=>!(p.meta.roomType===mode&&p.meta.roomId===roomId));
+  pending.forEach(({call,meta})=>{call.answer(roomVoiceStream);attachRoomVoiceCall(call,meta.peerId||'friend');});
   Object.values(players||{}).forEach(p=>{
-    if(!p||p.uid===currentUser.uid||!p.peerId||roomVoicePeerIds.has(p.peerId)) return;
+    if(!p||p.uid===currentUser.uid||!p.peerId||roomVoicePeerIds.has(p.peerId)||myPeerId.localeCompare(p.peerId)>0) return;
     roomVoicePeerIds.add(p.peerId);
     const call=peer.call(p.peerId,roomVoiceStream,{metadata:{kind:'roomvoice',roomType:mode,roomId,peerId:myPeerId}});
     if(call) attachRoomVoiceCall(call,p.peerId);
@@ -660,7 +670,7 @@ function renderLudoBoard() {
   box.innerHTML=`<div class="p-3 space-y-3 ludo-screen">
     <div class="bg-[#075E54] text-white p-3 rounded-xl flex justify-between items-center shadow">
       <div><div class="text-[11px] opacity-75">Room Code</div><div class="font-bold text-lg tracking-widest">${ludoState.code}</div></div>
-      <div class="flex gap-2"><button id="ludoMicBtn" onclick="toggleLudoMic()" class="px-3 py-1.5 bg-gray-700 rounded-lg text-xs font-bold"><i class="fas fa-microphone-slash"></i> Mic</button><button onclick="exitLudoRoom()" class="px-3 py-1.5 bg-red-600 rounded-lg text-xs font-bold">Exit</button></div>
+      <div class="flex gap-2"><button id="ludoMicBtn" onclick="toggleLudoMic()" class="px-3 py-1.5 ${roomVoiceStream && roomVoiceMode === 'ludo' && roomVoiceRoomId === ludoRoomId ? 'bg-[#25D366]' : 'bg-gray-700'} rounded-lg text-xs font-bold"><i class="fas ${roomVoiceStream && roomVoiceMode === 'ludo' && roomVoiceRoomId === ludoRoomId ? 'fa-microphone' : 'fa-microphone-slash'}"></i> ${roomVoiceStream && roomVoiceMode === 'ludo' && roomVoiceRoomId === ludoRoomId ? 'Mic ON' : 'Mic'}</button><button onclick="exitLudoRoom()" class="px-3 py-1.5 bg-red-600 rounded-lg text-xs font-bold">Exit</button></div>
     </div>
     <div class="grid grid-cols-4 gap-1 text-[10px] font-bold text-center text-white"><div class="rounded bg-red-600 py-1">RED ${ludoState.players.red?.name||'Waiting'}</div><div class="rounded bg-green-600 py-1">GREEN ${ludoState.players.green?.name||'Waiting'}</div><div class="rounded bg-blue-600 py-1">BLUE ${ludoState.players.blue?.name||'Waiting'}</div><div class="rounded bg-yellow-500 py-1">YELLOW ${ludoState.players.yellow?.name||'Waiting'}</div></div>
     <div class="ludo-board-frame"><div class="ludo-board">${cellsHtml}<div class="ludo-center"><i class="tri-red"></i><i class="tri-green"></i><i class="tri-yellow"></i><i class="tri-blue"></i></div></div></div>
