@@ -340,13 +340,26 @@ function listenUsersAndGroups() {
 }
 
 window.switchTab = t => {
+  if (!['chats','ludo','movie','status','calls'].includes(t)) t = 'chats';
   activeTab = t;
   ['chats','ludo','movie','status','calls'].forEach(x => {
-    $('tab-'+x).classList.toggle('border-white', x===t);
-    $('tab-'+x).classList.toggle('border-transparent', x!==t);
-    $('tab-'+x).classList.toggle('opacity-75', x!==t);
+    const tab = $('tab-'+x);
+    if (!tab) return;
+    tab.classList.toggle('border-white', x === t);
+    tab.classList.toggle('border-transparent', x !== t);
+    tab.classList.toggle('opacity-75', x !== t);
+    tab.setAttribute('aria-selected', x === t ? 'true' : 'false');
   });
-  $('searchWrap').classList.toggle('hidden', t !== 'chats');
+  const search = $('searchWrap');
+  if (search) search.classList.toggle('hidden', t !== 'chats');
+  // Clear the previous tab's DOM before rendering the selected section.
+  // This prevents a stale Ludo/Movie panel remaining visible under another tab.
+  const box = $('listArea');
+  if (box) {
+    box.innerHTML = '';
+    box.dataset.activeTab = t;
+    box.scrollTop = 0;
+  }
   renderLists();
 };
 
@@ -683,6 +696,8 @@ window.closeStatusViewer = () => { const v=$('statusViewer'); if(v){ v.classList
 
 window.renderLists = () => {
   const box = $('listArea');
+  if (!box) return;
+  box.dataset.activeTab = activeTab;
   if (activeTab === 'chats') {
     const q = $('searchBox').value.toLowerCase();
     let html = '<div class="divide-y dark:divide-gray-800">';
