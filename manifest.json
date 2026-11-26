@@ -1,7 +1,7 @@
 {
   "name": "ChatPro",
   "short_name": "ChatPro",
-  "display": "standalone",
+  "display": "fullscreen",
   "start_url": "/chatpro/",
   "scope": "/chatpro/",
   "background_color": "#075E54",
@@ -14,5 +14,9 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
+  ],
+  "display_override": [
+    "fullscreen",
+    "standalone"
   ]
 }
