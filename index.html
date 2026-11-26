@@ -37,6 +37,28 @@ body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#e5ddd5}
 .token-piece:active{transform:translateY(-3px) scale(1.12)}
 .call-timer{font-variant-numeric:tabular-nums;letter-spacing:.08em}
 .ludo-grid{gap:1px;background:#64748b;padding:2px}
+.ludo-board-frame{width:100%;max-width:680px;margin:0 auto;padding:5px;border:3px solid #1f2937;border-radius:14px;background:#fff;box-shadow:0 8px 25px rgba(0,0,0,.22)}
+.ludo-board{position:relative;display:grid;grid-template-columns:repeat(15,minmax(0,1fr));grid-template-rows:repeat(15,minmax(0,1fr));aspect-ratio:1/1;background:#fff;overflow:hidden}
+.ludo-square{min-width:0;min-height:0;border:1px solid #b9c2c9;display:flex;align-items:center;justify-content:center;position:relative;background:#fff}
+.ludo-square.home-red{background:#f20d1b}.ludo-square.home-green{background:#08a947}.ludo-square.home-blue{background:#08a9df}.ludo-square.home-yellow{background:#e2b900}
+.ludo-square.yard{background:#fff;border:0}
+.ludo-square.yard-red:before,.ludo-square.yard-green:before,.ludo-square.yard-blue:before,.ludo-square.yard-yellow:before{content:"";position:absolute;inset:7%;border:2px solid rgba(0,0,0,.12);background:#fff}
+.ludo-square.lane-red{background:#f20d1b}.ludo-square.lane-green{background:#08a947}.ludo-square.lane-blue{background:#08a9df}.ludo-square.lane-yellow{background:#e2b900}
+.ludo-square.center-under{background:#fff}
+.ludo-center{position:absolute;left:40%;top:40%;width:20%;height:20%;pointer-events:none;z-index:3}
+.ludo-center i{position:absolute;inset:0;display:block}
+.ludo-center .tri-red{background:#f20d1b;clip-path:polygon(0 0,0 100%,50% 50%)}
+.ludo-center .tri-green{background:#08a947;clip-path:polygon(0 0,100% 0,50% 50%)}
+.ludo-center .tri-yellow{background:#e2b900;clip-path:polygon(100% 0,100% 100%,50% 50%)}
+.ludo-center .tri-blue{background:#08a9df;clip-path:polygon(0 100%,100% 100%,50% 50%)}
+.ludo-star{font-size:clamp(10px,2.5vw,22px);font-weight:800;color:#9ca3af;line-height:1}
+.ludo-arrow{font-size:clamp(12px,2.8vw,24px);font-weight:900;line-height:1}
+.green-arrow{color:#078b3b}.red-arrow{color:#e11d2e}.yellow-arrow{color:#c5a000}.blue-arrow{color:#078ec4}
+.ludo-token{position:relative;z-index:5;width:80%;height:80%;border:2px solid #fff;border-radius:50% 50% 50% 8%;transform:rotate(-45deg);box-shadow:0 2px 2px rgba(0,0,0,.35),inset 0 2px 3px rgba(255,255,255,.8);display:flex;align-items:center;justify-content:center;padding:0}
+.ludo-token span{width:48%;height:48%;border-radius:50%;background:#fff;border:1px solid rgba(0,0,0,.18)}
+.ludo-token.red{background:#d71928}.ludo-token.green{background:#078c42}.ludo-token.blue{background:#079ed4}.ludo-token.yellow{background:#d2a900}
+.ludo-screen .ludo-board-frame{margin-top:2px}
+@media(max-width:420px){.ludo-screen{padding:8px!important}.ludo-board-frame{padding:3px;border-width:2px;border-radius:10px}}
 .status-page{padding:12px 16px;background:#fff;min-height:100%}
 .dark .status-page{background:#111b21;color:#e9edef}
 .status-add-row,.status-user-row{width:100%;display:flex;align-items:center;gap:12px;text-align:left;padding:12px 4px;border-bottom:1px solid #e5e7eb}
@@ -510,73 +532,52 @@ function renderLudoBoard() {
   const box = $('listArea');
   if (!ludoState || !box) return;
   const tokenMap = {};
-  ['red','green','yellow','blue'].forEach(c => {
-    if (!ludoState.players[c]) return;
-    ludoState.tokens[c].forEach((pos, idx) => {
-      const [r, col] = getCellCoord(c, pos, idx);
+  ['red','green','yellow','blue'].forEach(color => {
+    if (!ludoState.players[color]) return;
+    (ludoState.tokens[color] || []).forEach((pos, idx) => {
+      const [r, col] = getCellCoord(color, pos, idx);
       const key = `${r},${col}`;
-      if (!tokenMap[key]) tokenMap[key] = [];
-      tokenMap[key].push({ color: c, idx });
+      (tokenMap[key] ||= []).push({color,idx});
     });
   });
-
+  const colorClass = {red:'red',green:'green',yellow:'yellow',blue:'blue'};
+  const safe = new Set(SAFE_CELLS);
   let cellsHtml = '';
-  for (let r = 0; r < 15; r++) {
-    for (let c = 0; c < 15; c++) {
-      let bg = '#ffffff', star = '';
-      // 4 Corner Yards (Classic Ludo King Bright Colors)
-      if (r < 6 && c < 6) bg = (r>=1 && r<=4 && c>=1 && c<=4) ? '#ffffff' : '#ef4444';
-      else if (r < 6 && c > 8) bg = (r>=1 && r<=4 && c>=10 && c<=13) ? '#ffffff' : '#22c55e';
-      else if (r > 8 && c > 8) bg = (r>=10 && r<=13 && c>=10 && c<=13) ? '#ffffff' : '#eab308';
-      else if (r > 8 && c < 6) bg = (r>=10 && r<=13 && c>=1 && c<=4) ? '#ffffff' : '#3b82f6';
-      // Center Home Crown
-      else if (r >= 6 && r <= 8 && c >= 6 && c <= 8) bg = 'linear-gradient(135deg,#ef4444 25%,#22c55e 25%,#22c55e 50%,#eab308 50%,#eab308 75%,#3b82f6 75%)';
-      // Colored Home Lanes & Start Squares
-      else if ((r === 7 && c >= 1 && c <= 5) || (r === 6 && c === 1)) bg = '#ef4444';
-      else if ((c === 7 && r >= 1 && r <= 5) || (r === 1 && c === 8)) bg = '#22c55e';
-      else if ((r === 7 && c >= 9 && c <= 13) || (r === 8 && c === 13)) bg = '#eab308';
-      else if ((c === 7 && r >= 9 && r <= 13) || (r === 13 && c === 6)) bg = '#3b82f6';
-
-      if (SAFE_CELLS.includes(`${r},${c}`)) star = '<span class="text-amber-500 font-black text-sm">☆</span>';
-      const here = tokenMap[`${r},${c}`] || [];
-      const tokHtml = here.map(t => {
-        const hex = { red:'#dc2626', green:'#16a34a', yellow:'#ca8a04', blue:'#2563eb' }[t.color];
-        return `<div onclick="moveLudoToken('${t.color}',${t.idx})" style="background:${hex}" class="token-piece"></div>`;
-      }).join('');
-      cellsHtml += `<div class="ludo-cell" style="background:${bg}">${tokHtml || star}</div>`;
-    }
+  for (let r=0;r<15;r++) for (let c=0;c<15;c++) {
+    let cls='track';
+    if (r<6&&c<6) cls=(r>=1&&r<=4&&c>=1&&c<=4)?'yard yard-red':'home-red';
+    else if (r<6&&c>8) cls=(r>=1&&r<=4&&c>=10&&c<=13)?'yard yard-green':'home-green';
+    else if (r>8&&c<6) cls=(r>=10&&r<=13&&c>=1&&c<=4)?'yard yard-blue':'home-blue';
+    else if (r>8&&c>8) cls=(r>=10&&r<=13&&c>=10&&c<=13)?'yard yard-yellow':'home-yellow';
+    if ((r===7&&c>=1&&c<=5)||(r===6&&c===1)) cls='lane-red';
+    if ((c===7&&r>=1&&r<=5)||(r===1&&c===8)) cls='lane-green';
+    if ((r===7&&c>=9&&c<=13)||(r===8&&c===13)) cls='lane-yellow';
+    if ((c===7&&r>=9&&r<=13)||(r===13&&c===6)) cls='lane-blue';
+    if (r>=6&&r<=8&&c>=6&&c<=8) cls='center-under';
+    const key=`${r},${c}`;
+    const tokens=tokenMap[key]||[];
+    const tokenHtml=tokens.map(t=>`<button aria-label="${t.color} token" onclick="moveLudoToken('${t.color}',${t.idx})" class="ludo-token ${colorClass[t.color]}"><span></span></button>`).join('');
+    let mark='';
+    if(safe.has(key)) mark='<span class="ludo-star">☆</span>';
+    if(r===0&&c===7) mark='<span class="ludo-arrow green-arrow">↓</span>';
+    if(r===7&&c===0) mark='<span class="ludo-arrow red-arrow">→</span>';
+    if(r===7&&c===14) mark='<span class="ludo-arrow yellow-arrow">←</span>';
+    if(r===14&&c===7) mark='<span class="ludo-arrow blue-arrow">↑</span>';
+    cellsHtml+=`<div class="ludo-square ${cls}">${tokenHtml||mark}</div>`;
   }
-
-  const isMyTurn = ludoState.turn === myColor;
-  const turnHex = { red:'text-red-600', green:'text-green-600', yellow:'text-yellow-600', blue:'text-blue-600' }[ludoState.turn];
-  box.innerHTML = `<div class="p-3 space-y-3">
+  const isMyTurn=ludoState.turn===myColor;
+  const turnHex={red:'text-red-600',green:'text-green-600',yellow:'text-yellow-600',blue:'text-blue-600'}[ludoState.turn];
+  box.innerHTML=`<div class="p-3 space-y-3 ludo-screen">
     <div class="bg-[#075E54] text-white p-3 rounded-xl flex justify-between items-center shadow">
       <div><div class="text-[11px] opacity-75">Room Code</div><div class="font-bold text-lg tracking-widest">${ludoState.code}</div></div>
-      <div class="flex gap-2">
-        <button id="ludoMicBtn" onclick="toggleLudoMic()" class="px-3 py-1.5 bg-gray-700 rounded-lg text-xs font-bold"><i class="fas fa-microphone-slash"></i> Mic</button>
-        <button onclick="exitLudoRoom()" class="px-3 py-1.5 bg-red-600 rounded-lg text-xs font-bold">Exit</button>
-      </div>
+      <div class="flex gap-2"><button id="ludoMicBtn" onclick="toggleLudoMic()" class="px-3 py-1.5 bg-gray-700 rounded-lg text-xs font-bold"><i class="fas fa-microphone-slash"></i> Mic</button><button onclick="exitLudoRoom()" class="px-3 py-1.5 bg-red-600 rounded-lg text-xs font-bold">Exit</button></div>
     </div>
     <audio id="ludoVoiceAudio" autoplay></audio>
-    <div class="grid grid-cols-4 gap-1 text-[10px] font-bold text-center text-white">
-      <div class="rounded bg-red-600 py-1">RED ${ludoState.players.red?.name || 'Waiting'}</div>
-      <div class="rounded bg-green-600 py-1">GREEN ${ludoState.players.green?.name || 'Waiting'}</div>
-      <div class="rounded bg-blue-600 py-1">BLUE ${ludoState.players.blue?.name || 'Waiting'}</div>
-      <div class="rounded bg-yellow-500 py-1">YELLOW ${ludoState.players.yellow?.name || 'Waiting'}</div>
-    </div>
-    <div class="ludo-grid rounded-lg overflow-hidden">${cellsHtml}</div>
-    <div class="bg-white dark:bg-[#202c33] p-3 rounded-xl shadow flex items-center justify-between border dark:border-gray-700">
-      <div>
-        <div class="text-xs text-gray-500">Turn: <span class="font-bold uppercase ${turnHex}">${ludoState.turn}</span></div>
-        <div class="font-bold text-sm">${isMyTurn ? (ludoState.rolled ? 'Tap your token to move!' : 'Your Turn! Roll Dice') : 'Waiting for opponent...'}</div>
-      </div>
-      <button onclick="rollLudoDice()" class="px-5 py-3 bg-[#25D366] text-white font-bold rounded-xl shadow active:scale-95 text-base">
-        🎲 ${ludoState.dice || 'Roll'}
-      </button>
-    </div>
+    <div class="grid grid-cols-4 gap-1 text-[10px] font-bold text-center text-white"><div class="rounded bg-red-600 py-1">RED ${ludoState.players.red?.name||'Waiting'}</div><div class="rounded bg-green-600 py-1">GREEN ${ludoState.players.green?.name||'Waiting'}</div><div class="rounded bg-blue-600 py-1">BLUE ${ludoState.players.blue?.name||'Waiting'}</div><div class="rounded bg-yellow-500 py-1">YELLOW ${ludoState.players.yellow?.name||'Waiting'}</div></div>
+    <div class="ludo-board-frame"><div class="ludo-board">${cellsHtml}<div class="ludo-center"><i class="tri-red"></i><i class="tri-green"></i><i class="tri-yellow"></i><i class="tri-blue"></i></div></div></div>
+    <div class="bg-white dark:bg-[#202c33] p-3 rounded-xl shadow flex items-center justify-between border dark:border-gray-700"><div><div class="text-xs text-gray-500">Turn: <span class="font-bold uppercase ${turnHex}">${ludoState.turn}</span></div><div class="font-bold text-sm">${isMyTurn?(ludoState.rolled?'Tap your token to move!':'Your Turn! Roll Dice'):'Waiting for opponent...'}</div></div><button onclick="rollLudoDice()" class="px-5 py-3 bg-[#25D366] text-white font-bold rounded-xl shadow active:scale-95 text-base">🎲 ${ludoState.dice||'Roll'}</button></div>
   </div>`;
 }
-
 
 function makeToneWav(freq,duration){const rate=16000,count=Math.floor(rate*duration),buf=new ArrayBuffer(44+count*2),v=new DataView(buf);const w=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i));};w(0,"RIFF");v.setUint32(4,36+count*2,true);w(8,"WAVE");w(12,"fmt ");v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,rate,true);v.setUint32(28,rate*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,"data");v.setUint32(40,count*2,true);for(let i=0;i<count;i++){const fade=Math.min(1,i/180,(count-i)/500);v.setInt16(44+i*2,Math.sin(2*Math.PI*freq*i/rate)*fade*9000,true);}return URL.createObjectURL(new Blob([buf],{type:"audio/wav"}));}
 function initLudoAudio(){[["ludoDiceAudio",560,.12],["ludoStepAudio",420,.075],["ludoWinAudio",880,.28]].forEach(([id,f,d])=>{const el=$(id);if(el&&!el.src)el.src=makeToneWav(f,d);});}
