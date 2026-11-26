@@ -51,7 +51,8 @@ body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#e5ddd5}
 .status-section-title{font-size:13px;font-weight:700;color:#6b7280;padding:18px 4px 6px}
 .status-time{font-size:11px;color:#9ca3af}
 .status-empty{padding:28px 8px;text-align:center;color:#6b7280;font-size:14px}
-#statusViewer{display:flex;flex-direction:column;padding:env(safe-area-inset-top) 14px env(safe-area-inset-bottom)}
+#statusViewer{display:none;flex-direction:column;padding:env(safe-area-inset-top) 14px env(safe-area-inset-bottom)}
+#statusViewer:not(.hidden){display:flex}
 .status-view-top{height:56px;display:flex;align-items:center;gap:12px}
 .status-view-top button{font-size:32px}.status-view-top small{margin-left:auto;color:#bbb}
 .status-progress{height:3px;background:#555;border-radius:4px}.status-progress span{display:block;height:100%;background:#fff}
