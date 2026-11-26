@@ -301,7 +301,7 @@ body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#e5ddd5}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getFirestore, collection, doc, setDoc, getDoc, addDoc, updateDoc, deleteDoc, query, orderBy, onSnapshot, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, collection, doc, setDoc, getDoc, addDoc, updateDoc, deleteDoc, query, orderBy, onSnapshot, where, serverTimestamp, deleteField } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyB6ZQGTrXS6Eqp4Za2y993Vnja5FNU_HRA",
@@ -322,6 +322,7 @@ window.$ = id => document.getElementById(id);
 let isSignup = false, currentUser = null, allUsers = [], allGroups = [], activeTab = 'chats';
 let activeChat = null, unsubMsgs = null, replyData = null;
 let peer = null, myPeerId = null, localStream = null, ludoStream = null, ludoCalls = [], currentCallObj = null, currentCallDocId = null, ringInterval = null, audioCtx = null, isMuted = false;
+let roomVoiceStream = null, roomVoiceCalls = [], roomVoiceAudio = new Map(), roomVoiceMode = null, roomVoiceRoomId = null, roomVoicePeerIds = new Set();
 let callTimerInterval = null, callStartedAt = 0;
 let statusMediaData = null, statusMediaType = null;
 
@@ -399,11 +400,10 @@ function initPeer() {
   peer = new Peer('cp_' + currentUser.uid.slice(0, 12) + '_' + Math.floor(Math.random()*900+100));
   peer.on('open', id => { myPeerId = id; updateDoc(doc(db, 'users', currentUser.uid), { peerId: id }).catch(()=>{}); });
   peer.on('call', call => {
-    if (call.metadata && call.metadata.kind === 'ludo') {
-      if (!ludoStream) return;
-      call.answer(ludoStream);
-      call.on('stream', rem => { const el=$('ludoVoiceAudio'); if(el) el.srcObject=rem; });
-      ludoCalls.push(call); return;
+    const meta = call.metadata || {};
+    if (meta.kind === 'roomvoice') {
+      if (!roomVoiceStream || roomVoiceMode !== meta.roomType || roomVoiceRoomId !== meta.roomId) return;
+      call.answer(roomVoiceStream); attachRoomVoiceCall(call, meta.peerId || 'friend'); return;
     }
     if (!localStream) return;
     currentCallObj = call; call.answer(localStream);
@@ -496,13 +496,13 @@ window.joinLudoRoom = async (codeInput) => {
     if (!s.exists()) return;
     ludoState = s.data();
     if (activeTab === 'ludo') renderLudoBoard();
+    if (roomVoiceStream && roomVoiceMode === 'ludo' && roomVoiceRoomId === code) startRoomVoice('ludo', code, ludoState.players || {});
   });
 };
 
 window.exitLudoRoom = () => {
   if (unsubLudo) { unsubLudo(); unsubLudo = null; }
-  ludoCalls.forEach(c => c.close()); ludoCalls = [];
-  if (ludoStream) { ludoStream.getTracks().forEach(t => t.stop()); ludoStream = null; }
+  if (roomVoiceMode === 'ludo') stopRoomVoice();
   ludoRoomId = null; ludoState = null; renderLists();
 };
 
@@ -553,27 +553,50 @@ window.moveLudoToken = async (color, idx) => {
   await updateDoc(doc(db, 'ludo_rooms', ludoRoomId), { tokens: tempTokens, turn: nextTurn, rolled: false, dice: 0 });
 };
 
-window.toggleLudoMic = async () => {
-  if (!ludoStream) {
-    try {
-      ludoStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      Object.values(ludoState?.players || {}).forEach(p => {
-        if (p.uid !== currentUser.uid && p.peerId) {
-          const call = peer.call(p.peerId, ludoStream, { metadata: { kind: 'ludo' } });
-          call.on('stream', rem => { const el=$('ludoVoiceAudio'); if(el) el.srcObject=rem; });
-          ludoCalls.push(call);
-        }
-      });
-      $('ludoMicBtn').innerHTML = '<i class="fas fa-microphone"></i> Mic ON';
-      $('ludoMicBtn').classList.replace('bg-gray-700', 'bg-[#25D366]');
-    } catch(e) { alert("Microphone permission is needed for Ludo voice chat."); }
-  } else {
-    ludoCalls.forEach(c => c.close()); ludoCalls=[];
-    ludoStream.getTracks().forEach(t => t.stop()); ludoStream=null;
-    const el=$('ludoVoiceAudio'); if(el) el.srcObject=null;
-    $('ludoMicBtn').innerHTML = '<i class="fas fa-microphone-slash"></i> Mic';
-    $('ludoMicBtn').classList.replace('bg-[#25D366]', 'bg-gray-700');
+function attachRoomVoiceCall(call, peerLabel) {
+  const key = String(peerLabel) + '_' + Math.random().toString(36).slice(2);
+  const audio = document.createElement('audio'); audio.autoplay = true; audio.playsInline = true;
+  audio.dataset.roomVoice = key; audio.style.display = 'none'; document.body.appendChild(audio);
+  roomVoiceAudio.set(key, audio);
+  call.on('stream', stream => { audio.srcObject = stream; audio.play().catch(()=>{}); });
+  const cleanup = () => { audio.srcObject=null; audio.remove(); roomVoiceAudio.delete(key); roomVoiceCalls=roomVoiceCalls.filter(c=>c!==call); };
+  call.on('close', cleanup); call.on('error', cleanup); roomVoiceCalls.push(call);
+}
+function stopRoomVoice() {
+  roomVoiceCalls.forEach(c=>{try{c.close();}catch(e){}}); roomVoiceCalls=[];
+  roomVoiceAudio.forEach(a=>{a.srcObject=null;a.remove();}); roomVoiceAudio.clear();
+  if(roomVoiceStream) roomVoiceStream.getTracks().forEach(t=>t.stop());
+  roomVoiceStream=null; ludoStream=null; ludoCalls=[];
+  roomVoiceMode=null; roomVoiceRoomId=null; roomVoicePeerIds.clear();
+}
+async function startRoomVoice(mode, roomId, players) {
+  if(!peer||!myPeerId) return alert('Voice connection is still starting. Please try again.');
+  if(roomVoiceStream&&(roomVoiceMode!==mode||roomVoiceRoomId!==roomId)) stopRoomVoice();
+  if(!roomVoiceStream) {
+    try { roomVoiceStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}}); }
+    catch(e) { alert('Microphone permission is needed for voice chat.'); return; }
+    roomVoiceMode=mode; roomVoiceRoomId=roomId; ludoStream=roomVoiceStream;
   }
+  Object.values(players||{}).forEach(p=>{
+    if(!p||p.uid===currentUser.uid||!p.peerId||roomVoicePeerIds.has(p.peerId)) return;
+    roomVoicePeerIds.add(p.peerId);
+    const call=peer.call(p.peerId,roomVoiceStream,{metadata:{kind:'roomvoice',roomType:mode,roomId,peerId:myPeerId}});
+    if(call) attachRoomVoiceCall(call,p.peerId);
+  });
+}
+window.toggleLudoMic = async () => {
+  if(roomVoiceStream&&roomVoiceMode==='ludo'&&roomVoiceRoomId===ludoRoomId) {
+    stopRoomVoice(); const b=$('ludoMicBtn'); if(b){b.innerHTML='<i class="fas fa-microphone-slash"></i> Mic';b.classList.remove('bg-[#25D366]');b.classList.add('bg-gray-700');} return;
+  }
+  await startRoomVoice('ludo',ludoRoomId,ludoState?.players||{});
+  const b=$('ludoMicBtn'); if(b&&roomVoiceStream){b.innerHTML='<i class="fas fa-microphone"></i> Mic ON';b.classList.remove('bg-gray-700');b.classList.add('bg-[#25D366]');}
+};
+window.toggleMovieMic = async () => {
+  if(roomVoiceStream&&roomVoiceMode==='movie'&&roomVoiceRoomId===watchRoomId) {
+    stopRoomVoice(); const b=$('movieMicBtn'); if(b){b.innerHTML='<i class="fas fa-microphone-slash"></i> Mic';b.classList.remove('bg-[#25D366]');b.classList.add('bg-gray-700');} return;
+  }
+  await startRoomVoice('movie',watchRoomId,watchRoomPlayers||{});
+  const b=$('movieMicBtn'); if(b&&roomVoiceStream){b.innerHTML='<i class="fas fa-microphone"></i> Mic ON';b.classList.remove('bg-gray-700');b.classList.add('bg-[#25D366]');}
 };
 
 function getCellCoord(color, pos, idx) {
@@ -639,7 +662,6 @@ function renderLudoBoard() {
       <div><div class="text-[11px] opacity-75">Room Code</div><div class="font-bold text-lg tracking-widest">${ludoState.code}</div></div>
       <div class="flex gap-2"><button id="ludoMicBtn" onclick="toggleLudoMic()" class="px-3 py-1.5 bg-gray-700 rounded-lg text-xs font-bold"><i class="fas fa-microphone-slash"></i> Mic</button><button onclick="exitLudoRoom()" class="px-3 py-1.5 bg-red-600 rounded-lg text-xs font-bold">Exit</button></div>
     </div>
-    <audio id="ludoVoiceAudio" autoplay></audio>
     <div class="grid grid-cols-4 gap-1 text-[10px] font-bold text-center text-white"><div class="rounded bg-red-600 py-1">RED ${ludoState.players.red?.name||'Waiting'}</div><div class="rounded bg-green-600 py-1">GREEN ${ludoState.players.green?.name||'Waiting'}</div><div class="rounded bg-blue-600 py-1">BLUE ${ludoState.players.blue?.name||'Waiting'}</div><div class="rounded bg-yellow-500 py-1">YELLOW ${ludoState.players.yellow?.name||'Waiting'}</div></div>
     <div class="ludo-board-frame"><div class="ludo-board">${cellsHtml}<div class="ludo-center"><i class="tri-red"></i><i class="tri-green"></i><i class="tri-yellow"></i><i class="tri-blue"></i></div></div></div>
     <div class="bg-white dark:bg-[#202c33] p-3 rounded-xl shadow flex items-center justify-between border dark:border-gray-700"><div><div class="text-xs text-gray-500">Turn: <span class="font-bold uppercase ${turnHex}">${ludoState.turn}</span></div><div class="font-bold text-sm">${isMyTurn?(ludoState.rolled?'Tap your token to move!':'Your Turn! Roll Dice'):'Waiting for opponent...'}</div></div><button onclick="rollLudoDice()" class="px-5 py-3 bg-[#25D366] text-white font-bold rounded-xl shadow active:scale-95 text-base">🎲 ${ludoState.dice||'Roll'}</button></div>
@@ -651,41 +673,49 @@ function initLudoAudio(){[["ludoDiceAudio",560,.12],["ludoStepAudio",420,.075],[
 function playLudoSound(kind){const el=$(kind==="dice"?"ludoDiceAudio":kind==="win"?"ludoWinAudio":"ludoStepAudio");if(el){el.currentTime=0;el.play().catch(()=>{});}}
 initLudoAudio();
 
-// MOVIE WATCH PARTY
-let watchRoomId = null, unsubWatch = null;
+// MOVIE WATCH PARTY + ROOM LIVE VOICE
+let watchRoomId = null, unsubWatch = null, watchRoomPlayers = {};
 window.createWatchRoom = async () => {
   const url = $('movieUrlInp').value.trim();
   if (!url) return alert('Paste a direct MP4 video link!');
   const code = 'MV' + Math.floor(100 + Math.random() * 900);
-  await setDoc(doc(db, 'watch_rooms', code), { code, url, playing: false, time: 0, hostPeerId: myPeerId });
-  joinWatchRoom(code);
+  await setDoc(doc(db, 'watch_rooms', code), { code, url, playing: false, time: 0, hostPeerId: myPeerId, players: { [currentUser.uid]: { uid: currentUser.uid, name: currentUser.displayName || 'Host', peerId: myPeerId } } });
+  await joinWatchRoom(code);
 };
-
-window.joinWatchRoom = (codeInp) => {
-  const code = (codeInp || $('watchJoinInp').value).trim().toUpperCase();
+window.joinWatchRoom = async (codeInp) => {
+  const code = (codeInp || $('watchJoinInp')?.value || '').trim().toUpperCase();
   if (!code) return alert('Enter Watch Party Code');
-  watchRoomId = code;
-  if (unsubWatch) unsubWatch();
-  unsubWatch = onSnapshot(doc(db, 'watch_rooms', code), snap => {
-    if (!snap.exists()) return alert('Room not found');
-    const d = snap.data();
-    $('listArea').innerHTML = `<div class="p-3 space-y-3">
-      <div class="bg-[#075E54] text-white p-3 rounded-xl flex justify-between items-center">
+  watchRoomId = code; const ref=doc(db,'watch_rooms',code);
+  const initial=await getDoc(ref);
+  if(!initial.exists()){watchRoomId=null;return alert('Room not found');}
+  await updateDoc(ref,{[`players.${currentUser.uid}`]:{uid:currentUser.uid,name:currentUser.displayName||'Player',peerId:myPeerId}});
+  if(unsubWatch) unsubWatch();
+  unsubWatch=onSnapshot(ref,snap=>{
+    if(!snap.exists()) return;
+    const d=snap.data(); watchRoomPlayers=d.players||{};
+    $('listArea').innerHTML=`<div class="p-3 space-y-3">
+      <div class="bg-[#075E54] text-white p-3 rounded-xl flex justify-between items-center gap-2">
         <div><span class="text-xs opacity-75">Watch Code:</span> <b class="text-lg">${d.code}</b></div>
-        <button onclick="watchRoomId=null;renderLists()" class="px-3 py-1 bg-red-600 rounded-lg text-xs font-bold">Leave</button>
+        <div class="flex gap-2"><button id="movieMicBtn" onclick="toggleMovieMic()" class="px-3 py-1.5 bg-gray-700 rounded-lg text-xs font-bold"><i class="fas fa-microphone-slash"></i> Mic</button>
+        <button onclick="leaveWatchRoom()" class="px-3 py-1.5 bg-red-600 rounded-lg text-xs font-bold">Leave</button></div>
       </div>
+      <div class="text-xs text-gray-500">${Object.keys(watchRoomPlayers).length} friend(s) in room • Live voice available</div>
       <video id="syncVideo" src="${d.url}" controls playsinline class="w-full rounded-xl bg-black max-h-64 shadow-lg"></video>
-      <div class="flex gap-2">
-        <button onclick="syncMovieAction(true)" class="flex-1 py-2.5 bg-[#25D366] text-white font-bold rounded-xl">▶ Sync Play</button>
-        <button onclick="syncMovieAction(false)" class="flex-1 py-2.5 bg-gray-700 text-white font-bold rounded-xl">⏸ Sync Pause</button>
-      </div>
+      <div class="flex gap-2"><button onclick="syncMovieAction(true)" class="flex-1 py-2.5 bg-[#25D366] text-white font-bold rounded-xl">▶ Sync Play</button>
+      <button onclick="syncMovieAction(false)" class="flex-1 py-2.5 bg-gray-700 text-white font-bold rounded-xl">⏸ Sync Pause</button></div>
     </div>`;
-    const vid = $('syncVideo');
-    if (vid) {
-      if (Math.abs(vid.currentTime - d.time) > 2) vid.currentTime = d.time;
-      d.playing ? vid.play().catch(()=>{}) : vid.pause();
-    }
+    const mic=$('movieMicBtn');
+    if(mic&&roomVoiceStream&&roomVoiceMode==='movie'&&roomVoiceRoomId===code){mic.innerHTML='<i class="fas fa-microphone"></i> Mic ON';mic.classList.remove('bg-gray-700');mic.classList.add('bg-[#25D366]');}
+    if(roomVoiceStream&&roomVoiceMode==='movie'&&roomVoiceRoomId===code) startRoomVoice('movie',code,watchRoomPlayers);
+    const vid=$('syncVideo'); if(vid){if(Math.abs(vid.currentTime-d.time)>2)vid.currentTime=d.time;d.playing?vid.play().catch(()=>{}):vid.pause();}
   });
+};
+window.leaveWatchRoom = async () => {
+  if(unsubWatch){unsubWatch();unsubWatch=null;}
+  if(roomVoiceMode==='movie') stopRoomVoice();
+  const code=watchRoomId;watchRoomId=null;watchRoomPlayers={};
+  if(code&&currentUser)updateDoc(doc(db,'watch_rooms',code),{[`players.${currentUser.uid}`]:deleteField()}).catch(()=>{});
+  renderLists();
 };
 
 window.syncMovieAction = async (play) => {
