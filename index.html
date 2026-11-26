@@ -16,7 +16,7 @@
     await OneSignal.init({
       appId: "de3c0523-8122-471c-bd11-a7c0dd6e3efe",
       serviceWorkerParam: { scope: "/chatpro/" },
-      serviceWorkerPath: "chatpro/OneSignalSDKWorker.js"
+      serviceWorkerPath: "/chatpro/OneSignalSDKWorker.js"
     });
     if (window.currentUidForOS) {
       OneSignal.login(window.currentUidForOS);
@@ -33,8 +33,10 @@ body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#e5ddd5}
 .ring-anim{animation:pulseRing 1.5s infinite}
 .ludo-grid{display:grid;grid-template-columns:repeat(15,1fr);grid-template-rows:repeat(15,1fr);aspect-ratio:1/1;border:3px solid #1f2937;background:#fff;box-shadow:0 8px 25px rgba(0,0,0,0.2)}
 .ludo-cell{border:0.5px solid #cbd5e1;display:flex;align-items:center;justify-content:center;position:relative;font-size:10px}
-.token-piece{width:76%;height:76%;border-radius:50%;border:2px solid #fff;box-shadow:0 3px 5px rgba(0,0,0,0.45),inset 0 2px 3px rgba(255,255,255,0.6);transition:transform 0.2s;cursor:pointer;z-index:10}
-.token-piece:active{transform:scale(1.2)}
+.token-piece{width:76%;height:76%;border-radius:50%;border:2px solid #fff;box-shadow:0 5px 2px rgba(0,0,0,.3),0 7px 8px rgba(0,0,0,.25),inset 0 3px 4px rgba(255,255,255,.8),inset 0 -4px 5px rgba(0,0,0,.2);background-image:radial-gradient(circle at 32% 24%,rgba(255,255,255,.95),rgba(255,255,255,.12) 32%,transparent 48%);transition:transform .18s;cursor:pointer;z-index:10;position:relative}
+.token-piece:active{transform:translateY(-3px) scale(1.12)}
+.call-timer{font-variant-numeric:tabular-nums;letter-spacing:.08em}
+.ludo-grid{gap:1px;background:#64748b;padding:2px}
 </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden">
@@ -169,6 +171,7 @@ body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#e5ddd5}
       <p id="callStatusTxt" class="text-green-200 mt-1">Ringing...</p>
     </div>
     <video id="localVideo" autoplay muted playsinline class="w-28 h-40 object-cover rounded-xl border-2 border-white absolute top-4 right-4 bg-gray-900 shadow-lg"></video>
+    <div id="callTimer" class="call-timer absolute bottom-5 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-4 py-2 text-lg font-bold">00:00</div>
   </div>
   <div class="bg-gray-900/90 py-5 flex justify-center gap-8">
     <button id="muteBtn" onclick="toggleMute()" class="w-14 h-14 rounded-full bg-gray-700 flex items-center justify-center text-xl"><i class="fas fa-microphone"></i></button>
@@ -176,6 +179,9 @@ body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#e5ddd5}
   </div>
 </div>
 
+<audio id="ludoDiceAudio" preload="auto"></audio>
+<audio id="ludoStepAudio" preload="auto"></audio>
+<audio id="ludoWinAudio" preload="auto"></audio>
 <!-- GROUP MODAL -->
 <div id="groupModal" class="hidden fixed inset-0 z-40 bg-black/60 flex items-center justify-center p-4">
   <div class="bg-white dark:bg-[#202c33] w-full max-w-sm rounded-2xl p-5">
@@ -204,7 +210,6 @@ const firebaseConfig = {
   measurementId: "G-V31RJGQMYK"
 };
 const OS_APP_ID = "de3c0523-8122-471c-bd11-a7c0dd6e3efe";
-const OS_API_KEY = "os_v2_app_" + "3y6aki4bejdrzpiru7an23r67yxkn2ajmmluv75wn7yldmiy2okq324aamxf3jawfduydmdzylithoukkth6gfzoewemumo7fosnc6a";
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -213,7 +218,8 @@ const db = getFirestore(app);
 window.$ = id => document.getElementById(id);
 let isSignup = false, currentUser = null, allUsers = [], allGroups = [], activeTab = 'chats';
 let activeChat = null, unsubMsgs = null, replyData = null;
-let peer = null, myPeerId = null, localStream = null, currentCallObj = null, currentCallDocId = null, ringInterval = null, audioCtx = null, isMuted = false;
+let peer = null, myPeerId = null, localStream = null, ludoStream = null, ludoCalls = [], currentCallObj = null, currentCallDocId = null, ringInterval = null, audioCtx = null, isMuted = false;
+let callTimerInterval = null, callStartedAt = 0;
 let statusMediaData = null, statusMediaType = null;
 
 // SOUND EFFECTS FOR LUDO & CALLS
@@ -230,21 +236,8 @@ function playTone(freq, dur = 0.12, type = 'triangle') {
 }
 
 async function sendPushAlert(targetUid, title, body, isCall = false) {
-  try {
-    await fetch("https://api.onesignal.com/notifications", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": "Key " + OS_API_KEY },
-      body: JSON.stringify({
-        app_id: OS_APP_ID,
-        include_aliases: { external_id: [targetUid] },
-        target_channel: "push",
-        headings: { en: title },
-        contents: { en: body },
-        url: "https://saruparam945-sudo.github.io/chatpro/",
-        priority: isCall ? 10 : 8
-      })
-    });
-  } catch (e) {}
+  console.warn("Secure OneSignal sender is not configured. Push delivery requires a trusted server-side function; no REST secret is stored in this page.");
+  return false;
 }
 
 window.enablePush = () => {
@@ -303,16 +296,16 @@ function initPeer() {
   peer = new Peer('cp_' + currentUser.uid.slice(0, 12) + '_' + Math.floor(Math.random()*900+100));
   peer.on('open', id => { myPeerId = id; updateDoc(doc(db, 'users', currentUser.uid), { peerId: id }).catch(()=>{}); });
   peer.on('call', call => {
-    currentCallObj = call;
-    if (localStream) {
-      call.answer(localStream);
-      call.on('stream', rem => {
-        $('remoteVideo').srcObject = rem;
-        if ($('ludoVoiceAudio')) $('ludoVoiceAudio').srcObject = rem;
-        if ($('watchVoiceAudio')) $('watchVoiceAudio').srcObject = rem;
-        $('callStatusTxt').textContent = 'Connected';
-      });
+    if (call.metadata && call.metadata.kind === 'ludo') {
+      if (!ludoStream) return;
+      call.answer(ludoStream);
+      call.on('stream', rem => { const el=$('ludoVoiceAudio'); if(el) el.srcObject=rem; });
+      ludoCalls.push(call); return;
     }
+    if (!localStream) return;
+    currentCallObj = call; call.answer(localStream);
+    call.on('stream', rem => { $('remoteVideo').srcObject=rem; $('callStatusTxt').textContent='Connected'; startCallTimer(); });
+    call.on('close', cleanupCall);
   });
 }
 
@@ -392,7 +385,7 @@ window.joinLudoRoom = async (codeInput) => {
 
 window.rollLudoDice = async () => {
   if (!ludoState || ludoState.turn !== myColor || ludoState.rolled || isAnimating) return;
-  playTone(520, 0.08); setTimeout(() => playTone(680, 0.1), 80);
+  playLudoSound("dice");
   const val = Math.floor(Math.random() * 6) + 1;
   const myTokens = ludoState.tokens[myColor];
   const canMove = myTokens.some(pos => (pos === -1 && val === 6) || (pos >= 0 && pos + val <= 56));
@@ -424,12 +417,12 @@ window.moveLudoToken = async (color, idx) => {
     pos = (pos === -1) ? 0 : pos + 1;
     tempTokens[color][idx] = pos;
     ludoState.tokens = tempTokens;
-    playTone(440 + (s * 45), 0.09, 'sine');
+    playLudoSound("step");
     renderLudoBoard();
-    await new Promise(r => setTimeout(r, 260));
+    await new Promise(r => setTimeout(r, 360));
   }
 
-  if (pos === 56) playTone(880, 0.3, 'triangle');
+  if (pos === 56) playLudoSound("win");
   const order = Object.keys(ludoState.players);
   const extraTurn = (dice === 6 || pos === 56);
   const nextTurn = extraTurn ? myColor : order[(order.indexOf(myColor) + 1) % order.length];
@@ -438,18 +431,23 @@ window.moveLudoToken = async (color, idx) => {
 };
 
 window.toggleLudoMic = async () => {
-  if (!localStream) {
-    localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    Object.values(ludoState.players).forEach(p => {
-      if (p.uid !== currentUser.uid && p.peerId) {
-        const call = peer.call(p.peerId, localStream);
-        call.on('stream', rem => { $('ludoVoiceAudio').srcObject = rem; });
-      }
-    });
-    $('ludoMicBtn').innerHTML = '<i class="fas fa-microphone"></i> Mic ON';
-    $('ludoMicBtn').classList.replace('bg-gray-700', 'bg-[#25D366]');
+  if (!ludoStream) {
+    try {
+      ludoStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      Object.values(ludoState?.players || {}).forEach(p => {
+        if (p.uid !== currentUser.uid && p.peerId) {
+          const call = peer.call(p.peerId, ludoStream, { metadata: { kind: 'ludo' } });
+          call.on('stream', rem => { const el=$('ludoVoiceAudio'); if(el) el.srcObject=rem; });
+          ludoCalls.push(call);
+        }
+      });
+      $('ludoMicBtn').innerHTML = '<i class="fas fa-microphone"></i> Mic ON';
+      $('ludoMicBtn').classList.replace('bg-gray-700', 'bg-[#25D366]');
+    } catch(e) { alert("Microphone permission is needed for Ludo voice chat."); }
   } else {
-    localStream.getTracks().forEach(t => t.stop()); localStream = null;
+    ludoCalls.forEach(c => c.close()); ludoCalls=[];
+    ludoStream.getTracks().forEach(t => t.stop()); ludoStream=null;
+    const el=$('ludoVoiceAudio'); if(el) el.srcObject=null;
     $('ludoMicBtn').innerHTML = '<i class="fas fa-microphone-slash"></i> Mic';
     $('ludoMicBtn').classList.replace('bg-[#25D366]', 'bg-gray-700');
   }
@@ -493,7 +491,7 @@ function renderLudoBoard() {
       else if ((r === 7 && c >= 9 && c <= 13) || (r === 8 && c === 13)) bg = '#eab308';
       else if ((c === 7 && r >= 9 && r <= 13) || (r === 13 && c === 6)) bg = '#3b82f6';
 
-      if (SAFE_CELLS.includes(`${r},${c}`)) star = '<span class="text-gray-400 font-bold text-xs">★</span>';
+      if (SAFE_CELLS.includes(`${r},${c}`)) star = '<span class="text-amber-500 font-black text-sm">☆</span>';
       const here = tokenMap[`${r},${c}`] || [];
       const tokHtml = here.map(t => {
         const hex = { red:'#dc2626', green:'#16a34a', yellow:'#ca8a04', blue:'#2563eb' }[t.color];
@@ -526,6 +524,12 @@ function renderLudoBoard() {
     </div>
   </div>`;
 }
+
+
+function makeToneWav(freq,duration){const rate=16000,count=Math.floor(rate*duration),buf=new ArrayBuffer(44+count*2),v=new DataView(buf);const w=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i));};w(0,"RIFF");v.setUint32(4,36+count*2,true);w(8,"WAVE");w(12,"fmt ");v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,rate,true);v.setUint32(28,rate*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,"data");v.setUint32(40,count*2,true);for(let i=0;i<count;i++){const fade=Math.min(1,i/180,(count-i)/500);v.setInt16(44+i*2,Math.sin(2*Math.PI*freq*i/rate)*fade*9000,true);}return URL.createObjectURL(new Blob([buf],{type:"audio/wav"}));}
+function initLudoAudio(){[["ludoDiceAudio",560,.12],["ludoStepAudio",420,.075],["ludoWinAudio",880,.28]].forEach(([id,f,d])=>{const el=$(id);if(el&&!el.src)el.src=makeToneWav(f,d);});}
+function playLudoSound(kind){const el=$(kind==="dice"?"ludoDiceAudio":kind==="win"?"ludoWinAudio":"ludoStepAudio");if(el){el.currentTime=0;el.play().catch(()=>{});}}
+initLudoAudio();
 
 // MOVIE WATCH PARTY
 let watchRoomId = null, unsubWatch = null;
@@ -740,7 +744,7 @@ window.startCall = async type => {
     const unsub = onSnapshot(doc(db, 'calls', callRef.id), snap => {
       const data = snap.data();
       if (!data) return;
-      if (data.status === 'accepted' && data.receiverPeerId && !currentCallObj) { $('callStatusTxt').textContent = 'Connected'; currentCallObj = peer.call(data.receiverPeerId, localStream); currentCallObj.on('stream', rem => { $('remoteVideo').srcObject = rem; }); }
+      if (data.status === 'accepted' && data.receiverPeerId && !currentCallObj) { $('callStatusTxt').textContent = 'Connected'; currentCallObj = peer.call(data.receiverPeerId, localStream); currentCallObj.on('stream', rem => { $('remoteVideo').srcObject = rem; $('callStatusTxt').textContent='Connected'; startCallTimer(); }); }
       else if (data.status === 'rejected' || data.status === 'ended') { unsub(); cleanupCall(); }
     });
   } catch (err) { alert('Allow Camera & Microphone permissions to call!'); }
@@ -767,7 +771,14 @@ window.acceptIncomingCall = async () => {
 
 window.rejectIncomingCall = async () => { stopRingtone(); $('incomingModal').classList.add('hidden'); if (currentCallDocId) await updateDoc(doc(db, 'calls', currentCallDocId), { status: 'rejected' }).catch(()=>{}); };
 window.endActiveCall = async () => { if (currentCallDocId) await updateDoc(doc(db, 'calls', currentCallDocId), { status: 'ended' }).catch(()=>{}); cleanupCall(); };
-function cleanupCall() { stopRingtone(); $('activeCallScreen').classList.add('hidden'); $('incomingModal').classList.add('hidden'); if (currentCallObj) { currentCallObj.close(); currentCallObj = null; } if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; } currentCallDocId = null; }
+function startCallTimer() {
+  if(callTimerInterval) clearInterval(callTimerInterval);
+  callStartedAt=Date.now();
+  const tick=()=>{const n=Math.floor((Date.now()-callStartedAt)/1000);const el=$('callTimer');if(el)el.textContent=String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');};
+  tick(); callTimerInterval=setInterval(tick,1000);
+}
+function stopCallTimer(){if(callTimerInterval)clearInterval(callTimerInterval);callTimerInterval=null;callStartedAt=0;const el=$('callTimer');if(el)el.textContent='00:00';}
+function cleanupCall() { stopRingtone(); stopCallTimer(); $('activeCallScreen').classList.add('hidden'); $('incomingModal').classList.add('hidden'); if (currentCallObj) { currentCallObj.close(); currentCallObj = null; } if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; } currentCallDocId = null; }
 window.toggleMute = () => { if (!localStream) return; isMuted = !isMuted; localStream.getAudioTracks().forEach(t => t.enabled = !isMuted); $('muteBtn').innerHTML = isMuted ? '<i class="fas fa-microphone-slash text-red-400"></i>' : '<i class="fas fa-microphone"></i>'; };
 window.openGroupModal = () => { $('grpMembers').innerHTML = allUsers.map(u => `<label class="flex items-center gap-2"><input type="checkbox" value="${u.uid}" class="grpChk"> ${u.name}</label>`).join(''); $('groupModal').classList.remove('hidden'); };
 window.createGroup = async () => { const name = $('grpName').value.trim(), members = [currentUser.uid, ...Array.from(document.querySelectorAll('.grpChk:checked')).map(c => c.value)]; if (!name || members.length < 2) return alert('Enter group name & pick members'); await addDoc(collection(db, 'groups'), { name, members, createdAt: serverTimestamp() }); $('groupModal').classList.add('hidden'); };
