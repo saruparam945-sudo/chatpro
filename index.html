@@ -42,13 +42,15 @@ body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#e5ddd5}
 .ludo-square{min-width:0;min-height:0;border:1px solid #b9c2c9;display:flex;align-items:center;justify-content:center;position:relative;background:#fff}
 .ludo-square.home-red{background:#f20d1b}.ludo-square.home-green{background:#08a947}.ludo-square.home-blue{background:#08a9df}.ludo-square.home-yellow{background:#e2b900}
 .ludo-square.yard{background:#fff;border:0;box-shadow:none}
-.ludo-square.yard-red:before,.ludo-square.yard-green:before,.ludo-square.yard-blue:before,.ludo-square.yard-yellow:before{content:none}
-.yard-token-base{position:absolute;width:76%;height:34%;bottom:8%;left:12%;border-radius:50%;z-index:4;opacity:.9;box-shadow:0 3px 3px rgba(0,0,0,.28),inset 0 2px 3px rgba(255,255,255,.65)}
-.yard-token-base.red{background:radial-gradient(ellipse,#ff9ca6 0%,#b90018 72%)}
-.yard-token-base.green{background:radial-gradient(ellipse,#a8f4c8 0%,#007c3b 72%)}
-.yard-token-base.blue{background:radial-gradient(ellipse,#a8eaff 0%,#006eaa 72%)}
-.yard-token-base.yellow{background:radial-gradient(ellipse,#fff0a0 0%,#c28a00 72%)}
-.yard-ludo-token{width:88%;height:88%;position:relative;z-index:5;cursor:pointer}
+.ludo-square.yard-edge-top{border-top:2px solid #d4d9dc}
+.ludo-square.yard-edge-bottom{border-bottom:2px solid #d4d9dc}
+.ludo-square.yard-edge-left{border-left:2px solid #d4d9dc}
+.ludo-square.yard-edge-right{border-right:2px solid #d4d9dc}
+.ludo-square.home-red:first-child{border-top-left-radius:11px}
+.ludo-board>.ludo-square:nth-child(15){border-top-right-radius:11px}
+.ludo-board>.ludo-square:nth-child(211){border-bottom-left-radius:11px}
+.ludo-board>.ludo-square:nth-child(225){border-bottom-right-radius:11px}
+.yard-ludo-token{width:94%;height:96%;position:relative;z-index:5;cursor:pointer}
 .ludo-square.lane-red{background:#f20d1b}.ludo-square.lane-green{background:#08a947}.ludo-square.lane-blue{background:#08a9df}.ludo-square.lane-yellow{background:#e2b900}
 .ludo-square.center-under{background:#fff}
 .ludo-center{position:absolute;left:40%;top:40%;width:20%;height:20%;pointer-events:none;z-index:3}
@@ -60,12 +62,15 @@ body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#e5ddd5}
 .ludo-star{font-size:clamp(10px,2.5vw,22px);font-weight:800;color:#9ca3af;line-height:1}
 .ludo-arrow{font-size:clamp(12px,2.8vw,24px);font-weight:900;line-height:1}
 .green-arrow{color:#078b3b}.red-arrow{color:#e11d2e}.yellow-arrow{color:#c5a000}.blue-arrow{color:#078ec4}
-.ludo-token{position:relative;z-index:6;width:96%;height:96%;min-width:0;min-height:0;border:2px solid #fff;border-radius:50% 50% 50% 8%;transform:rotate(-45deg) scale(1.02);box-shadow:0 3px 5px rgba(0,0,0,.45),inset 0 3px 4px rgba(255,255,255,.9),inset 0 -4px 5px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;padding:0}
-.ludo-token span{width:48%;height:48%;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff 0 35%,#e5e7eb 72%,#9ca3af 100%);border:1px solid rgba(0,0,0,.22);box-shadow:0 1px 2px rgba(0,0,0,.3)}
-.ludo-token.red{background:radial-gradient(circle at 30% 22%,#ff9aa5 0 8%,#ed1c32 35%,#9f0015 100%)}
-.ludo-token.green{background:radial-gradient(circle at 30% 22%,#b4ffd4 0 8%,#10b95e 35%,#006b32 100%)}
-.ludo-token.blue{background:radial-gradient(circle at 30% 22%,#b8efff 0 8%,#079ed4 35%,#005b94 100%)}
-.ludo-token.yellow{background:radial-gradient(circle at 30% 22%,#fff4a8 0 8%,#f6c900 35%,#a97700 100%)}
+.ludo-token{position:relative;z-index:6;width:94%;height:96%;min-width:0;min-height:0;border:0;border-radius:0;transform:none;background:transparent!important;box-shadow:none;display:block;padding:0;overflow:visible}
+.ludo-token:before{content:"";position:absolute;left:27%;top:37%;width:46%;height:53%;border-radius:18% 18% 42% 42%;clip-path:polygon(20% 0,80% 0,100% 100%,0 100%);box-shadow:inset 0 2px 3px rgba(255,255,255,.65),0 2px 3px rgba(0,0,0,.3)}
+.ludo-token:after{content:"";position:absolute;left:16%;bottom:3%;width:68%;height:29%;border-radius:50%;border:2px solid rgba(255,255,255,.92);box-shadow:inset 0 2px 4px rgba(255,255,255,.65),0 2px 4px rgba(0,0,0,.38)}
+.ludo-token span{position:absolute;left:14%;top:0;width:72%;height:66%;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,.42),inset 0 2px 4px rgba(255,255,255,.8);z-index:2}
+.ludo-token.red:before,.ludo-token.red:after{background:radial-gradient(circle at 32% 20%,#ff9eaa 0 8%,#ed1c32 42%,#970016 100%)}
+.ludo-token.green:before,.ludo-token.green:after{background:radial-gradient(circle at 32% 20%,#b8ffda 0 8%,#10b95e 42%,#006b32 100%)}
+.ludo-token.blue:before,.ludo-token.blue:after{background:radial-gradient(circle at 32% 20%,#b8efff 0 8%,#079ed4 42%,#005b94 100%)}
+.ludo-token.yellow:before,.ludo-token.yellow:after{background:radial-gradient(circle at 32% 20%,#fff4a8 0 8%,#f6c900 42%,#a97700 100%)}
+.ludo-token span{background:radial-gradient(circle at 35% 30%,#fff 0 25%,#e5e7eb 72%,#9ca3af 100%)}
 .ludo-screen .ludo-board-frame{margin-top:2px}
 @media(max-width:420px){.ludo-screen{padding:8px!important}.ludo-board-frame{padding:3px;border-width:2px;border-radius:10px}}
 .status-page{padding:12px 16px;background:#fff;min-height:100%}
@@ -569,7 +574,14 @@ function renderLudoBoard() {
     const yardColor = cls.includes('yard-red')?'red':cls.includes('yard-green')?'green':cls.includes('yard-blue')?'blue':cls.includes('yard-yellow')?'yellow':null;
     const yardIdx = yardColor ? BASE_SPOTS[yardColor].findIndex(([rr,cc])=>rr===r&&cc===c) : -1;
     const yardSpot = yardIdx >= 0;
-    const yardDot = yardSpot ? `<span class="yard-token-base ${yardColor}"></span><button aria-label="${yardColor} token ${yardIdx+1}" onclick="moveLudoToken('${yardColor}',${yardIdx})" class="ludo-token yard-ludo-token ${yardColor}"><span></span></button>` : '';
+    const yardEdge = yardColor ? [
+      (yardColor==='red'&&r===1)||(yardColor==='green'&&r===1)||(yardColor==='blue'&&r===10)||(yardColor==='yellow'&&r===10) ? 'yard-edge-top':'',
+      (yardColor==='red'&&r===4)||(yardColor==='green'&&r===4)||(yardColor==='blue'&&r===13)||(yardColor==='yellow'&&r===13) ? 'yard-edge-bottom':'',
+      (yardColor==='red'&&c===1)||(yardColor==='blue'&&c===1)||(yardColor==='green'&&c===10)||(yardColor==='yellow'&&c===10) ? 'yard-edge-left':'',
+      (yardColor==='red'&&c===4)||(yardColor==='blue'&&c===4)||(yardColor==='green'&&c===13)||(yardColor==='yellow'&&c===13) ? 'yard-edge-right':''
+    ].filter(Boolean).join(' ') : '';
+    if (yardEdge) cls += ' '+yardEdge;
+    const yardDot = yardSpot ? `<button aria-label="${yardColor} token ${yardIdx+1}" onclick="moveLudoToken('${yardColor}',${yardIdx})" class="ludo-token yard-ludo-token ${yardColor}"><span></span></button>` : '';
     let mark='';
     if(safe.has(key)) mark='<span class="ludo-star">☆</span>';
     if(r===0&&c===7) mark='<span class="ludo-arrow green-arrow">↓</span>';
