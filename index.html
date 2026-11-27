@@ -574,10 +574,19 @@ const SERIES_CATALOG = [];
 // Public browser key: restrict by HTTP referrer (https://saruparam945-sudo.github.io/*)
 // and API restriction (YouTube Data API v3) in Google Cloud Console.
 const YOUTUBE_DATA_API_KEY = 'AIzaSyD5A_zJnG0aruaySDp2ZXqUXDKm9GuCyYA';
-const REELS_API_CACHE_KEY = 'chatpro_youtube_hindi_vertical_playlists_v3';
+const REELS_API_CACHE_KEY = 'chatpro_youtube_verified_vertical_playlists_v4';
 const REELS_API_CACHE_TTL = 12 * 60 * 60 * 1000;
 // Invalidate the previous wide-channel catalog and its poster cache immediately on startup.
-try{localStorage.removeItem('chatpro_youtube_public_playlists_v1');localStorage.removeItem('chatpro_youtube_vertical_playlists_v2');localStorage.removeItem('chatpro_youtube_hindi_vertical_playlists_v3');localStorage.removeItem('chatpro_reels_posters_v1');}catch(e){}
+try{
+ if(localStorage.getItem('chatpro_reels_vertical_cache_migrated_v4')!=='yes'){
+  localStorage.removeItem('chatpro_youtube_public_playlists_v1');
+  localStorage.removeItem('chatpro_youtube_vertical_playlists_v2');
+  localStorage.removeItem('chatpro_youtube_hindi_vertical_playlists_v3');
+  localStorage.removeItem('chatpro_reels_posters_v1');
+  localStorage.removeItem('chatpro_youtube_verified_vertical_playlists_v4');
+  localStorage.setItem('chatpro_reels_vertical_cache_migrated_v4','yes');
+ }
+}catch(e){}
 const REELS_CHANNELS = [
  { name:'Vertical TV', handle:'VerticalDekho', category:'hindi-vertical', tags:['हिंदी','9:16','माइक्रो-ड्रामा'], badge:'हिंदी 9:16' }
 ];
@@ -640,35 +649,49 @@ function looksLikeHindiPlaylist(item){
  const text=title+' '+description;
  return /[\u0900-\u097F]/.test(text)||/\b(hindi|हिंदी|hind(i|ee)|bharat|desi)\b/i.test(text);
 }
-async function searchHindiVerticalPlaylists(query){
- let pageToken='',found=[];
- do{
-  const params={part:'snippet',type:'playlist',q:query,maxResults:50,regionCode:'IN',relevanceLanguage:'hi'};
-  if(pageToken)params.pageToken=pageToken;
-  const data=await youtubeApiRequest('search',params);
-  found.push(...(data.items||[]));
-  pageToken=data.nextPageToken||'';
- }while(pageToken);
- const ids=[...new Set(found.map(x=>x.id&&x.id.playlistId).filter(Boolean))];
- const detailed=[];
- for(let i=0;i<ids.length;i+=50){
-  const data=await youtubeApiRequest('playlists',{part:'snippet,contentDetails',id:ids.slice(i,i+50).join(','),maxResults:50});
-  detailed.push(...(data.items||[]));
+async function verifyVerticalPlaylistFirstVideo(playlistItems){
+ const firstItems=await Promise.all(playlistItems.map(async playlist=>{
+  try{
+   const data=await youtubeApiRequest('playlistItems',{part:'snippet',playlistId:playlist.id,maxResults:1});
+   const first=(data.items||[])[0];
+   const videoId=first&&first.snippet&&first.snippet.resourceId&&first.snippet.resourceId.videoId;
+   return videoId?{playlistId:playlist.id,videoId,playlist,first}:null;
+  }catch(error){console.warn('Could not inspect first episode',playlist.id,error);return null;}
+ }));
+ const valid=[];
+ const records=firstItems.filter(Boolean);
+ for(let i=0;i<records.length;i+=50){
+  const batch=records.slice(i,i+50);
+  if(!batch.length)continue;
+  try{
+   const data=await youtubeApiRequest('videos',{part:'snippet',id:batch.map(x=>x.videoId).join(','),maxResults:50});
+   const byId=new Map((data.items||[]).map(video=>[video.id,video]));
+   batch.forEach(record=>{
+    const video=byId.get(record.videoId);
+    if(!video)return;
+    const thumbs=video.snippet&&video.snippet.thumbnails||{};
+    const thumb=thumbs.maxres||thumbs.standard||thumbs.high||thumbs.medium||thumbs.default;
+    if(!thumb||!Number(thumb.width)||!Number(thumb.height))return;
+    const ratio=Number(thumb.width)/Number(thumb.height);
+    // Accept portrait thumbnails only; landscape/square thumbnails are rejected.
+    if(ratio>0.8)return;
+    const videoText=((video.snippet.title||'')+' '+(video.snippet.description||''));
+    const language=String(video.snippet.defaultAudioLanguage||video.snippet.defaultLanguage||'').toLowerCase();
+    if(!(/[\\u0900-\\u097F]/.test(videoText)||/\\b(hindi|हिंदी)\\b/i.test(videoText)||language.startsWith('hi')))return;
+    const item=record.playlist;
+    const thumbsForPlaylist=item.snippet&&item.snippet.thumbnails||{};
+    const poster=(thumbsForPlaylist.maxres||thumbsForPlaylist.high||thumbsForPlaylist.medium||thumbsForPlaylist.default||{}).url;
+    if(poster)reelsPosterMap[item.id]=poster;
+    valid.push({
+     title:item.snippet.title,season:'Verified Hindi vertical playlist',playlistId:item.id,
+     episodes:Number(item.contentDetails.itemCount),category:'hindi-vertical',
+     tags:['हिंदी','9:16','माइक्रो-ड्रामा'],badge:'हिंदी 9:16',
+     source:'Vertical TV',firstVideoId:record.videoId
+    });
+   });
+  }catch(error){console.warn('Could not verify vertical video thumbnails',error);}
  }
- const excluded=/(full\s*movie|compilation|trailer)/i;
- return detailed.filter(item=>{
-  const title=(item.snippet&&item.snippet.title)||'';
-  const count=Number(item.contentDetails&&item.contentDetails.itemCount)||0;
-  return count>=5&&!excluded.test(title)&&looksLikeHindiPlaylist(item);
- }).map(item=>{
-  const thumbs=item.snippet&&item.snippet.thumbnails||{};
-  const thumb=(thumbs.maxres||thumbs.high||thumbs.medium||thumbs.default||{}).url;
-  if(thumb)reelsPosterMap[item.id]=thumb;
-  return {title:item.snippet.title,season:'Hindi micro-drama playlist',playlistId:item.id,
-   episodes:Number(item.contentDetails.itemCount),category:'hindi-vertical',
-   tags:['हिंदी','9:16','माइक्रो-ड्रामा'],badge:'हिंदी 9:16',
-   source:item.snippet.channelTitle||'YouTube खोज',firstVideoId:''};
- });
+ return valid;
 }
 async function fetchAllChannelPlaylists(channel){
  const channelId=await resolveReelsChannelId(channel);
@@ -681,21 +704,12 @@ async function fetchAllChannelPlaylists(channel){
   pageToken=data.nextPageToken||'';
  }while(pageToken);
  const excluded=/(full\\s*movie|compilation|trailer)/i;
- return items.filter(item=>{
+ const candidates=items.filter(item=>{
   const title=(item.snippet&&item.snippet.title)||'';
   const count=Number(item.contentDetails&&item.contentDetails.itemCount)||0;
   return count>=5&&!excluded.test(title)&&looksLikeHindiPlaylist(item);
- }).map(item=>{
-  const thumbs=item.snippet&&item.snippet.thumbnails||{};
-  const thumb=(thumbs.maxres||thumbs.high||thumbs.medium||thumbs.default||{}).url;
-  if(thumb)reelsPosterMap[item.id]=thumb;
-  return {
-   title:item.snippet.title,season:'Official playlist',playlistId:item.id,
-   episodes:Number(item.contentDetails.itemCount),category:channel.category,
-   tags:[...channel.tags],badge:channel.badge,source:channel.name,
-   firstVideoId:''
-  };
  });
+ return await verifyVerticalPlaylistFirstVideo(candidates);
 }
 async function forceRefreshOfficialPlaylists(){
  const button=document.getElementById('forceRefreshBtn');
@@ -727,32 +741,23 @@ async function loadOfficialReelsPlaylists(force=false){
   try{
    const cached=JSON.parse(localStorage.getItem(REELS_API_CACHE_KEY)||'null');
    if(cached&&Array.isArray(cached.items)&&Date.now()-cached.savedAt<REELS_API_CACHE_TTL){
-    reelsApiCatalog=cached.items;reelsApiStatus='Vertical TV + हिंदी 9:16 खोज · 12 घंटे का कैश';
+    reelsApiCatalog=cached.items;reelsApiStatus='केवल Vertical TV · verified portrait episodes · 12 घंटे का कैश';
     if(activeTab==='reels')renderReels();
     return true;
    }
   }catch(e){}
  }
- reelsApiStatus='Vertical TV और हिंदी माइक्रो-ड्रामा खोज रहे हैं…';
+ reelsApiStatus='Vertical TV की हिंदी 9:16 प्लेलिस्ट और पहले एपिसोड का अनुपात जाँचा जा रहा है…';
  if(activeTab==='reels')renderReels();
  try{
   const channelGroups=await Promise.all(REELS_CHANNELS.map(async channel=>({channel,items:await fetchAllChannelPlaylists(channel)})));
-  const verticalChannelItems=channelGroups.flatMap(group=>group.items);
-  const searchGroups=await Promise.all([
-   searchHindiVerticalPlaylists('Hindi vertical drama playlist'),
-   searchHindiVerticalPlaylists('Hindi micro drama full episodes')
-  ]);
-  const seenIds=new Set();
-  // Official VerticalDekho playlists appear first, followed by matching Hindi search results.
-  reelsApiCatalog=[...verticalChannelItems,...searchGroups.flat()].filter(item=>{
-   if(!item||!item.playlistId||seenIds.has(item.playlistId))return false;
-   seenIds.add(item.playlistId);return true;
-  });
+  // Only playlists owned by the configured official Vertical TV channel are eligible.
+  reelsApiCatalog=channelGroups.flatMap(group=>group.items);
   try{
    localStorage.setItem(REELS_API_CACHE_KEY,JSON.stringify({savedAt:Date.now(),items:reelsApiCatalog}));
    localStorage.setItem('chatpro_reels_posters_v1',JSON.stringify(reelsPosterMap));
   }catch(e){}
-  reelsApiStatus='Vertical TV + हिंदी खोज · '+reelsApiCatalog.length+' फ़िल्टर की गई प्लेलिस्ट';
+  reelsApiStatus='Vertical TV verified portrait playlists · '+reelsApiCatalog.length+' प्लेलिस्ट';
  }catch(error){
   console.warn('Official Reels playlist fetch failed',error);
   reelsApiStatus='YouTube API लोड नहीं हुआ: '+(error.message||'कृपया API key और referrer restriction जाँचें।');
@@ -772,7 +777,7 @@ function renderReels() {
   const filters=[['all','हिंदी 9:16']];
   const rows=getAllReelsSeries().filter(x=>reelsFilter==='all'||x.category===reelsFilter);
   box.innerHTML=`<section class="reels-page">
-    <div class="reels-hero"><div class="reels-title">FreeReels <span class="text-violet-300">+</span> <span class="text-xs font-bold text-white/70">v6.0</span></div><div class="reels-sub">Vertical Micro-Drama • मोबाइल 9:16 सीरीज़</div><div class="text-[10px] text-gray-400 mt-3">Vertical TV + हिंदी YouTube खोज · ${getAllReelsSeries().length} प्लेलिस्ट</div><div class="text-[10px] text-gray-400 mt-2" id="reelsApiStatus">${reelsEscape(reelsApiStatus)}</div><button type="button" id="forceRefreshBtn" style="position:relative;z-index:999;pointer-events:auto;user-select:none;-webkit-user-select:none;cursor:pointer;touch-action:manipulation" class="reels-filter mt-2">↻ Refresh official playlists</button></div>
+    <div class="reels-hero"><div class="reels-title">FreeReels <span class="text-violet-300">+</span> <span class="text-xs font-bold text-white/70">v6.0</span></div><div class="reels-sub">Vertical Micro-Drama • मोबाइल 9:16 सीरीज़</div><div class="text-[10px] text-gray-400 mt-3">केवल Vertical TV के verified 9:16 एपिसोड · ${getAllReelsSeries().length} प्लेलिस्ट</div><div class="text-[10px] text-gray-400 mt-2" id="reelsApiStatus">${reelsEscape(reelsApiStatus)}</div><button type="button" id="forceRefreshBtn" style="position:relative;z-index:999;pointer-events:auto;user-select:none;-webkit-user-select:none;cursor:pointer;touch-action:manipulation" class="reels-filter mt-2">↻ Refresh official playlists</button></div>
     <div class="reels-filters">${filters.map(([key,label])=>`<button class="reels-filter ${reelsFilter===key?'active':''}" onclick="setReelsFilter('${key}')">${label}</button>`).join('')}</div>
     <div class="reels-grid">${rows.map(series=>{
       const poster=reelsPoster(series);
