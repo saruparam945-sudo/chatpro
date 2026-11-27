@@ -575,22 +575,33 @@ const SERIES_CATALOG = [];
 // Public browser key: restrict by HTTP referrer (https://saruparam945-sudo.github.io/*)
 // and API restriction (YouTube Data API v3) in Google Cloud Console.
 const YOUTUBE_DATA_API_KEY = 'AIzaSyD5A_zJnG0aruaySDp2ZXqUXDKm9GuCyYA';
-const REELS_API_CACHE_KEY = 'chatpro_korean_chinese_hindi_movies_v13';
+const REELS_API_CACHE_KEY = 'chatpro_korean_chinese_hindi_movies_v14';
 const REELS_API_CACHE_TTL = 24 * 60 * 60 * 1000;
 // Invalidate the previous wide-channel catalog and its poster cache immediately on startup.
 try{
- if(localStorage.getItem('chatpro_reels_catalog_cleanup_v12')!=='yes'){
+ if(localStorage.getItem('chatpro_reels_catalog_cleanup_v13')!=='yes'){
   ['chatpro_youtube_public_playlists_v1','chatpro_youtube_vertical_playlists_v2','chatpro_youtube_hindi_vertical_playlists_v3',
    'chatpro_youtube_verified_vertical_playlists_v4','chatpro_youtube_reels_catalog_v5','chatpro_youtube_reels_catalog_v6',
    'chatpro_youtube_reels_catalog_v7','chatpro_youtube_reels_catalog_v8','chatpro_youtube_uploads_catalog_v10',
-   'chatpro_vertical_real_hindi_catalog_v11','chatpro_full_hindi_movies_catalog_v12','chatpro_korean_chinese_hindi_movies_v13','chatpro_reels_posters_v1'].forEach(k=>localStorage.removeItem(k));
+   'chatpro_vertical_real_hindi_catalog_v11','chatpro_full_hindi_movies_catalog_v12','chatpro_korean_chinese_hindi_movies_v13','chatpro_korean_chinese_hindi_movies_v14','chatpro_reels_posters_v1'].forEach(k=>localStorage.removeItem(k));
   localStorage.setItem('chatpro_reels_catalog_cleanup_v12','yes');
  }
 }catch(e){}
 const REELS_CHANNELS = [
- {name:'Drama Central - Hindi',handle:'Chinesedramacentral',category:'popular',priority:0,tags:['कोरियन ड्रामा','चाइनीज ड्रामा','हिंदी डब्ड'],badge:'Drama Central'},
- {name:'Mini Drama Hindi',handle:'minidramahindii',category:'new',priority:1,tags:['कोरियन ड्रामा','चाइनीज ड्रामा','हिंदी डब्ड'],badge:'Mini Drama Hindi'},
- {name:'C-Love Dubs Hindi',handle:'C-LoveDubs',category:'popular',priority:2,tags:['कोरियन ड्रामा','चाइनीज ड्रामा','हिंदी डब्ड'],badge:'C-Love Dubs'}
+{name:'Drama Central - Hindi',handle:'Chinesedramacentral',category:'popular',priority:0,tags:['कोरियन ड्रामा','चाइनीज ड्रामा','हिंदी डब्ड'],badge:'Drama Central'},
+{name:'Dyar Entertainment Hindi',handle:'DyarEntertainment',category:'popular',priority:1,tags:['कोरियन ड्रामा','चाइनीज ड्रामा','हिंदी डब्ड'],badge:'Dyar Entertainment'},
+{name:'K-Drama Hindi',handle:'KDramaHindi1',category:'popular',priority:2,tags:['कोरियन ड्रामा','हिंदी डब्ड'],badge:'K-Drama Hindi'},
+{name:'Mini Drama Hindi',handle:'minidramahindii',category:'new',priority:3,tags:['कोरियन ड्रामा','चाइनीज ड्रामा','हिंदी डब्ड'],badge:'Mini Drama Hindi'},
+{name:'C-Love Dubs Hindi',handle:'C-LoveDubs',category:'popular',priority:4,tags:['चाइनीज ड्रामा','हिंदी डब्ड'],badge:'C-Love Dubs'},
+{name:'Korean Hindi Dubbed Movies',handle:'WorldMoviesLocalHindi',category:'popular',priority:5,tags:['कोरियन ड्रामा','हिंदी डब्ड'],badge:'World Movies Hindi'},
+{name:'Cdrama Central',channelSearch:'Cdrama Central',category:'popular',priority:6,tags:['चाइनीज ड्रामा','हिंदी डब्ड'],badge:'Cdrama Central'},
+{name:'C-Drama Mania',channelSearch:'C-Drama Mania',category:'popular',priority:7,tags:['चाइनीज ड्रामा','हिंदी डब्ड'],badge:'C-Drama Mania'},
+{name:'Drama Fever Hour',channelSearch:'Drama Fever Hour',category:'popular',priority:8,tags:['कोरियन ड्रामा','हिंदी डब्ड'],badge:'Drama Fever Hour'},
+{name:'Drama hungama Hindi',channelSearch:'Drama hungama Hindi',category:'popular',priority:9,tags:['कोरियन ड्रामा','चाइनीज ड्रामा','हिंदी डब्ड'],badge:'Drama Hungama Hindi'},
+{name:'Cities of C-Drama',channelSearch:'Cities of C-Drama',category:'popular',priority:10,tags:['चाइनीज ड्रामा','हिंदी डब्ड'],badge:'Cities of C-Drama'},
+{name:'Drama Deewana Hindi',channelSearch:'Drama Deewana Hindi',category:'popular',priority:11,tags:['कोरियन ड्रामा','चाइनीज ड्रामा','हिंदी डब्ड'],badge:'Drama Deewana Hindi'},
+{name:'F4 Central 1',channelSearch:'F4 Central 1',category:'popular',priority:12,tags:['चाइनीज ड्रामा','हिंदी डब्ड'],badge:'F4 Central 1'},
+{name:'Future Tv Hindi Drama',channelSearch:'Future Tv Hindi Drama',category:'new',priority:13,tags:['कोरियन ड्रामा','चाइनीज ड्रामा','हिंदी डब्ड'],badge:'Future TV Hindi Drama'}
 ];
 let reelsApiCatalog = [];
 let reelsHistoryActive=false;
@@ -631,7 +642,12 @@ async function youtubeApiRequest(resource,params){
  const url=new URL('https://www.googleapis.com/youtube/v3/'+resource);Object.entries({...params,key:YOUTUBE_DATA_API_KEY}).forEach(([k,v])=>url.searchParams.set(k,String(v)));
  const r=await fetch(url.toString()),d=await r.json();if(!r.ok)throw Error(d.error&&d.error.message||'YouTube API '+r.status);return d;
 }
-async function resolveReelsChannelId(c){if(c.channelId)return c.channelId;const d=await youtubeApiRequest('channels',{part:'id',forHandle:c.handle,maxResults:1}),x=(d.items||[])[0];if(!x)throw Error('Channel not found: '+c.handle);return x.id;}
+async function resolveReelsChannelId(c){
+ if(c.channelId)return c.channelId;
+ if(c.handle){const d=await youtubeApiRequest('channels',{part:'id',forHandle:c.handle,maxResults:1}),x=(d.items||[])[0];if(!x)throw Error('Channel not found: '+c.handle);return x.id;}
+ if(c.channelSearch){const d=await youtubeApiRequest('search',{part:'snippet',type:'channel',q:c.channelSearch,maxResults:10,relevanceLanguage:'hi',regionCode:'IN'});const norm=v=>String(v||'').toLowerCase().replace(/[^a-z0-9]/g,'');const xs=d.items||[];const x=xs.find(z=>norm(z.snippet&&z.snippet.title)===norm(c.channelSearch))||xs.find(z=>norm(z.snippet&&z.snippet.title).includes(norm(c.channelSearch)));if(!x||!x.id||!x.id.channelId)throw Error('Channel not found: '+c.channelSearch);return x.id.channelId;}
+ throw Error('Channel reference missing');
+}
 function parseYouTubeDurationSeconds(iso){const m=String(iso||'').match(/^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/i);return m?(+m[1]||0)*3600+(+m[2]||0)*60+(+m[3]||0):0;}
 function formatReelsDuration(n){const v=Math.floor(+n||0),h=Math.floor(v/3600),m=Math.floor(v%3600/60);return h?h+'घं '+String(m).padStart(2,'0')+'मि':m+' मिनट';}
 async function fetchLimitedPages(resource,baseParams,maxPages){
@@ -649,26 +665,21 @@ async function fetchMovieChannelUploads(channel){
 }
 async function fetchHindiMovieSearch(query,priority){
  const out=[],params={part:'snippet',type:'video',videoDuration:'long',relevanceLanguage:'hi',regionCode:'IN',maxResults:50,q:query};
- const data=await youtubeApiRequest('search',params);
- for(const item of data.items||[]){
-  const id=item.id&&item.id.videoId;if(id)out.push({videoId:id,source:'YouTube Search',category:'popular',
-   tags:['कोरियन/चाइनीज ड्रामा','हिंदी डब्ड'],badge:'Search',priority,origin:'search'});
- }
+ const pages=await fetchLimitedPages('search',params,2);
+ for(const item of pages){const id=item.id&&item.id.videoId;if(id)out.push({videoId:id,source:'YouTube Search',category:'popular',tags:['कोरियन/चाइनीज ड्रामा','हिंदी डब्ड'],badge:'Search',priority,origin:'search'});}
  return out;
 }
 function isFullMovieTitle(title){
  return /(full\s*(?:hindi\s*)?(?:movie|film)|complete\s*(?:hindi\s*)?(?:movie|film)|full[- ]length\s*(?:movie|film)|पूरी\s*फिल्म|फुल\s*मूवी|संपूर्ण\s*फिल्म|हिंदी\s*फुल\s*मूवी)/i.test(String(title||''));
 }
-function isBlockedMovieTitle(title){
- return /\b(episode|ep\.?|part|pt\.?|chapter|season|s\d+\s*e\d+|ai|a\.i\.|trailer|promo|teaser|english|eng(?:lish)?\s*dub(?:bed)?)\b|भाग|एपिसोड|कड़ी|ट्रेलर|टीज़र|प्रोमो/i.test(String(title||''));
-}
+function isBlockedMovieTitle(title){return /\\b(part|pt\\.?|episode|ep\\.?|chapter|season|s\\d+\\s*e\\d+|trailer|promo|teaser|explain|explainer|ai|a\\.i\\.|english|eng(?:lish)?\\s*dub(?:bed)?)\\b|भाग|एपिसोड|कड़ी|ट्रेलर|टीज़र|प्रोमो|व्याख्या/i.test(String(title||''));}
 function isKoreanChineseDrama(title,description){
  const text=String(title||'')+' '+String(description||'');
  return /\b(korean|korea|k[- ]?drama|chinese|china|c[- ]?drama|cdrama)\b|कोरियन|कोरियाई|चाइनीज|चीनी|चीन/i.test(text);
 }
 function isHindiDubbedMovie(title,description,source){
  const text=String(title||'')+' '+String(description||'');
- if(source==='Drama Central - Hindi'||source==='Mini Drama Hindi'||source==='C-Love Dubs Hindi')return true;
+ if(REELS_CHANNELS.some(c=>c.name===source))return true;
  return /hindi\s*dub(?:bed)?|dubbed\s*in\s*hindi|hindi\s*version|हिंदी\s*डब|हिन्दी\s*डब|हिंदी\s*में|हिन्दी\s*में/i.test(text);
 }
 function formatFullMovieDuration(seconds){const n=Math.floor(Number(seconds)||0),h=Math.floor(n/3600),m=Math.floor(n%3600/60);return h?h+'h '+m+'m':m+'m';}
@@ -684,7 +695,7 @@ async function fetchAllMovieDetails(candidates){
   const video=byId.get(candidate.videoId);if(!video)continue;
   const snippet=video.snippet||{},title=(snippet.title||'').trim(),description=snippet.description||'';
   const durationSeconds=parseYouTubeDurationSeconds(video.contentDetails&&video.contentDetails.duration);
-  if(durationSeconds<1800||!isFullMovieTitle(title)||isBlockedMovieTitle(title)||isBlockedMovieTitle(description)||
+  if(durationSeconds<2400||!isFullMovieTitle(title)||isBlockedMovieTitle(title)||isBlockedMovieTitle(description)||
      !isKoreanChineseDrama(title,description)||!isHindiDubbedMovie(title,description,candidate.source))continue;
   const thumbs=snippet.thumbnails||{},thumbnail=(thumbs.maxres||thumbs.high||thumbs.medium||thumbs.default||{}).url||'';
   out.push({videoId:video.id,title,durationSeconds,durationLabel:formatReelsDuration(durationSeconds),
@@ -696,10 +707,10 @@ async function fetchAllMovieDetails(candidates){
 }
 async function forceRefreshOfficialPlaylists(){
  const button=document.getElementById('forceRefreshBtn');if(reelsLoading)return;
- if(button){button.disabled=true;button.textContent='🔄 10 चैनल + Search अपडेट हो रहे हैं…';}
+ if(button){button.disabled=true;button.textContent='🔄 14 चैनल + 10 Search अपडेट हो रहे हैं…';}
  reelsApiCatalog=[];try{localStorage.removeItem(REELS_API_CACHE_KEY);localStorage.removeItem('chatpro_reels_posters_v1');reelsPosterMap={};}catch(e){}
  let ok=false;try{ok=await loadOfficialReelsPlaylists(true)===true;}catch(error){reelsApiStatus='अपडेट नहीं हुआ: '+(error.message||'API error');}
- if(ok)reelsApiStatus='✅ '+reelsApiCatalog.length+' अलग हिंदी फुल मूवीज़ · 30+ मिनट';
+ if(ok)reelsApiStatus='✅ '+reelsApiCatalog.length+' अलग हिंदी फुल मूवीज़ · 40+ मिनट';
  if(activeTab==='reels')renderReels();
  const current=document.getElementById('forceRefreshBtn');if(current){current.disabled=false;current.textContent=ok?'✅ मूवी कैटलॉग अपडेट हुआ':'↻ फिर कोशिश करें';}
  if(typeof showToast==='function')showToast(ok?'✅ फुल-मूवी कैटलॉग अपडेट हुआ!':'कैटलॉग अपडेट नहीं हो सका।');return ok;
@@ -710,19 +721,14 @@ async function loadOfficialReelsPlaylists(force=false){
  }
  if(!force){try{const cached=JSON.parse(localStorage.getItem(REELS_API_CACHE_KEY)||'null');
   if(cached&&Array.isArray(cached.items)&&Date.now()-cached.savedAt<REELS_API_CACHE_TTL){
-   reelsApiCatalog=cached.items.filter(x=>x&&Number(x.durationSeconds)>=1800&&isFullMovieTitle(x.title)&&!isBlockedMovieTitle(x.title));
+   reelsApiCatalog=cached.items.filter(x=>x&&Number(x.durationSeconds)>=2400&&isFullMovieTitle(x.title)&&!isBlockedMovieTitle(x.title));
    reelsApiStatus=reelsApiCatalog.length+' कोरियन/चाइनीज हिंदी डब्ड फुल मूवीज़ · 24 घंटे कैश';
    if(activeTab==='reels')renderReels();return true;
   }}catch(e){}}
- reelsApiStatus='3 हिंदी डब्ड ड्रामा चैनल और 4 Korean/Chinese Search क्वेरी लोड हो रही हैं…';
+ reelsApiStatus='14 हिंदी डब्ड ड्रामा चैनल और 10 मल्टी-पेज Search क्वेरी लोड हो रही हैं…';
  if(activeTab==='reels')renderReels();
  try{
-  const queries=[
-   'Korean drama Hindi dubbed full movie',
-   'Chinese drama Hindi dubbed full movie',
-   'Korean romantic drama movie in Hindi dubbed',
-   'Chinese CEO love story full movie in Hindi dubbed'
-  ];
+  const queries=['Korean drama Hindi dubbed full movie','Chinese drama Hindi dubbed full movie','Korean romantic drama movie in Hindi dubbed','Chinese CEO love story full movie in Hindi dubbed','K-drama Hindi dubbed full movie','Chinese historical drama full movie Hindi dubbed','Korean action thriller movie Hindi dubbed full','New Chinese drama full movie Hindi dubbed','Korean love story full movie Hindi dubbed','Billionaire CEO Chinese drama full movie Hindi'];
   const jobs=await Promise.allSettled([
    ...REELS_CHANNELS.map(channel=>fetchMovieChannelUploads(channel)),
    ...queries.map((query,index)=>fetchHindiMovieSearch(query,10+index))
@@ -749,7 +755,7 @@ document.addEventListener('click',function(event){
 function renderReels(){
  const box=$('listArea');if(!box||activeTab!=='reels')return;
  const filters=[['all','सभी'],['popular','पॉपुलर'],['new','नया']],rows=getAllReelsSeries().filter(x=>reelsFilter==='all'||x.category===reelsFilter);
- box.innerHTML=`<section class="reels-page"><div class="reels-hero"><div class="reels-title">FreeReels <span class="text-violet-300">+</span> <span class="text-xs font-bold text-white/70">v7.0</span></div><div class="reels-sub">3 हिंदी डब्ड चैनल + Korean/Chinese Search · 30+ मिनट</div><div class="text-[10px] text-gray-400 mt-3">Goldmines · Shemaroo · Rajshri · Ultra · Pen · Aditya · Eros · B4U · Drama Central · Mini Drama · ${getAllReelsSeries().length} फिल्में</div><div class="text-[10px] text-gray-400 mt-2" id="reelsApiStatus">${reelsEscape(reelsApiStatus)}</div><button type="button" id="forceRefreshBtn" style="position:relative;z-index:999;pointer-events:auto;user-select:none;-webkit-user-select:none;cursor:pointer;touch-action:manipulation" class="reels-filter mt-2">↻ Refresh channel Uploads</button></div>
+ box.innerHTML=`<section class="reels-page"><div class="reels-hero"><div class="reels-title">FreeReels <span class="text-violet-300">+</span> <span class="text-xs font-bold text-white/70">v7.0</span></div><div class="reels-sub">14 हिंदी डब्ड ड्रामा चैनल + 10 मल्टी-पेज Search · 40+ मिनट</div><div class="text-[10px] text-gray-400 mt-3">Korean/Chinese Hindi-dubbed sources · ${getAllReelsSeries().length} फिल्में</div><div class="text-[10px] text-gray-400 mt-2" id="reelsApiStatus">${reelsEscape(reelsApiStatus)}</div><button type="button" id="forceRefreshBtn" style="position:relative;z-index:999;pointer-events:auto;user-select:none;-webkit-user-select:none;cursor:pointer;touch-action:manipulation" class="reels-filter mt-2">↻ Refresh channel Uploads</button></div>
  <div class="reels-filters">${filters.map(([k,l])=>`<button class="reels-filter ${reelsFilter===k?'active':''}" onclick="setReelsFilter('${k}')">${l}</button>`).join('')}</div>
  <div class="reels-grid">${rows.map(x=>{const poster=reelsPoster(x);return `<article class="reels-card" onclick="openReelsPlayer('${x.videoId}')"><div class="reels-poster-wrap">${poster?`<img class="reels-poster" loading="lazy" src="${reelsEscape(poster)}" alt="${reelsEscape(x.title)} poster" onerror="reelsFallbackImage(this)">`:''}<div class="reels-poster-fallback"><strong>${reelsEscape(x.title)}</strong><small>${reelsEscape(x.source)}</small></div><div class="reels-badges"><span class="reels-badge">${reelsEscape(x.badge)}</span><span class="reels-badge">${reelsEscape(x.displayDurationLabel||x.durationLabel)}</span></div><span class="reels-views">▶ फुल शो</span></div><div class="reels-card-body"><div class="reels-card-title">${reelsEscape(x.title)}</div><div class="reels-meta">${reelsEscape(x.source)} · ${reelsEscape(x.durationLabel)}</div><div class="reels-tags">${(x.tags||[]).map(t=>`<span class="reels-tag">${reelsEscape(t)}</span>`).join('')}</div></div></article>`;}).join('')}</div></section>`;
 }
@@ -863,14 +869,9 @@ window.openReelsPlayer=async function(videoId){
  mount.id='reelsFullscreenYTMount';
  mount.style.cssText='position:absolute;inset:0;width:100%;height:100%;background:#000;overflow:hidden;touch-action:none';
  box.appendChild(mount);
- const touchLayer=document.createElement('div');
- touchLayer.id='reelsFullscreenTouchLayer';
- touchLayer.setAttribute('aria-label','Tap to play or pause; swipe up for next episode; swipe down for previous episode');
- touchLayer.style.cssText='position:absolute;inset:0;z-index:5;background:transparent;touch-action:none;-webkit-tap-highlight-color:transparent';
- touchLayer.addEventListener('touchstart',handleReelsFullscreenTouchStart,{passive:false});
- touchLayer.addEventListener('touchend',handleReelsFullscreenTouchEnd,{passive:false});
- touchLayer.addEventListener('touchcancel',function(){reelsSwipeStartY=null;reelsTouchStartX=null;},{passive:true});
- box.appendChild(touchLayer);
+ mount.addEventListener('touchstart',handleReelsFullscreenTouchStart,{passive:false});
+ mount.addEventListener('touchend',handleReelsFullscreenTouchEnd,{passive:false});
+ mount.addEventListener('touchcancel',function(){reelsSwipeStartY=null;reelsTouchStartX=null;},{passive:true});
  const controls=document.createElement('div');controls.id='reelsPlaybackControls';
  controls.style.cssText='position:absolute;left:0;right:0;bottom:0;z-index:12;padding:44px 16px max(18px,env(safe-area-inset-bottom));background:linear-gradient(transparent,rgba(0,0,0,.78));display:flex;align-items:center;gap:12px;opacity:0;pointer-events:none;transition:opacity .2s';
  controls.innerHTML='<button id="reelsPlayPause" type="button" aria-label="Play or pause" style="color:#fff;font-size:22px;background:transparent;border:0;padding:8px;pointer-events:auto" onclick="event.stopPropagation();toggleReelsPlayback()">▶</button><span id="reelsCurrentTime" style="color:#fff;font-size:12px;min-width:42px">00:00</span><input id="reelsSeekRange" type="range" min="0" max="1" value="0" step="0.1" aria-label="वीडियो आगे पीछे करें" style="flex:1;min-width:0;accent-color:#a78bfa;pointer-events:auto" onpointerdown="reelsSeeking=true;clearTimeout(reelsControlsTimer)" oninput="seekReelsVideo(this.value)" onpointerup="reelsSeeking=false;showReelsControls()" ontouchend="reelsSeeking=false;showReelsControls()"><span id="reelsTotalTime" style="color:#fff;font-size:12px;min-width:42px">00:00</span>';
@@ -912,10 +913,6 @@ window.closeReelsPlayer=function(updateHistory){
  const box=document.getElementById('reelsPlayer');
  if(!box)return;
  clearTimeout(reelsControlsTimer);clearInterval(reelsProgressTimer);reelsControlsTimer=null;reelsProgressTimer=null;reelsSeeking=false;
- const layer=document.getElementById('reelsFullscreenTouchLayer');
- if(layer){
-  layer.replaceWith(layer.cloneNode(false));
- }
  const controls=document.getElementById('reelsPlaybackControls');if(controls)controls.remove();
  reelsSwipeStartY=null;
  reelsTouchStartX=null;
