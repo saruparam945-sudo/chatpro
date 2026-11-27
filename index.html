@@ -173,7 +173,7 @@ body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#e5ddd5}
 
 .reels-player-fullscreen{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;background:#000;z-index:999999;display:none;overflow:hidden}
 .reels-player-fullscreen iframe{display:block;width:100%;height:100%;border:0;background:#000}
-#reelsPlaybackControls.visible{opacity:1!important;pointer-events:auto!important}
+#reelsPlaybackControls{position:fixed!important;bottom:14px!important;left:12px!important;right:12px!important;z-index:9999999!important;opacity:1!important;pointer-events:auto!important;display:flex!important;background:rgba(12,12,18,.92)!important;border:1px solid rgba(255,255,255,.18)!important;border-radius:14px!important;padding:10px 12px!important;gap:10px!important;backdrop-filter:blur(10px)!important;box-sizing:border-box!important}#reelsPlaybackControls.visible{opacity:1!important;pointer-events:auto!important}#reelsSeekRange{height:10px!important;min-width:0!important;flex:1!important;touch-action:pan-x!important}
 </style>
 <!-- ChatPro SW migration: remove legacy /chatpro/sw.js registrations and app caches before installing the current worker. -->
 <script>
@@ -575,15 +575,15 @@ const SERIES_CATALOG = [];
 // Public browser key: restrict by HTTP referrer (https://saruparam945-sudo.github.io/*)
 // and API restriction (YouTube Data API v3) in Google Cloud Console.
 const YOUTUBE_DATA_API_KEY = 'AIzaSyD5A_zJnG0aruaySDp2ZXqUXDKm9GuCyYA';
-const REELS_API_CACHE_KEY = 'chatpro_korean_chinese_hindi_movies_v14';
+const REELS_API_CACHE_KEY = 'chatpro_korean_chinese_hindi_uploads_v15';
 const REELS_API_CACHE_TTL = 24 * 60 * 60 * 1000;
 // Invalidate the previous wide-channel catalog and its poster cache immediately on startup.
 try{
- if(localStorage.getItem('chatpro_reels_catalog_cleanup_v13')!=='yes'){
+ if(localStorage.getItem('chatpro_reels_catalog_cleanup_v14')!=='yes'){
   ['chatpro_youtube_public_playlists_v1','chatpro_youtube_vertical_playlists_v2','chatpro_youtube_hindi_vertical_playlists_v3',
    'chatpro_youtube_verified_vertical_playlists_v4','chatpro_youtube_reels_catalog_v5','chatpro_youtube_reels_catalog_v6',
    'chatpro_youtube_reels_catalog_v7','chatpro_youtube_reels_catalog_v8','chatpro_youtube_uploads_catalog_v10',
-   'chatpro_vertical_real_hindi_catalog_v11','chatpro_full_hindi_movies_catalog_v12','chatpro_korean_chinese_hindi_movies_v13','chatpro_korean_chinese_hindi_movies_v14','chatpro_reels_posters_v1'].forEach(k=>localStorage.removeItem(k));
+   'chatpro_vertical_real_hindi_catalog_v11','chatpro_full_hindi_movies_catalog_v12','chatpro_korean_chinese_hindi_movies_v13','chatpro_korean_chinese_hindi_movies_v14','chatpro_korean_chinese_hindi_uploads_v15','chatpro_reels_posters_v1'].forEach(k=>localStorage.removeItem(k));
   localStorage.setItem('chatpro_reels_catalog_cleanup_v12','yes');
  }
 }catch(e){}
@@ -591,17 +591,7 @@ const REELS_CHANNELS = [
 {name:'Drama Central - Hindi',handle:'Chinesedramacentral',category:'popular',priority:0,tags:['कोरियन ड्रामा','चाइनीज ड्रामा','हिंदी डब्ड'],badge:'Drama Central'},
 {name:'Dyar Entertainment Hindi',handle:'DyarEntertainment',category:'popular',priority:1,tags:['कोरियन ड्रामा','चाइनीज ड्रामा','हिंदी डब्ड'],badge:'Dyar Entertainment'},
 {name:'K-Drama Hindi',handle:'KDramaHindi1',category:'popular',priority:2,tags:['कोरियन ड्रामा','हिंदी डब्ड'],badge:'K-Drama Hindi'},
-{name:'Mini Drama Hindi',handle:'minidramahindii',category:'new',priority:3,tags:['कोरियन ड्रामा','चाइनीज ड्रामा','हिंदी डब्ड'],badge:'Mini Drama Hindi'},
-{name:'C-Love Dubs Hindi',handle:'C-LoveDubs',category:'popular',priority:4,tags:['चाइनीज ड्रामा','हिंदी डब्ड'],badge:'C-Love Dubs'},
-{name:'Korean Hindi Dubbed Movies',handle:'WorldMoviesLocalHindi',category:'popular',priority:5,tags:['कोरियन ड्रामा','हिंदी डब्ड'],badge:'World Movies Hindi'},
-{name:'Cdrama Central',channelSearch:'Cdrama Central',category:'popular',priority:6,tags:['चाइनीज ड्रामा','हिंदी डब्ड'],badge:'Cdrama Central'},
-{name:'C-Drama Mania',channelSearch:'C-Drama Mania',category:'popular',priority:7,tags:['चाइनीज ड्रामा','हिंदी डब्ड'],badge:'C-Drama Mania'},
-{name:'Drama Fever Hour',channelSearch:'Drama Fever Hour',category:'popular',priority:8,tags:['कोरियन ड्रामा','हिंदी डब्ड'],badge:'Drama Fever Hour'},
-{name:'Drama hungama Hindi',channelSearch:'Drama hungama Hindi',category:'popular',priority:9,tags:['कोरियन ड्रामा','चाइनीज ड्रामा','हिंदी डब्ड'],badge:'Drama Hungama Hindi'},
-{name:'Cities of C-Drama',channelSearch:'Cities of C-Drama',category:'popular',priority:10,tags:['चाइनीज ड्रामा','हिंदी डब्ड'],badge:'Cities of C-Drama'},
-{name:'Drama Deewana Hindi',channelSearch:'Drama Deewana Hindi',category:'popular',priority:11,tags:['कोरियन ड्रामा','चाइनीज ड्रामा','हिंदी डब्ड'],badge:'Drama Deewana Hindi'},
-{name:'F4 Central 1',channelSearch:'F4 Central 1',category:'popular',priority:12,tags:['चाइनीज ड्रामा','हिंदी डब्ड'],badge:'F4 Central 1'},
-{name:'Future Tv Hindi Drama',channelSearch:'Future Tv Hindi Drama',category:'new',priority:13,tags:['कोरियन ड्रामा','चाइनीज ड्रामा','हिंदी डब्ड'],badge:'Future TV Hindi Drama'}
+{name:'Korean Hindi Dubbed Movies',handle:'WorldMoviesLocalHindi',category:'popular',priority:3,tags:['कोरियन ड्रामा','हिंदी डब्ड'],badge:'World Movies Hindi'}
 ];
 let reelsApiCatalog = [];
 let reelsHistoryActive=false;
@@ -657,17 +647,10 @@ async function fetchLimitedPages(resource,baseParams,maxPages){
  }while(pageToken&&pages<maxPages);return items;
 }
 async function fetchMovieChannelUploads(channel){
- const channelId=await resolveReelsChannelId(channel);if(!/^UC[\w-]{22}$/.test(channelId))throw Error('Invalid channel ID for '+channel.name);
+ const channelId=await resolveReelsChannelId(channel);if(!/^UC[\\w-]{22}$/.test(channelId))throw Error('Invalid channel ID for '+channel.name);
  const uploadsPlaylistId='UU'+channelId.slice(2);
- const items=await fetchLimitedPages('playlistItems',{part:'snippet,contentDetails',playlistId:uploadsPlaylistId},3);
- return items.map(item=>({videoId:item.contentDetails&&item.contentDetails.videoId,source:channel.name,category:channel.category,
-  tags:channel.tags,badge:channel.badge,priority:channel.priority,origin:'channel uploads'})).filter(x=>x.videoId);
-}
-async function fetchHindiMovieSearch(query,priority){
- const out=[],params={part:'snippet',type:'video',videoDuration:'long',relevanceLanguage:'hi',regionCode:'IN',maxResults:50,q:query};
- const pages=await fetchLimitedPages('search',params,2);
- for(const item of pages){const id=item.id&&item.id.videoId;if(id)out.push({videoId:id,source:'YouTube Search',category:'popular',tags:['कोरियन/चाइनीज ड्रामा','हिंदी डब्ड'],badge:'Search',priority,origin:'search'});}
- return out;
+ const items=await fetchLimitedPages('playlistItems',{part:'snippet,contentDetails',playlistId:uploadsPlaylistId},2);
+ return items.map(item=>({videoId:item.contentDetails&&item.contentDetails.videoId,source:channel.name,category:channel.category,tags:channel.tags,badge:channel.badge,priority:channel.priority,origin:'channel uploads'})).filter(x=>x.videoId);
 }
 function isFullMovieTitle(title){
  return /(full\s*(?:hindi\s*)?(?:movie|film)|complete\s*(?:hindi\s*)?(?:movie|film)|full[- ]length\s*(?:movie|film)|पूरी\s*फिल्म|फुल\s*मूवी|संपूर्ण\s*फिल्म|हिंदी\s*फुल\s*मूवी)/i.test(String(title||''));
@@ -695,7 +678,7 @@ async function fetchAllMovieDetails(candidates){
   const video=byId.get(candidate.videoId);if(!video)continue;
   const snippet=video.snippet||{},title=(snippet.title||'').trim(),description=snippet.description||'';
   const durationSeconds=parseYouTubeDurationSeconds(video.contentDetails&&video.contentDetails.duration);
-  if(durationSeconds<2400||!isFullMovieTitle(title)||isBlockedMovieTitle(title)||isBlockedMovieTitle(description)||
+  if(durationSeconds<2100||!isFullMovieTitle(title)||isBlockedMovieTitle(title)||isBlockedMovieTitle(description)||
      !isKoreanChineseDrama(title,description)||!isHindiDubbedMovie(title,description,candidate.source))continue;
   const thumbs=snippet.thumbnails||{},thumbnail=(thumbs.maxres||thumbs.high||thumbs.medium||thumbs.default||{}).url||'';
   out.push({videoId:video.id,title,durationSeconds,durationLabel:formatReelsDuration(durationSeconds),
@@ -707,55 +690,28 @@ async function fetchAllMovieDetails(candidates){
 }
 async function forceRefreshOfficialPlaylists(){
  const button=document.getElementById('forceRefreshBtn');if(reelsLoading)return;
- if(button){button.disabled=true;button.textContent='🔄 14 चैनल + 10 Search अपडेट हो रहे हैं…';}
+ if(button){button.disabled=true;button.textContent='🔄 4 चैनलों के Uploads अपडेट हो रहे हैं…';}
  reelsApiCatalog=[];try{localStorage.removeItem(REELS_API_CACHE_KEY);localStorage.removeItem('chatpro_reels_posters_v1');reelsPosterMap={};}catch(e){}
  let ok=false;try{ok=await loadOfficialReelsPlaylists(true)===true;}catch(error){reelsApiStatus='अपडेट नहीं हुआ: '+(error.message||'API error');}
- if(ok)reelsApiStatus='✅ '+reelsApiCatalog.length+' अलग हिंदी फुल मूवीज़ · 40+ मिनट';
- if(activeTab==='reels')renderReels();
- const current=document.getElementById('forceRefreshBtn');if(current){current.disabled=false;current.textContent=ok?'✅ मूवी कैटलॉग अपडेट हुआ':'↻ फिर कोशिश करें';}
- if(typeof showToast==='function')showToast(ok?'✅ फुल-मूवी कैटलॉग अपडेट हुआ!':'कैटलॉग अपडेट नहीं हो सका।');return ok;
+ if(ok)reelsApiStatus='✅ '+reelsApiCatalog.length+' अलग हिंदी ड्रामा वीडियो · 35+ मिनट';
+ if(activeTab==='reels')renderReels();const current=document.getElementById('forceRefreshBtn');if(current){current.disabled=false;current.textContent=ok?'✅ Uploads अपडेट हुए':'↻ फिर कोशिश करें';}
+ if(typeof showToast==='function')showToast(ok?'✅ Uploads कैटलॉग अपडेट हुआ!':'कैटलॉग अपडेट नहीं हो सका।');return ok;
 }
 async function loadOfficialReelsPlaylists(force=false){
- if(!YOUTUBE_DATA_API_KEY||YOUTUBE_DATA_API_KEY==='PASTE_RESTRICTED_YOUTUBE_API_KEY_HERE'){
-  reelsApiStatus='YOUTUBE_DATA_API_KEY सेट करें।';if(activeTab==='reels')renderReels();return false;
- }
- if(!force){try{const cached=JSON.parse(localStorage.getItem(REELS_API_CACHE_KEY)||'null');
-  if(cached&&Array.isArray(cached.items)&&Date.now()-cached.savedAt<REELS_API_CACHE_TTL){
-   reelsApiCatalog=cached.items.filter(x=>x&&Number(x.durationSeconds)>=2400&&isFullMovieTitle(x.title)&&!isBlockedMovieTitle(x.title));
-   reelsApiStatus=reelsApiCatalog.length+' कोरियन/चाइनीज हिंदी डब्ड फुल मूवीज़ · 24 घंटे कैश';
-   if(activeTab==='reels')renderReels();return true;
-  }}catch(e){}}
- reelsApiStatus='14 हिंदी डब्ड ड्रामा चैनल और 10 मल्टी-पेज Search क्वेरी लोड हो रही हैं…';
- if(activeTab==='reels')renderReels();
- try{
-  const queries=['Korean drama Hindi dubbed full movie','Chinese drama Hindi dubbed full movie','Korean romantic drama movie in Hindi dubbed','Chinese CEO love story full movie in Hindi dubbed','K-drama Hindi dubbed full movie','Chinese historical drama full movie Hindi dubbed','Korean action thriller movie Hindi dubbed full','New Chinese drama full movie Hindi dubbed','Korean love story full movie Hindi dubbed','Billionaire CEO Chinese drama full movie Hindi'];
-  const jobs=await Promise.allSettled([
-   ...REELS_CHANNELS.map(channel=>fetchMovieChannelUploads(channel)),
-   ...queries.map((query,index)=>fetchHindiMovieSearch(query,10+index))
-  ]);
-  const candidates=[];
-  jobs.forEach((result,index)=>{if(result.status==='fulfilled')candidates.push(...result.value);else console.warn('Korean/Chinese source failed:',index,result.reason);});
-  const unique=await fetchAllMovieDetails(candidates);
-  reelsApiCatalog=unique.sort((a,b)=>(Number(a.priority)||0)-(Number(b.priority)||0)||(b.publishedAt||'').localeCompare(a.publishedAt||''));
-  try{localStorage.setItem(REELS_API_CACHE_KEY,JSON.stringify({savedAt:Date.now(),items:reelsApiCatalog}));}
-  catch(error){console.warn('Korean/Chinese movie cache unavailable',error);}
-  reelsApiStatus=reelsApiCatalog.length+' कोरियन/चाइनीज हिंदी डब्ड फुल मूवीज़ · 30+ मिनट · 24 घंटे कैश';
- }catch(error){
-  console.warn('Korean/Chinese Hindi-dubbed catalog failed',error);
-  reelsApiStatus='YouTube API लोड नहीं हुआ: '+(error.message||'API key/referrer जाँचें।');reelsApiCatalog=[];
- }
+ if(!YOUTUBE_DATA_API_KEY||YOUTUBE_DATA_API_KEY==='PASTE_RESTRICTED_YOUTUBE_API_KEY_HERE'){reelsApiStatus='YOUTUBE_DATA_API_KEY सेट करें।';if(activeTab==='reels')renderReels();return false;}
+ if(!force){try{const cached=JSON.parse(localStorage.getItem(REELS_API_CACHE_KEY)||'null');if(cached&&Array.isArray(cached.items)&&Date.now()-cached.savedAt<REELS_API_CACHE_TTL){reelsApiCatalog=cached.items.filter(x=>x&&Number(x.durationSeconds)>=2100&&!isBlockedMovieTitle(x.title)&&!isBlockedMovieTitle(x.description||''));reelsApiStatus=reelsApiCatalog.length+' हिंदी ड्रामा वीडियो · 24 घंटे कैश';if(activeTab==='reels')renderReels();return true;}}catch(e){}}
+ reelsApiStatus='4 चुने हुए चैनलों के सीधे Uploads (प्रति चैनल 100 वीडियो) लोड हो रहे हैं…';if(activeTab==='reels')renderReels();
+ try{const candidates=[];for(const channel of REELS_CHANNELS){try{candidates.push(...await fetchMovieChannelUploads(channel));}catch(error){console.warn('Channel uploads failed:',channel.name,error);}}
+ const unique=await fetchAllMovieDetails(candidates);reelsApiCatalog=unique.sort((x,y)=>(Number(x.priority)||0)-(Number(y.priority)||0)||(y.publishedAt||'').localeCompare(x.publishedAt||''));
+ try{localStorage.setItem(REELS_API_CACHE_KEY,JSON.stringify({savedAt:Date.now(),items:reelsApiCatalog}));}catch(error){console.warn('Uploads cache unavailable',error);}
+ reelsApiStatus=reelsApiCatalog.length+' हिंदी ड्रामा वीडियो · 35+ मिनट · 24 घंटे कैश';
+ }catch(error){console.warn('Uploads catalog failed',error);reelsApiStatus='YouTube API लोड नहीं हुआ: '+(error.message||'API key/referrer जाँचें।');reelsApiCatalog=[];}
  if(activeTab==='reels')renderReels();return !reelsApiStatus.startsWith('YouTube API लोड नहीं हुआ');
 }
-document.addEventListener('click',function(event){
- const button=event.target&&event.target.closest?event.target.closest('#forceRefreshBtn'):null;
- if(!button)return;
- event.preventDefault();event.stopPropagation();
- forceRefreshOfficialPlaylists();
-},true);
 function renderReels(){
  const box=$('listArea');if(!box||activeTab!=='reels')return;
  const filters=[['all','सभी'],['popular','पॉपुलर'],['new','नया']],rows=getAllReelsSeries().filter(x=>reelsFilter==='all'||x.category===reelsFilter);
- box.innerHTML=`<section class="reels-page"><div class="reels-hero"><div class="reels-title">FreeReels <span class="text-violet-300">+</span> <span class="text-xs font-bold text-white/70">v7.0</span></div><div class="reels-sub">14 हिंदी डब्ड ड्रामा चैनल + 10 मल्टी-पेज Search · 40+ मिनट</div><div class="text-[10px] text-gray-400 mt-3">Korean/Chinese Hindi-dubbed sources · ${getAllReelsSeries().length} फिल्में</div><div class="text-[10px] text-gray-400 mt-2" id="reelsApiStatus">${reelsEscape(reelsApiStatus)}</div><button type="button" id="forceRefreshBtn" style="position:relative;z-index:999;pointer-events:auto;user-select:none;-webkit-user-select:none;cursor:pointer;touch-action:manipulation" class="reels-filter mt-2">↻ Refresh channel Uploads</button></div>
+ box.innerHTML=`<section class="reels-page"><div class="reels-hero"><div class="reels-title">FreeReels <span class="text-violet-300">+</span> <span class="text-xs font-bold text-white/70">v7.0</span></div><div class="reels-sub">4 चैनलों के सीधे Uploads · 35+ मिनट</div><div class="text-[10px] text-gray-400 mt-3">केवल चुने हुए Hindi-dubbed चैनल · ${getAllReelsSeries().length} फिल्में</div><div class="text-[10px] text-gray-400 mt-2" id="reelsApiStatus">${reelsEscape(reelsApiStatus)}</div><button type="button" id="forceRefreshBtn" style="position:relative;z-index:999;pointer-events:auto;user-select:none;-webkit-user-select:none;cursor:pointer;touch-action:manipulation" class="reels-filter mt-2">↻ Refresh channel Uploads</button></div>
  <div class="reels-filters">${filters.map(([k,l])=>`<button class="reels-filter ${reelsFilter===k?'active':''}" onclick="setReelsFilter('${k}')">${l}</button>`).join('')}</div>
  <div class="reels-grid">${rows.map(x=>{const poster=reelsPoster(x);return `<article class="reels-card" onclick="openReelsPlayer('${x.videoId}')"><div class="reels-poster-wrap">${poster?`<img class="reels-poster" loading="lazy" src="${reelsEscape(poster)}" alt="${reelsEscape(x.title)} poster" onerror="reelsFallbackImage(this)">`:''}<div class="reels-poster-fallback"><strong>${reelsEscape(x.title)}</strong><small>${reelsEscape(x.source)}</small></div><div class="reels-badges"><span class="reels-badge">${reelsEscape(x.badge)}</span><span class="reels-badge">${reelsEscape(x.displayDurationLabel||x.durationLabel)}</span></div><span class="reels-views">▶ फुल शो</span></div><div class="reels-card-body"><div class="reels-card-title">${reelsEscape(x.title)}</div><div class="reels-meta">${reelsEscape(x.source)} · ${reelsEscape(x.durationLabel)}</div><div class="reels-tags">${(x.tags||[]).map(t=>`<span class="reels-tag">${reelsEscape(t)}</span>`).join('')}</div></div></article>`;}).join('')}</div></section>`;
 }
@@ -834,7 +790,7 @@ let reelsControlsTimer=null,reelsProgressTimer=null;
 function showReelsControls(){
  const panel=document.getElementById('reelsPlaybackControls');if(!panel)return;
  panel.classList.add('visible');updateReelsControls();clearTimeout(reelsControlsTimer);
- reelsControlsTimer=setTimeout(()=>{if(!reelsSeeking)panel.classList.remove('visible');},4000);
+ reelsControlsTimer=setTimeout(()=>{panel.classList.add('visible');},4000);
 }
 function updateReelsControls(){
  const player=reelsFullscreenYTPlayer,panel=document.getElementById('reelsPlaybackControls');if(!player||!panel)return;
@@ -890,6 +846,7 @@ window.openReelsPlayer=async function(videoId){
     controls:0,
     modestbranding:1,
     rel:0,
+    iv_load_policy:3,
     playsinline:1
    },
    events:{
