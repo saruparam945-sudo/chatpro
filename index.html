@@ -983,6 +983,7 @@ function startStatusFeed() {
   }, err => console.warn('Own status query failed:', err));
   statusFeedUnsubs.push(ownUnsub);
   const friendsUnsub = onSnapshot(query(collection(db, 'statuses'), where('visibleTo', 'array-contains', currentUser.uid)), snap => {
+    for (const uid of [...statusDocsByUid.keys()]) if (uid !== currentUser.uid) statusDocsByUid.delete(uid);
     const byUid = new Map();
     snap.docs.forEach(d => { const item = {id:d.id, ...d.data()}; if (!byUid.has(item.uid)) byUid.set(item.uid, []); byUid.get(item.uid).push(item); });
     byUid.forEach((items, uid) => statusDocsByUid.set(uid, items));
