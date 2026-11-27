@@ -884,8 +884,8 @@ window.openReelsPlayer=async function(videoId){
   reelsFullscreenYTPlayer=new YT.Player('reelsFullscreenYTMount',{
    width:String(width),
    height:String(height),
+   videoId:videoId,
    playerVars:{
-    videoId:videoId,
     autoplay:1,
     controls:0,
     modestbranding:1,
