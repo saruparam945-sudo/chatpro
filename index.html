@@ -557,15 +557,11 @@ function listenUsersAndGroups() {
 // नए शो जोड़ने से पहले official channel पर playlist की episode list जाँचें; mixed/clip collections न जोड़ें.
 // TVF official channel: https://www.youtube.com/@TheViralFever
 // Drama Central Hindi official channel: https://www.youtube.com/@Chinesedramacentral
-const SERIES_CATALOG = [
-  { title:'Kota Factory', season:'Season 1', playlistId:'PLTB0eCoUXErb7pV0Sj1hXWrxerSZX1qgh', episodes:5, category:'popular', tags:['हिंदी','ड्रामा','एजुकेशन'], badge:'HIT', firstVideoId:'JWbnEt3xuos', source:'The Viral Fever' },
-  { title:'TVF Aspirants', season:'Season 1', playlistId:'PLTB0eCoUXErY_KvRNKOERQtYSDPjOb8jw', episodes:5, category:'popular', tags:['हिंदी','ड्रामा','मोटिवेशन'], badge:'HOT', firstVideoId:'ViOutJqDI-0', source:'The Viral Fever' },
-  { title:'FLAMES', season:'Season 1', playlistId:'PLbZboRRHE3b14pFvT26golxysQKbWGOSg', episodes:5, category:'popular', tags:['हिंदी','रोमांस','युथ'], badge:'HIT', firstVideoId:'f8t4S84d9fA', source:'The Viral Fever' }
-];
-// Add a NEW YouTube Data API key here only after restricting it in Google Cloud
-// (HTTP referrers = your GitHub Pages domain; API restriction = YouTube Data API v3).
-// The previously pasted key is intentionally NOT embedded in this public file.
-const YOUTUBE_DATA_API_KEY = 'PASTE_RESTRICTED_YOUTUBE_API_KEY_HERE';
+// Dynamic-only catalog: no hardcoded series. Cards come only from the three official channels below.
+const SERIES_CATALOG = [];
+// Public browser key: restrict by HTTP referrer (https://saruparam945-sudo.github.io/*)
+// and API restriction (YouTube Data API v3) in Google Cloud Console.
+const YOUTUBE_DATA_API_KEY = 'AIzaSyD5A_zJnG0aruaySDp2ZXqUXDKm9GuCyYA';
 const REELS_API_CACHE_KEY = 'chatpro_youtube_public_playlists_v1';
 const REELS_API_CACHE_TTL = 12 * 60 * 60 * 1000;
 const REELS_CHANNELS = [
@@ -736,7 +732,7 @@ window.playReelsEpisode=index=>{
 };
 window.toggleReelsEpisodes=()=>{const drawer=$('reelsEpisodeDrawer'),open=drawer.classList.toggle('open');$('reelsEpisodesToggle').setAttribute('aria-expanded',open?'true':'false');$('reelsEpisodePanel').setAttribute('aria-hidden',open?'false':'true');};
 window.openReelsPlayer=async playlistId=>{
- const series=SERIES_CATALOG.find(x=>x.playlistId===playlistId);if(!series)return;
+ const series=getAllReelsSeries().find(x=>x.playlistId===playlistId);if(!series)return;
  reelsCurrentSeries=series;
  $('reelsEpisodeCount').textContent='EP. 1/'+series.episodes;$('reelsEpisodeDrawer').classList.remove('open');$('reelsEpisodesToggle')?.setAttribute('aria-expanded','false');$('reelsEpisodePanel').setAttribute('aria-hidden','true');
  $('reelsMiniTitle').textContent=series.title;$('reelsMiniEpisode').textContent='EP 1 / '+series.episodes;
