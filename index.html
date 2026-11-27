@@ -575,7 +575,9 @@ const SERIES_CATALOG = [];
 // Public browser key: restrict by HTTP referrer (https://saruparam945-sudo.github.io/*)
 // and API restriction (YouTube Data API v3) in Google Cloud Console.
 const YOUTUBE_DATA_API_KEY = 'AIzaSyD5A_zJnG0aruaySDp2ZXqUXDKm9GuCyYA';
-const REELS_API_CACHE_KEY = 'chatpro_korean_chinese_hindi_uploads_v15';
+const REELS_API_CACHE_KEY = 'chatpro_korean_chinese_hindi_uploads_v16';
+const REELS_CHANNEL_ID_CACHE_KEY = 'chatpro_reels_channel_ids_v1';
+try{const old=JSON.parse(localStorage.getItem('chatpro_korean_chinese_hindi_uploads_v15')||'null');if(old&&Array.isArray(old.items)&&!localStorage.getItem(REELS_API_CACHE_KEY))localStorage.setItem(REELS_API_CACHE_KEY,JSON.stringify(old));}catch(e){}
 const REELS_API_CACHE_TTL = 24 * 60 * 60 * 1000;
 // Invalidate the previous wide-channel catalog and its poster cache immediately on startup.
 try{
@@ -637,9 +639,11 @@ async function youtubeApiRequest(resource,params){
 }
 async function resolveReelsChannelId(c){
  if(c.channelId)return c.channelId;
- if(c.handle){const d=await youtubeApiRequest('channels',{part:'id',forHandle:c.handle,maxResults:1}),x=(d.items||[])[0];if(!x)throw Error('Channel not found: '+c.handle);return x.id;}
- if(c.channelSearch){const d=await youtubeApiRequest('search',{part:'snippet',type:'channel',q:c.channelSearch,maxResults:10,relevanceLanguage:'hi',regionCode:'IN'});const norm=v=>String(v||'').toLowerCase().replace(/[^a-z0-9]/g,'');const xs=d.items||[];const x=xs.find(z=>norm(z.snippet&&z.snippet.title)===norm(c.channelSearch))||xs.find(z=>norm(z.snippet&&z.snippet.title).includes(norm(c.channelSearch)));if(!x||!x.id||!x.id.channelId)throw Error('Channel not found: '+c.channelSearch);return x.id.channelId;}
- throw Error('Channel reference missing');
+ const handle=String(c.handle||'').replace(/^@/,'');if(!handle)throw Error('Channel handle missing for '+c.name);
+ let ids={};try{ids=JSON.parse(localStorage.getItem(REELS_CHANNEL_ID_CACHE_KEY)||'{}')||{};}catch(e){}
+ if(ids[handle]&&/^UC[\w-]{22}$/.test(ids[handle]))return ids[handle];
+ const d=await youtubeApiRequest('channels',{part:'id',forHandle:handle,maxResults:1});const x=(d.items||[])[0];if(!x||!x.id)throw Error('Channel not found: '+handle);
+ ids[handle]=x.id;try{localStorage.setItem(REELS_CHANNEL_ID_CACHE_KEY,JSON.stringify(ids));}catch(e){}return x.id;
 }
 function parseYouTubeDurationSeconds(iso){const m=String(iso||'').match(/^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/i);return m?(+m[1]||0)*3600+(+m[2]||0)*60+(+m[3]||0):0;}
 function formatReelsDuration(n){const v=Math.floor(+n||0),h=Math.floor(v/3600),m=Math.floor(v%3600/60);return h?h+'घं '+String(m).padStart(2,'0')+'मि':m+' मिनट';}
@@ -692,24 +696,23 @@ async function fetchAllMovieDetails(candidates){
  return out;
 }
 async function forceRefreshOfficialPlaylists(){
- const button=document.getElementById('forceRefreshBtn');if(reelsLoading)return;
- if(button){button.disabled=true;button.textContent='🔄 4 चैनलों के Uploads अपडेट हो रहे हैं…';}
- try{localStorage.removeItem(REELS_API_CACHE_KEY);localStorage.removeItem('chatpro_reels_posters_v1');reelsPosterMap={};}catch(e){}
- let ok=false;try{ok=await loadOfficialReelsPlaylists(true)===true;}catch(error){reelsApiStatus='अपडेट नहीं हुआ: '+(error.message||'API error');}
- if(ok)reelsApiStatus='✅ '+getAllReelsSeries().length+' अलग हिंदी ड्रामा वीडियो · Built-in + API Merge';
- if(activeTab==='reels')renderReels();const current=document.getElementById('forceRefreshBtn');if(current){current.disabled=false;current.textContent=ok?'✅ Uploads अपडेट हुए':'↻ फिर कोशिश करें';}
- if(typeof showToast==='function')showToast(ok?'✅ Uploads कैटलॉग अपडेट हुआ!':'कैटलॉग अपडेट नहीं हो सका।');return ok;
+ const button=document.getElementById('forceRefreshBtn');if(reelsLoading)return;if(button){button.disabled=true;button.textContent='🔄 4 चैनलों के Uploads अपडेट हो रहे हैं…';}
+ try{localStorage.removeItem('chatpro_reels_posters_v1');reelsPosterMap={};}catch(e){}
+ let ok=false;try{ok=await loadOfficialReelsPlaylists(true)===true;}catch(error){reelsApiStatus='API अपडेट नहीं हुआ—पुरानी फिल्में सुरक्षित हैं। '+(error.message||'');}
+ if(ok)reelsApiStatus='✅ '+getAllReelsSeries().length+' अलग हिंदी ड्रामा वीडियो · Built-in + API Merge';if(activeTab==='reels')renderReels();
+ const current=document.getElementById('forceRefreshBtn');if(current){current.disabled=false;current.textContent=ok?'✅ Uploads अपडेट हुए':'↻ फिर कोशिश करें';}
+ if(typeof showToast==='function')showToast(ok?'✅ Uploads कैटलॉग अपडेट हुआ!':'API उपलब्ध नहीं—पुरानी फिल्में दिखाई जा रही हैं।');return ok;
 }
 async function loadOfficialReelsPlaylists(force=false){
- if(!YOUTUBE_DATA_API_KEY||YOUTUBE_DATA_API_KEY==='PASTE_RESTRICTED_YOUTUBE_API_KEY_HERE'){reelsApiStatus='API उपलब्ध नहीं है—Built-in verified कैटलॉग दिखाया जा रहा है।';if(activeTab==='reels')renderReels();return false;}
- if(!force){try{const cached=JSON.parse(localStorage.getItem(REELS_API_CACHE_KEY)||'null');if(cached&&Array.isArray(cached.items)&&Date.now()-cached.savedAt<REELS_API_CACHE_TTL){reelsApiCatalog=cached.items.filter(x=>x&&Number(x.durationSeconds)>=2100&&!isBlockedMovieTitle(x.title)&&!isBlockedMovieTitle(x.description||''));reelsApiStatus=getAllReelsSeries().length+' हिंदी ड्रामा वीडियो · Built-in + API Cache';if(activeTab==='reels')renderReels();return true;}}catch(e){}}
- reelsApiStatus='4 चुने हुए चैनलों के Uploads लोड हो रहे हैं—Built-in कैटलॉग पहले से उपलब्ध है…';if(activeTab==='reels')renderReels();
+ if(!reelsApiCatalog.length){try{const c=JSON.parse(localStorage.getItem(REELS_API_CACHE_KEY)||'null');if(c&&Array.isArray(c.items))reelsApiCatalog=c.items.filter(x=>x&&x.videoId&&Number(x.durationSeconds)>=2100&&!isBlockedMovieTitle(x.title)&&!isBlockedMovieTitle(x.description||''));}catch(e){}}
+ if(!YOUTUBE_DATA_API_KEY||YOUTUBE_DATA_API_KEY==='PASTE_RESTRICTED_YOUTUBE_API_KEY_HERE'){reelsApiStatus='YouTube API उपलब्ध नहीं—सेव और Built-in फिल्में दिखाई जा रही हैं।';if(activeTab==='reels')renderReels();return false;}
+ if(!force){try{const c=JSON.parse(localStorage.getItem(REELS_API_CACHE_KEY)||'null');if(c&&Array.isArray(c.items)&&Date.now()-c.savedAt<REELS_API_CACHE_TTL){const m=new Map([...reelsApiCatalog,...c.items].filter(x=>x&&x.videoId).map(x=>[x.videoId,x]));reelsApiCatalog=[...m.values()].filter(x=>Number(x.durationSeconds)>=2100&&!isBlockedMovieTitle(x.title)&&!isBlockedMovieTitle(x.description||''));reelsApiStatus=getAllReelsSeries().length+' हिंदी ड्रामा वीडियो · Built-in + API Cache';if(activeTab==='reels')renderReels();return true;}}catch(e){}}
+ reelsApiStatus='4 चैनलों के सीधे Uploads लोड हो रहे हैं (हर चैनल के अधिकतम 100 वीडियो)…';if(activeTab==='reels')renderReels();
  try{const candidates=[];for(const channel of REELS_CHANNELS){try{candidates.push(...await fetchMovieChannelUploads(channel));}catch(error){console.warn('Channel uploads failed:',channel.name,error);}}
- const unique=await fetchAllMovieDetails(candidates);reelsApiCatalog=[...new Map([...reelsApiCatalog,...unique].map(x=>[x.videoId,x])).values()].sort((x,y)=>(Number(x.priority)||0)-(Number(y.priority)||0)||(y.publishedAt||'').localeCompare(x.publishedAt||''));
- try{localStorage.setItem(REELS_API_CACHE_KEY,JSON.stringify({savedAt:Date.now(),items:reelsApiCatalog}));}catch(error){console.warn('Uploads cache unavailable',error);}
- reelsApiStatus=getAllReelsSeries().length+' हिंदी ड्रामा वीडियो · Built-in + API Merge · 24 घंटे कैश';
- }catch(error){console.warn('Uploads catalog failed',error);reelsApiStatus='YouTube API उपलब्ध नहीं—Built-in कैटलॉग सुरक्षित है। '+(error.message||'');}
- if(activeTab==='reels')renderReels();return !reelsApiStatus.startsWith('YouTube API लोड नहीं हुआ');
+ const fresh=await fetchAllMovieDetails(candidates);const merged=new Map([...reelsApiCatalog,...fresh].filter(x=>x&&x.videoId).map(x=>[x.videoId,x]));reelsApiCatalog=[...merged.values()].sort((a,b)=>(Number(a.priority)||0)-(Number(b.priority)||0)||(b.publishedAt||'').localeCompare(a.publishedAt||''));
+ try{localStorage.setItem(REELS_API_CACHE_KEY,JSON.stringify({savedAt:Date.now(),items:reelsApiCatalog}));}catch(error){console.warn('Uploads cache unavailable',error);}reelsApiStatus=getAllReelsSeries().length+' हिंदी ड्रामा वीडियो · Built-in + API Merge · 24 घंटे कैश';
+ }catch(error){console.warn('Uploads catalog failed',error);reelsApiStatus='YouTube API उपलब्ध नहीं—पहले से सेव फिल्में सुरक्षित हैं। '+(error.message||'');}
+ if(activeTab==='reels')renderReels();return !reelsApiStatus.includes('YouTube API उपलब्ध नहीं');
 }
 function renderReels(){
  const box=$('listArea');if(!box||activeTab!=='reels')return;
@@ -792,8 +795,7 @@ function formatReelsTime(seconds){
 let reelsControlsTimer=null,reelsProgressTimer=null;
 function showReelsControls(){
  const panel=document.getElementById('reelsPlaybackControls');if(!panel)return;
- panel.classList.add('visible');updateReelsControls();clearTimeout(reelsControlsTimer);
- reelsControlsTimer=setTimeout(()=>{panel.classList.add('visible');},4000);
+ panel.classList.add('visible');panel.style.opacity='1';panel.style.pointerEvents='auto';updateReelsControls();clearTimeout(reelsControlsTimer);
 }
 function updateReelsControls(){
  const player=reelsFullscreenYTPlayer,panel=document.getElementById('reelsPlaybackControls');if(!player||!panel)return;
@@ -832,7 +834,7 @@ window.openReelsPlayer=async function(videoId){
  mount.addEventListener('touchend',handleReelsFullscreenTouchEnd,{passive:false});
  mount.addEventListener('touchcancel',function(){reelsSwipeStartY=null;reelsTouchStartX=null;},{passive:true});
  const controls=document.createElement('div');controls.id='reelsPlaybackControls';
- controls.style.cssText='position:absolute;left:0;right:0;bottom:0;z-index:12;padding:44px 16px max(18px,env(safe-area-inset-bottom));background:linear-gradient(transparent,rgba(0,0,0,.78));display:flex;align-items:center;gap:12px;opacity:0;pointer-events:none;transition:opacity .2s';
+ controls.style.cssText='position:fixed;left:12px;right:12px;bottom:14px;z-index:9999999;padding:10px 12px max(10px,env(safe-area-inset-bottom));background:rgba(12,12,18,.94);border:1px solid rgba(255,255,255,.2);border-radius:14px;display:flex;align-items:center;gap:10px;opacity:1;pointer-events:auto;box-sizing:border-box;backdrop-filter:blur(10px)';
  controls.innerHTML='<button id="reelsPlayPause" type="button" aria-label="Play or pause" style="color:#fff;font-size:22px;background:transparent;border:0;padding:8px;pointer-events:auto" onclick="event.stopPropagation();toggleReelsPlayback()">▶</button><span id="reelsCurrentTime" style="color:#fff;font-size:12px;min-width:42px">00:00</span><input id="reelsSeekRange" type="range" min="0" max="1" value="0" step="0.1" aria-label="वीडियो आगे पीछे करें" style="flex:1;min-width:0;accent-color:#a78bfa;pointer-events:auto" onpointerdown="reelsSeeking=true;clearTimeout(reelsControlsTimer)" oninput="seekReelsVideo(this.value)" onpointerup="reelsSeeking=false;showReelsControls()" ontouchend="reelsSeeking=false;showReelsControls()"><span id="reelsTotalTime" style="color:#fff;font-size:12px;min-width:42px">00:00</span>';
  box.appendChild(controls);
  try{
