@@ -587,6 +587,9 @@ try{
   localStorage.setItem('chatpro_reels_catalog_cleanup_v14','yes');
  }
 }catch(e){}
+const BUILTIN_VERIFIED_REELS = [
+ {videoId:'eKwcg4mveTg',title:'Train To Busan | Hindi Dubbed Full Movie',durationSeconds:7080,durationLabel:'1घं 58मि',displayDurationLabel:'🎬 1h 58m • Full Movie',thumbnail:'https://i.ytimg.com/vi/eKwcg4mveTg/hqdefault.jpg',source:'World Movies Local Hindi',category:'popular',tags:['कोरियन ड्रामा','हिंदी डब्ड','फुल मूवी'],badge:'Verified Hindi Dubbed',priority:-10,publishedAt:'2025-05-22T00:00:00Z',builtin:true}
+];
 const REELS_CHANNELS = [
 {name:'Drama Central - Hindi',handle:'Chinesedramacentral',category:'popular',priority:0,tags:['कोरियन ड्रामा','चाइनीज ड्रामा','हिंदी डब्ड'],badge:'Drama Central'},
 {name:'Dyar Entertainment Hindi',handle:'DyarEntertainment',category:'popular',priority:1,tags:['कोरियन ड्रामा','चाइनीज ड्रामा','हिंदी डब्ड'],badge:'Dyar Entertainment'},
@@ -625,7 +628,7 @@ async function loadReelsPlaylistPosters() {
  }));
 }
 function getAllReelsSeries(){
- const seen=new Set();return [...reelsApiCatalog].filter(x=>{if(!x||!x.videoId||seen.has(x.videoId))return false;seen.add(x.videoId);return true;})
+ const seen=new Set();return [...BUILTIN_VERIFIED_REELS,...reelsApiCatalog].filter(x=>{if(!x||!x.videoId||seen.has(x.videoId))return false;seen.add(x.videoId);return true;})
  .sort((a,b)=>(Number(a.priority)||0)-(Number(b.priority)||0)||(b.publishedAt||'').localeCompare(a.publishedAt||''));
 }
 async function youtubeApiRequest(resource,params){
@@ -691,27 +694,27 @@ async function fetchAllMovieDetails(candidates){
 async function forceRefreshOfficialPlaylists(){
  const button=document.getElementById('forceRefreshBtn');if(reelsLoading)return;
  if(button){button.disabled=true;button.textContent='🔄 4 चैनलों के Uploads अपडेट हो रहे हैं…';}
- reelsApiCatalog=[];try{localStorage.removeItem(REELS_API_CACHE_KEY);localStorage.removeItem('chatpro_reels_posters_v1');reelsPosterMap={};}catch(e){}
+ try{localStorage.removeItem(REELS_API_CACHE_KEY);localStorage.removeItem('chatpro_reels_posters_v1');reelsPosterMap={};}catch(e){}
  let ok=false;try{ok=await loadOfficialReelsPlaylists(true)===true;}catch(error){reelsApiStatus='अपडेट नहीं हुआ: '+(error.message||'API error');}
- if(ok)reelsApiStatus='✅ '+reelsApiCatalog.length+' अलग हिंदी ड्रामा वीडियो · 35+ मिनट';
+ if(ok)reelsApiStatus='✅ '+getAllReelsSeries().length+' अलग हिंदी ड्रामा वीडियो · Built-in + API Merge';
  if(activeTab==='reels')renderReels();const current=document.getElementById('forceRefreshBtn');if(current){current.disabled=false;current.textContent=ok?'✅ Uploads अपडेट हुए':'↻ फिर कोशिश करें';}
  if(typeof showToast==='function')showToast(ok?'✅ Uploads कैटलॉग अपडेट हुआ!':'कैटलॉग अपडेट नहीं हो सका।');return ok;
 }
 async function loadOfficialReelsPlaylists(force=false){
- if(!YOUTUBE_DATA_API_KEY||YOUTUBE_DATA_API_KEY==='PASTE_RESTRICTED_YOUTUBE_API_KEY_HERE'){reelsApiStatus='YOUTUBE_DATA_API_KEY सेट करें।';if(activeTab==='reels')renderReels();return false;}
- if(!force){try{const cached=JSON.parse(localStorage.getItem(REELS_API_CACHE_KEY)||'null');if(cached&&Array.isArray(cached.items)&&Date.now()-cached.savedAt<REELS_API_CACHE_TTL){reelsApiCatalog=cached.items.filter(x=>x&&Number(x.durationSeconds)>=2100&&!isBlockedMovieTitle(x.title)&&!isBlockedMovieTitle(x.description||''));reelsApiStatus=reelsApiCatalog.length+' हिंदी ड्रामा वीडियो · 24 घंटे कैश';if(activeTab==='reels')renderReels();return true;}}catch(e){}}
- reelsApiStatus='4 चुने हुए चैनलों के सीधे Uploads (प्रति चैनल 100 वीडियो) लोड हो रहे हैं…';if(activeTab==='reels')renderReels();
+ if(!YOUTUBE_DATA_API_KEY||YOUTUBE_DATA_API_KEY==='PASTE_RESTRICTED_YOUTUBE_API_KEY_HERE'){reelsApiStatus='API उपलब्ध नहीं है—Built-in verified कैटलॉग दिखाया जा रहा है।';if(activeTab==='reels')renderReels();return false;}
+ if(!force){try{const cached=JSON.parse(localStorage.getItem(REELS_API_CACHE_KEY)||'null');if(cached&&Array.isArray(cached.items)&&Date.now()-cached.savedAt<REELS_API_CACHE_TTL){reelsApiCatalog=cached.items.filter(x=>x&&Number(x.durationSeconds)>=2100&&!isBlockedMovieTitle(x.title)&&!isBlockedMovieTitle(x.description||''));reelsApiStatus=getAllReelsSeries().length+' हिंदी ड्रामा वीडियो · Built-in + API Cache';if(activeTab==='reels')renderReels();return true;}}catch(e){}}
+ reelsApiStatus='4 चुने हुए चैनलों के Uploads लोड हो रहे हैं—Built-in कैटलॉग पहले से उपलब्ध है…';if(activeTab==='reels')renderReels();
  try{const candidates=[];for(const channel of REELS_CHANNELS){try{candidates.push(...await fetchMovieChannelUploads(channel));}catch(error){console.warn('Channel uploads failed:',channel.name,error);}}
- const unique=await fetchAllMovieDetails(candidates);reelsApiCatalog=unique.sort((x,y)=>(Number(x.priority)||0)-(Number(y.priority)||0)||(y.publishedAt||'').localeCompare(x.publishedAt||''));
+ const unique=await fetchAllMovieDetails(candidates);reelsApiCatalog=[...new Map([...reelsApiCatalog,...unique].map(x=>[x.videoId,x])).values()].sort((x,y)=>(Number(x.priority)||0)-(Number(y.priority)||0)||(y.publishedAt||'').localeCompare(x.publishedAt||''));
  try{localStorage.setItem(REELS_API_CACHE_KEY,JSON.stringify({savedAt:Date.now(),items:reelsApiCatalog}));}catch(error){console.warn('Uploads cache unavailable',error);}
- reelsApiStatus=reelsApiCatalog.length+' हिंदी ड्रामा वीडियो · 35+ मिनट · 24 घंटे कैश';
- }catch(error){console.warn('Uploads catalog failed',error);reelsApiStatus='YouTube API लोड नहीं हुआ: '+(error.message||'API key/referrer जाँचें।');reelsApiCatalog=[];}
+ reelsApiStatus=getAllReelsSeries().length+' हिंदी ड्रामा वीडियो · Built-in + API Merge · 24 घंटे कैश';
+ }catch(error){console.warn('Uploads catalog failed',error);reelsApiStatus='YouTube API उपलब्ध नहीं—Built-in कैटलॉग सुरक्षित है। '+(error.message||'');}
  if(activeTab==='reels')renderReels();return !reelsApiStatus.startsWith('YouTube API लोड नहीं हुआ');
 }
 function renderReels(){
  const box=$('listArea');if(!box||activeTab!=='reels')return;
  const filters=[['all','सभी'],['popular','पॉपुलर'],['new','नया']],rows=getAllReelsSeries().filter(x=>reelsFilter==='all'||x.category===reelsFilter);
- box.innerHTML=`<section class="reels-page"><div class="reels-hero"><div class="reels-title">FreeReels <span class="text-violet-300">+</span> <span class="text-xs font-bold text-white/70">v7.0</span></div><div class="reels-sub">4 चैनलों के सीधे Uploads · 35+ मिनट</div><div class="text-[10px] text-gray-400 mt-3">केवल चुने हुए Hindi-dubbed चैनल · ${getAllReelsSeries().length} फिल्में</div><div class="text-[10px] text-gray-400 mt-2" id="reelsApiStatus">${reelsEscape(reelsApiStatus)}</div><button type="button" id="forceRefreshBtn" style="position:relative;z-index:999;pointer-events:auto;user-select:none;-webkit-user-select:none;cursor:pointer;touch-action:manipulation" class="reels-filter mt-2">↻ Refresh channel Uploads</button></div>
+ box.innerHTML=`<section class="reels-page"><div class="reels-hero"><div class="reels-title">FreeReels <span class="text-violet-300">+</span> <span class="text-xs font-bold text-white/70">v7.0</span></div><div class="reels-sub">Built-in Verified + 4 चैनलों के Uploads · 35+ मिनट</div><div class="text-[10px] text-gray-400 mt-3">केवल चुने हुए Hindi-dubbed चैनल · ${getAllReelsSeries().length} फिल्में</div><div class="text-[10px] text-gray-400 mt-2" id="reelsApiStatus">${reelsEscape(reelsApiStatus)}</div><button type="button" id="forceRefreshBtn" style="position:relative;z-index:999;pointer-events:auto;user-select:none;-webkit-user-select:none;cursor:pointer;touch-action:manipulation" class="reels-filter mt-2">↻ Refresh channel Uploads</button></div>
  <div class="reels-filters">${filters.map(([k,l])=>`<button class="reels-filter ${reelsFilter===k?'active':''}" onclick="setReelsFilter('${k}')">${l}</button>`).join('')}</div>
  <div class="reels-grid">${rows.map(x=>{const poster=reelsPoster(x);return `<article class="reels-card" onclick="openReelsPlayer('${x.videoId}')"><div class="reels-poster-wrap">${poster?`<img class="reels-poster" loading="lazy" src="${reelsEscape(poster)}" alt="${reelsEscape(x.title)} poster" onerror="reelsFallbackImage(this)">`:''}<div class="reels-poster-fallback"><strong>${reelsEscape(x.title)}</strong><small>${reelsEscape(x.source)}</small></div><div class="reels-badges"><span class="reels-badge">${reelsEscape(x.badge)}</span><span class="reels-badge">${reelsEscape(x.displayDurationLabel||x.durationLabel)}</span></div><span class="reels-views">▶ फुल शो</span></div><div class="reels-card-body"><div class="reels-card-title">${reelsEscape(x.title)}</div><div class="reels-meta">${reelsEscape(x.source)} · ${reelsEscape(x.durationLabel)}</div><div class="reels-tags">${(x.tags||[]).map(t=>`<span class="reels-tag">${reelsEscape(t)}</span>`).join('')}</div></div></article>`;}).join('')}</div></section>`;
 }
