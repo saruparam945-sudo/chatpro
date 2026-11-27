@@ -166,9 +166,9 @@ body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#e5ddd5}
 .reels-tag{font-size:9px;color:#c4b5fd;background:#312e81aa;border:1px solid #6d5ca533;border-radius:999px;padding:3px 7px}
 .reels-player-backdrop{position:fixed;inset:0;z-index:80;background:#05070d;display:flex;align-items:stretch;justify-content:center;padding:0;overflow:hidden;width:100vw;height:100vh;height:100dvh}
 .reels-player-panel{position:relative;width:100vw;height:100vh;height:100dvh;max-width:none;min-height:0;background:#090d16;border:0;border-radius:0;overflow:hidden}
-.reels-player-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;color:white;font-weight:800;gap:10px;max-width:1200px;margin:auto;position:absolute;z-index:3;top:0;left:0;right:0;background:linear-gradient(#05070de8,transparent)}
-.reels-player-frame{position:absolute;inset:0;width:100%;height:100%;aspect-ratio:auto;border:0;background:#000;display:block;max-height:none}.reels-episodes{display:grid;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));gap:7px;padding:10px 12px 18px;max-height:30vh;overflow-y:auto;max-width:1200px;margin:0 auto}.reels-ep-btn{background:#1b2231;color:#cbd5e1;border:1px solid #354052;border-radius:9px;padding:10px 5px;font-size:12px;font-weight:900}.reels-ep-btn.active{background:#7c3aed;border-color:#a78bfa;color:#fff;box-shadow:0 0 0 2px #8b5cf633}.reels-episode-drawer{position:absolute;z-index:4;left:0;right:0;bottom:0;padding:0 0 max(8px,env(safe-area-inset-bottom));background:transparent;pointer-events:none}
-.reels-floating-bar{display:flex;align-items:center;gap:10px;margin:0 12px;padding:10px 12px;border:1px solid #ffffff30;border-radius:14px;background:#10182799;color:#fff;backdrop-filter:blur(16px);box-shadow:0 4px 22px #0006;pointer-events:auto}
+.reels-player-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;color:white;font-weight:800;gap:10px;max-width:1200px;margin:auto;position:absolute;z-index:30;top:0;left:0;right:0;background:linear-gradient(#05070de8,transparent);pointer-events:auto}.reels-player-head button{position:relative;z-index:31;pointer-events:auto;touch-action:manipulation}
+.reels-player-frame{position:absolute;z-index:0;inset:0;width:100%;height:100%;aspect-ratio:auto;border:0;background:#000;display:block;max-height:none}.reels-touch-overlay{position:absolute;z-index:5;left:0;right:0;top:64px;bottom:100px;background:transparent;touch-action:pan-y;pointer-events:auto}.reels-episodes{display:grid;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));gap:7px;padding:10px 12px 18px;max-height:30vh;overflow-y:auto;max-width:1200px;margin:0 auto}.reels-ep-btn{background:#1b2231;color:#cbd5e1;border:1px solid #354052;border-radius:9px;padding:10px 5px;font-size:12px;font-weight:900}.reels-ep-btn.active{background:#7c3aed;border-color:#a78bfa;color:#fff;box-shadow:0 0 0 2px #8b5cf633}.reels-episode-drawer{position:absolute;z-index:25;left:0;right:0;bottom:0;padding:0 0 max(8px,env(safe-area-inset-bottom));background:transparent;pointer-events:none}
+.reels-floating-bar{display:flex;position:relative;z-index:26;pointer-events:auto;align-items:center;gap:10px;margin:0 12px;padding:10px 12px;border:1px solid #ffffff30;border-radius:14px;background:#10182799;color:#fff;backdrop-filter:blur(16px);box-shadow:0 4px 22px #0006;pointer-events:auto}
 .reels-floating-title{flex:1;min-width:0;font-size:13px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .reels-episodes-toggle{display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:10px;background:#ffffff1b;border:1px solid #ffffff2b;color:#fff;font-size:12px;font-weight:800;white-space:nowrap}
 .reels-episodes-toggle span:last-child{color:#d8c7ff;font-size:11px}
@@ -245,10 +245,12 @@ body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#e5ddd5}
 
 <div id="reelsPlayer" class="reels-player-backdrop hidden" onclick="if(event.target===this)minimizeReelsPlayer()">
   <div class="reels-player-panel">
-    <div class="reels-player-head"><span id="reelsPlayerTitle">Now Playing</span><div class="flex gap-2"><button onclick="minimizeReelsPlayer()" class="text-sm px-2" aria-label="Minimize player">—</button><button onclick="closeReelsPlayer()" class="text-2xl leading-none px-2" aria-label="Close player">&times;</button></div></div>
+    <div class="reels-player-head"><span id="reelsPlayerTitle">Now Playing</span><div class="flex gap-2"><button type="button" onclick="minimizeReelsPlayer()" class="text-sm px-3 py-2" aria-label="Minimize player">—</button><button type="button" onclick="closeReelsPlayer()" class="text-2xl leading-none px-3 py-2" aria-label="Close player">&times;</button></div></div>
     <div id="reelsPlayerFrame" class="reels-player-frame"></div>
+    <div id="reelsTouchOverlay" class="reels-touch-overlay" ontouchstart="handleReelsTouchStart(event)" ontouchend="handleReelsTouchEnd(event)" aria-label="Tap to play or pause; swipe up for next episode; swipe down for previous episode"></div>
     <div class="reels-episode-drawer" id="reelsEpisodeDrawer">
       <div class="reels-floating-bar">
+        <button type="button" class="reels-episodes-toggle" onclick="closeReelsPlayer()" aria-label="Back and close player">← Back / ✕</button>
         <div class="reels-floating-title" id="reelsFloatingTitle">Series</div>
         <button type="button" class="reels-episodes-toggle" onclick="toggleReelsEpisodes()" aria-expanded="false"><span>📂 Episodes</span><span id="reelsEpisodeCount">EP. 1/1</span></button>
       </div>
@@ -672,6 +674,27 @@ function updateReelsMiniState(){
 }
 function startReelsMiniSync(){if(reelsMiniTimer)clearInterval(reelsMiniTimer);reelsMiniTimer=setInterval(updateReelsMiniState,700);}
 window.toggleReelsPlayback=()=>{if(!reelsPlayer)return;if(reelsPlayer.getPlayerState()===1)reelsPlayer.pauseVideo();else reelsPlayer.playVideo();updateReelsMiniState();};
+let reelsTouchStart=null;
+window.handleReelsTouchStart=event=>{
+ const touch=event.touches&&event.touches[0];if(!touch)return;
+ reelsTouchStart={x:touch.clientX,y:touch.clientY,time:Date.now()};
+};
+window.handleReelsTouchEnd=event=>{
+ if(!reelsTouchStart)return;
+ const touch=event.changedTouches&&event.changedTouches[0];
+ if(!touch){reelsTouchStart=null;return;}
+ const dx=touch.clientX-reelsTouchStart.x,dy=touch.clientY-reelsTouchStart.y;
+ const elapsed=Date.now()-reelsTouchStart.time;reelsTouchStart=null;
+ if(Math.abs(dy)>45&&Math.abs(dy)>Math.abs(dx)*1.2){
+  if(!reelsCurrentSeries||!reelsPlayer)return;
+  const current=Math.max(0,reelsPlayer.getPlaylistIndex()||0);
+  const target=dy<0?current+1:current-1;
+  if(target>=0&&target<reelsCurrentSeries.episodes)window.playReelsEpisode(target);
+ }else if(Math.abs(dx)<18&&Math.abs(dy)<18&&elapsed<500){
+  window.toggleReelsPlayback();
+ }
+};
+
 window.minimizeReelsPlayer=()=>{$('reelsPlayer').classList.add('hidden');$('reelsMiniPlayer').classList.remove('hidden');};
 window.restoreReelsPlayer=()=>{$('reelsPlayer').classList.remove('hidden');$('reelsMiniPlayer').classList.remove('hidden');};
 window.closeReelsPlayer=()=>{
