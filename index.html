@@ -672,7 +672,7 @@ async function fetchHindiMovieSearch(query,priority){
 function isFullMovieTitle(title){
  return /(full\s*(?:hindi\s*)?(?:movie|film)|complete\s*(?:hindi\s*)?(?:movie|film)|full[- ]length\s*(?:movie|film)|पूरी\s*फिल्म|फुल\s*मूवी|संपूर्ण\s*फिल्म|हिंदी\s*फुल\s*मूवी)/i.test(String(title||''));
 }
-function isBlockedMovieTitle(title){return /\\b(part|pt\\.?|episode|ep\\.?|chapter|season|s\\d+\\s*e\\d+|trailer|promo|teaser|explain|explainer|ai|a\\.i\\.|english|eng(?:lish)?\\s*dub(?:bed)?)\\b|भाग|एपिसोड|कड़ी|ट्रेलर|टीज़र|प्रोमो|व्याख्या/i.test(String(title||''));}
+function isBlockedMovieTitle(title){return /\b(part|pt\.?|episode|ep\.?|chapter|season|s\d+\s*e\d+|trailer|promo|teaser|explain|explainer|ai|a\.i\.|english|eng(?:lish)?\s*dub(?:bed)?)\b|भाग|एपिसोड|कड़ी|ट्रेलर|टीज़र|प्रोमो|व्याख्या/i.test(String(title||''));}
 function isKoreanChineseDrama(title,description){
  const text=String(title||'')+' '+String(description||'');
  return /\b(korean|korea|k[- ]?drama|chinese|china|c[- ]?drama|cdrama)\b|कोरियन|कोरियाई|चाइनीज|चीनी|चीन/i.test(text);
