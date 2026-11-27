@@ -164,10 +164,10 @@ body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#e5ddd5}
 .reels-meta{font-size:10px;color:#9ba4b7;margin-top:5px}
 .reels-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
 .reels-tag{font-size:9px;color:#c4b5fd;background:#312e81aa;border:1px solid #6d5ca533;border-radius:999px;padding:3px 7px}
-.reels-player-backdrop{position:fixed;inset:0;z-index:80;background:#070910;display:flex;align-items:flex-start;justify-content:center;padding:0;overflow-y:auto}
-.reels-player-panel{width:100%;max-width:none;min-height:100%;background:#090d16;border:0;border-radius:0;overflow:hidden}
-.reels-player-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;color:white;font-weight:800;gap:10px;max-width:1200px;margin:auto}
-.reels-player-frame{width:100%;aspect-ratio:16/9;border:0;background:#000;display:block;max-height:70vh}.reels-episodes{display:grid;grid-template-columns:repeat(auto-fill,minmax(66px,1fr));gap:8px;padding:14px;max-width:1200px;margin:0 auto}.reels-ep-btn{background:#1b2231;color:#cbd5e1;border:1px solid #354052;border-radius:9px;padding:10px 5px;font-size:12px;font-weight:900}.reels-ep-btn.active{background:#7c3aed;border-color:#a78bfa;color:#fff;box-shadow:0 0 0 2px #8b5cf633}.reels-episodes-label{max-width:1200px;margin:12px auto 0;padding:0 14px;color:#aab4c6;font-size:12px;font-weight:800}
+.reels-player-backdrop{position:fixed;inset:0;z-index:80;background:#05070d;display:flex;align-items:stretch;justify-content:center;padding:0;overflow:hidden;width:100vw;height:100vh;height:100dvh}
+.reels-player-panel{position:relative;width:100vw;height:100vh;height:100dvh;max-width:none;min-height:0;background:#090d16;border:0;border-radius:0;overflow:hidden}
+.reels-player-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;color:white;font-weight:800;gap:10px;max-width:1200px;margin:auto;position:absolute;z-index:3;top:0;left:0;right:0;background:linear-gradient(#05070de8,transparent)}
+.reels-player-frame{position:absolute;inset:0;width:100%;height:100%;aspect-ratio:auto;border:0;background:#000;display:block;max-height:none}.reels-episodes{display:grid;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));gap:7px;padding:10px 12px 18px;max-height:30vh;overflow-y:auto;max-width:1200px;margin:0 auto}.reels-ep-btn{background:#1b2231;color:#cbd5e1;border:1px solid #354052;border-radius:9px;padding:10px 5px;font-size:12px;font-weight:900}.reels-ep-btn.active{background:#7c3aed;border-color:#a78bfa;color:#fff;box-shadow:0 0 0 2px #8b5cf633}.reels-episode-drawer{position:absolute;z-index:4;left:0;right:0;bottom:0;max-height:42vh;overflow-y:auto;padding:14px 0 max(14px,env(safe-area-inset-bottom));background:linear-gradient(180deg,#101827e8,#090d16 18%);border-top:1px solid #ffffff20;border-radius:18px 18px 0 0;backdrop-filter:blur(14px)}.reels-episodes-label{max-width:1200px;margin:0 auto;padding:0 12px 8px;color:#aab4c6;font-size:12px;font-weight:800}
 .reels-mini{position:fixed;z-index:79;left:10px;right:10px;bottom:10px;display:flex;align-items:center;gap:10px;padding:9px 11px;border:1px solid #4b4564;border-radius:14px;background:#171323f5;color:#fff;box-shadow:0 8px 30px #0009;backdrop-filter:blur(12px)}
 .reels-mini-poster{width:38px;height:52px;object-fit:cover;border-radius:6px;background:#312e81}
 .reels-mini-info{min-width:0;flex:1}
@@ -240,7 +240,7 @@ body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#e5ddd5}
   <div class="reels-player-panel">
     <div class="reels-player-head"><span id="reelsPlayerTitle">Now Playing</span><div class="flex gap-2"><button onclick="minimizeReelsPlayer()" class="text-sm px-2" aria-label="Minimize player">—</button><button onclick="closeReelsPlayer()" class="text-2xl leading-none px-2" aria-label="Close player">&times;</button></div></div>
     <div id="reelsPlayerFrame" class="reels-player-frame"></div>
-    <div class="reels-episodes-label">एपिसोड चुनें</div><div id="reelsEpisodeButtons" class="reels-episodes"></div>
+    <div class="reels-episode-drawer"><div class="reels-episodes-label" id="reelsDrawerTitle">एपिसोड चुनें</div><div id="reelsEpisodeButtons" class="reels-episodes"></div></div>
   </div>
 </div>
 <div id="reelsMiniPlayer" class="reels-mini hidden">
@@ -617,17 +617,28 @@ window.openReelsPlayer=async playlistId=>{
  $('reelsMiniTitle').textContent=series.title;$('reelsMiniEpisode').textContent='EP 1 / '+series.episodes;
  $('reelsMiniPoster').src=reelsPoster(series)||'';renderReelsEpisodeButtons(0);
  $('reelsMiniPlayer').classList.remove('hidden');$('reelsPlayer').classList.remove('hidden');
- const host=$('reelsPlayerFrame');
+ $('reelsDrawerTitle').textContent=series.title+' · '+series.episodes+' Episodes';\n const host=$('reelsPlayerFrame');
  if(reelsPlayer&&reelsPlayer.loadPlaylist){reelsPlayer.loadPlaylist({list:playlistId,listType:'playlist',index:0});return;}
  host.innerHTML='<div id="reelsYoutubePlayer" style="width:100%;height:100%"></div>';
  try{
   await loadYouTubeIframeAPI();
   reelsPlayer=new YT.Player('reelsYoutubePlayer',{width:'100%',height:'100%',playerVars:{listType:'playlist',list:playlistId,autoplay:1,playsinline:1,rel:0},events:{
    onReady:event=>{reelsPlayerReady=true;event.target.loadPlaylist({list:playlistId,listType:'playlist',index:0});startReelsMiniSync();},
-   onStateChange:updateReelsMiniState
+   onStateChange:onReelsPlayerStateChange
   }});
  }catch(error){host.innerHTML='<div class="p-5 text-white text-sm">YouTube Player लोड नहीं हुआ। कृपया दोबारा प्रयास करें।</div>';}
 };
+function onReelsPlayerStateChange(event){
+ updateReelsMiniState();
+ if(event && event.data===YT.PlayerState.ENDED && reelsCurrentSeries && reelsPlayer){
+  const index=typeof reelsPlayer.getPlaylistIndex==='function'?reelsPlayer.getPlaylistIndex():0;
+  const next=index+1;
+  if(next<reelsCurrentSeries.episodes){
+   if(reelsNextTimer) clearTimeout(reelsNextTimer);
+   reelsNextTimer=setTimeout(()=>{if(reelsPlayer&&reelsCurrentSeries)reelsPlayer.playVideoAt(next);},80);
+  }
+ }
+}
 function updateReelsMiniState(){
  if(!reelsPlayer||!reelsCurrentSeries)return;
  const raw=typeof reelsPlayer.getPlaylistIndex==='function'?reelsPlayer.getPlaylistIndex():0;
@@ -641,7 +652,7 @@ window.toggleReelsPlayback=()=>{if(!reelsPlayer)return;if(reelsPlayer.getPlayerS
 window.minimizeReelsPlayer=()=>{$('reelsPlayer').classList.add('hidden');$('reelsMiniPlayer').classList.remove('hidden');};
 window.restoreReelsPlayer=()=>{$('reelsPlayer').classList.remove('hidden');$('reelsMiniPlayer').classList.remove('hidden');};
 window.closeReelsPlayer=()=>{
- if(reelsMiniTimer)clearInterval(reelsMiniTimer);reelsMiniTimer=null;
+ if(reelsMiniTimer)clearInterval(reelsMiniTimer);reelsMiniTimer=null;if(reelsNextTimer)clearTimeout(reelsNextTimer);reelsNextTimer=null;
  if(reelsPlayer&&reelsPlayer.destroy){reelsPlayer.destroy();reelsPlayer=null;}
  reelsPlayerReady=false;reelsCurrentSeries=null;$('reelsPlayerFrame').innerHTML='';$('reelsEpisodeButtons').innerHTML='';
  $('reelsPlayer').classList.add('hidden');$('reelsMiniPlayer').classList.add('hidden');
