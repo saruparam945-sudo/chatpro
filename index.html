@@ -511,7 +511,7 @@ let ludoRoomId = null, unsubLudo = null, ludoState = null, myColor = 'red', isAn
 window.createLudoRoom = async () => {
   const code = Math.random().toString(36).substring(2, 7).toUpperCase();
   const initData = {
-    code, turn: 'red', dice: 0, rolled: false,
+    code, hostUid: currentUser.uid, turn: 'red', dice: 0, rolled: false,
     players: { red: { uid: currentUser.uid, name: currentUser.displayName || 'Player 1', peerId: myPeerId } },
     tokens: { red: [-1,-1,-1,-1], green: [-1,-1,-1,-1], yellow: [-1,-1,-1,-1], blue: [-1,-1,-1,-1] }
   };
@@ -726,7 +726,7 @@ window.createWatchRoom = async () => {
   const url = $('movieUrlInp').value.trim();
   if (!url) return alert('Paste a direct MP4 video link!');
   const code = 'MV' + Math.floor(100 + Math.random() * 900);
-  await setDoc(doc(db, 'watch_rooms', code), { code, url, playing: false, time: 0, hostPeerId: myPeerId, players: { [currentUser.uid]: { uid: currentUser.uid, name: currentUser.displayName || 'Host', peerId: myPeerId } } });
+  await setDoc(doc(db, 'watch_rooms', code), { code, hostUid: currentUser.uid, url, playing: false, time: 0, hostPeerId: myPeerId, players: { [currentUser.uid]: { uid: currentUser.uid, name: currentUser.displayName || 'Host', peerId: myPeerId } } });
   await joinWatchRoom(code);
 };
 window.joinWatchRoom = async (codeInp) => {
@@ -1004,6 +1004,16 @@ function startCallLogs() {
   });
 }
 
+async function ensureGroupChatRoom(roomId, groupId) {
+  if (!currentUser || !groupId) throw new Error('Invalid group chat');
+  const groupSnap = await getDoc(doc(db, 'groups', groupId));
+  if (!groupSnap.exists()) throw new Error('Group not found');
+  const groupData = groupSnap.data();
+  const members = Array.isArray(groupData.members) ? [...new Set(groupData.members)] : [];
+  if (!members.includes(currentUser.uid)) throw new Error('You are not a member of this group');
+  await setDoc(doc(db, 'rooms', roomId), { members, roomType: 'group', groupId, updatedAt: serverTimestamp() }, { merge: true });
+}
+
 async function ensurePrivateChatRoom(roomId, otherUid) {
   if (!currentUser || !otherUid || otherUid === currentUser.uid) throw new Error('Invalid private chat participants');
   const members = [currentUser.uid, otherUid].sort();
@@ -1013,10 +1023,10 @@ async function ensurePrivateChatRoom(roomId, otherUid) {
 window.openChat = async (id, name, isGroup) => {
   if (!isGroup && !areFriends(id)) { alert('पहले FRIENDS टैब से Add Friend भेजें। चैट शुरू करने के लिए सामने वाले की स्वीकृति जरूरी है।'); switchTab('friends'); return; }
   const roomId = isGroup ? 'grp_' + id : [currentUser.uid, id].sort().join('_');
-  if (!isGroup) {
-    try { await ensurePrivateChatRoom(roomId, id); }
-    catch (e) { alert('Private chat room तैयार नहीं हो सका: ' + e.message); return; }
-  }
+  try {
+    if (!isGroup) await ensurePrivateChatRoom(roomId, id);
+    else await ensureGroupChatRoom(roomId, id);
+  } catch (e) { alert('Chat room तैयार नहीं हो सका: ' + e.message); return; }
   activeChat = { id, name, isGroup, roomId };
   $('blockUserBtn').classList.toggle('hidden', !!isGroup);
   $('chatTitle').textContent = name; $('chatAvatar').textContent = name[0].toUpperCase();
@@ -1056,7 +1066,7 @@ window.sendLudoInvite = async () => {
   try {
     const code = Math.random().toString(36).substring(2, 7).toUpperCase();
     const initData = {
-      code, turn: 'red', dice: 0, rolled: false,
+      code, hostUid: currentUser.uid, turn: 'red', dice: 0, rolled: false,
       players: { red: { uid: currentUser.uid, name: currentUser.displayName || 'Player 1', peerId: myPeerId } },
       tokens: { red: [-1,-1,-1,-1], green: [-1,-1,-1,-1], yellow: [-1,-1,-1,-1], blue: [-1,-1,-1,-1] }
     };
@@ -1080,7 +1090,7 @@ window.sendMovieInvite = async () => {
     if (!['http:', 'https:'].includes(parsed.protocol)) return alert('कृपया सही http/https video link डालें।');
     const code = 'MV' + Math.floor(100 + Math.random() * 900);
     await setDoc(doc(db, 'watch_rooms', code), {
-      code, url, playing: false, time: 0, hostPeerId: myPeerId,
+      code, hostUid: currentUser.uid, url, playing: false, time: 0, hostPeerId: myPeerId,
       players: { [currentUser.uid]: { uid: currentUser.uid, name: currentUser.displayName || 'Host', peerId: myPeerId } }
     });
     const senderName = currentUser.displayName || 'ChatPro User';
