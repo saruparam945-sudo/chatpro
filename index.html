@@ -966,7 +966,7 @@ window.destroyReelsPlayer=function(){
  try{if(reelsPlayer&&typeof reelsPlayer.destroy==='function')reelsPlayer.destroy();}catch(e){}
  reelsPlayer=null;reelsPlayerReady=false;reelsConsecutiveVideoErrors=0;reelsCurrentSeries=null;
  const overlay=document.getElementById('reelsPlayer');
- const mini=document.getElementById('reelsMiniPlayer');
+
  if(overlay){overlay.classList.add('hidden');overlay.classList.remove('reels-minimized');overlay.style.cssText='display:none!important;visibility:hidden!important;pointer-events:none!important;';}
  if(mini){mini.classList.add('hidden');mini.style.cssText='display:none!important;';}
  const panel=overlay&&overlay.querySelector('.reels-player-panel');
