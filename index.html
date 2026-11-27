@@ -211,14 +211,14 @@ body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#e5ddd5}
         <button onclick="logoutUser()" class="p-1 active:scale-90" title="Logout"><i class="fas fa-sign-out-alt"></i></button>
       </div>
     </div>
-    <div class="flex text-xs font-bold tracking-wider">
-      <button onclick="switchTab('chats')" id="tab-chats" class="flex-1 pb-2 border-b-2 border-white">CHATS</button>
-      <button onclick="switchTab('ludo')" id="tab-ludo" class="flex-1 pb-2 border-b-2 border-transparent opacity-75">LUDO</button>
-      <button onclick="switchTab('movie')" id="tab-movie" class="flex-1 pb-2 border-b-2 border-transparent opacity-75">MOVIE</button>
-      <button onclick="switchTab('reels')" id="tab-reels" class="flex-1 pb-2 border-b-2 border-transparent opacity-75">REELS</button>
-      <button onclick="switchTab('status')" id="tab-status" class="flex-1 pb-2 border-b-2 border-transparent opacity-75">STATUS</button>
-      <button onclick="switchTab('calls')" id="tab-calls" class="flex-1 pb-2 border-b-2 border-transparent opacity-75">CALLS</button>
-      <button onclick="switchTab('friends')" id="tab-friends" class="flex-1 pb-2 border-b-2 border-transparent opacity-75">FRIENDS</button>
+    <div class="flex overflow-x-auto text-xs font-bold tracking-wider">
+      <button onclick="switchTab('chats')" id="tab-chats" class="flex-none min-w-[64px] px-1 pb-2 border-b-2 border-white">CHATS</button>
+      <button onclick="switchTab('ludo')" id="tab-ludo" class="flex-none min-w-[64px] px-1 pb-2 border-b-2 border-transparent opacity-75">LUDO</button>
+      <button onclick="switchTab('movie')" id="tab-movie" class="flex-none min-w-[64px] px-1 pb-2 border-b-2 border-transparent opacity-75">MOVIE</button>
+      <button onclick="switchTab('reels')" id="tab-reels" class="flex-none min-w-[64px] px-1 pb-2 border-b-2 border-transparent opacity-75">REELS</button>
+      <button onclick="switchTab('status')" id="tab-status" class="flex-none min-w-[64px] px-1 pb-2 border-b-2 border-transparent opacity-75">STATUS</button>
+      <button onclick="switchTab('calls')" id="tab-calls" class="flex-none min-w-[64px] px-1 pb-2 border-b-2 border-transparent opacity-75">CALLS</button>
+      <button onclick="switchTab('friends')" id="tab-friends" class="flex-none min-w-[64px] px-1 pb-2 border-b-2 border-transparent opacity-75">FRIENDS</button>
     </div>
   </div>
 
@@ -575,7 +575,8 @@ function renderReels() {
   const now = Date.now(), week = 7 * 24 * 60 * 60 * 1000;
   const filtered = reelsItems.filter(item => {
     if (reelsFilter === 'saved') return reelsSaved.has(item.id);
-    if (reelsFilter === 'hindi-dubbed') return /hindi\s*dub|हिंदी\s*डब|dubbed in hindi/i.test(item.title);
+    if (reelsFilter === 'hindi-dubbed') return item.category === 'hindi-dubbed' || /hindi\s*dub|हिंदी\s*डब|dubbed in hindi/i.test(item.title);
+    if (reelsFilter === 'popular') return item.category === 'popular';
     if (reelsFilter === 'new') return item.published && now - new Date(item.published).getTime() <= week;
     return true;
   }).sort((a,b) => new Date(b.published || 0) - new Date(a.published || 0));
