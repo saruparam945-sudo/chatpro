@@ -684,7 +684,7 @@ async function fetchAllChannelPlaylists(channel){
  return items.filter(item=>{
   const title=(item.snippet&&item.snippet.title)||'';
   const count=Number(item.contentDetails&&item.contentDetails.itemCount)||0;
-  return count>=5&&!excluded.test(title);
+  return count>=5&&!excluded.test(title)&&looksLikeHindiPlaylist(item);
  }).map(item=>{
   const thumbs=item.snippet&&item.snippet.thumbnails||{};
   const thumb=(thumbs.maxres||thumbs.high||thumbs.medium||thumbs.default||{}).url;
