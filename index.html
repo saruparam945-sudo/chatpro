@@ -164,7 +164,7 @@ body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#e5ddd5}
 .reels-meta{font-size:10px;color:#9ba4b7;margin-top:5px}
 .reels-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
 .reels-tag{font-size:9px;color:#c4b5fd;background:#312e81aa;border:1px solid #6d5ca533;border-radius:999px;padding:3px 7px}
-.reels-player-backdrop{position:fixed;inset:0;z-index:80;background:#05070d;display:flex;align-items:stretch;justify-content:center;padding:0;overflow:hidden;width:100vw;height:100vh;height:100dvh}
+.reels-player-backdrop{position:fixed;inset:0;z-index:80;background:#05070d;display:flex;align-items:stretch;justify-content:center;padding:0;overflow:hidden;width:100vw;height:100vh;height:100dvh;pointer-events:auto}.reels-player-backdrop.hidden,#reelsPlayer.hidden{display:none!important;visibility:hidden!important;pointer-events:none!important}.reels-player-backdrop:not(.hidden){visibility:visible;pointer-events:auto}
 .reels-player-panel{position:relative;width:100vw;height:100vh;height:100dvh;max-width:none;min-height:0;background:#090d16;border:0;border-radius:0;overflow:hidden}
 .reels-player-head{display:flex;align-items:center;justify-content:flex-end;padding:calc(10px + env(safe-area-inset-top)) 12px 10px;position:absolute;z-index:30;top:0;left:0;right:0;background:transparent;pointer-events:none}.reels-player-head button{position:relative;z-index:31;pointer-events:auto;touch-action:manipulation;width:38px;height:38px;padding:0;border-radius:50%;border:1px solid #ffffff55;background:#11182755;color:#fff;font-size:22px;line-height:1;backdrop-filter:blur(10px);box-shadow:0 2px 12px #0005}
 .reels-player-frame{position:absolute;z-index:0;inset:0;width:100%;height:100%;aspect-ratio:auto;border:0;background:#000;display:block;max-height:none;overflow:hidden}.reels-player-frame iframe{position:absolute!important;top:50%!important;left:50%!important;width:max(100vw,177.78vh)!important;height:max(100vh,56.25vw)!important;max-width:none!important;max-height:none!important;transform:translate(-50%,-50%)!important;border:0!important}.reels-touch-overlay{position:absolute;z-index:5;left:0;right:0;top:64px;bottom:100px;background:transparent;touch-action:pan-y;pointer-events:auto}.reels-episodes{display:grid;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));gap:7px;padding:10px 12px 18px;max-height:30vh;overflow-y:auto;max-width:1200px;margin:0 auto}.reels-ep-btn{background:#1b2231;color:#cbd5e1;border:1px solid #354052;border-radius:9px;padding:10px 5px;font-size:12px;font-weight:900}.reels-ep-btn.active{background:#7c3aed;border-color:#a78bfa;color:#fff;box-shadow:0 0 0 2px #8b5cf633}.reels-episode-drawer{position:absolute;z-index:25;left:0;right:0;bottom:0;padding:0 0 max(8px,env(safe-area-inset-bottom));background:transparent;pointer-events:none}
@@ -633,11 +633,11 @@ window.playReelsEpisode=index=>{
 window.toggleReelsEpisodes=()=>{const drawer=$('reelsEpisodeDrawer'),open=drawer.classList.toggle('open');$('reelsEpisodesToggle').setAttribute('aria-expanded',open?'true':'false');$('reelsEpisodePanel').setAttribute('aria-hidden',open?'false':'true');};
 window.openReelsPlayer=async playlistId=>{
  const series=SERIES_CATALOG.find(x=>x.playlistId===playlistId);if(!series)return;
- reelsCurrentSeries=series;$('reelsPlayerTitle').textContent=series.title+' · '+series.season;
- $('reelsFloatingTitle').textContent=series.title;$('reelsEpisodeCount').textContent='EP. 1/'+series.episodes;$('reelsEpisodeDrawer').classList.remove('open');$('reelsEpisodesToggle')?.setAttribute('aria-expanded','false');$('reelsEpisodePanel').setAttribute('aria-hidden','true');
+ reelsCurrentSeries=series;
+ $('reelsEpisodeCount').textContent='EP. 1/'+series.episodes;$('reelsEpisodeDrawer').classList.remove('open');$('reelsEpisodesToggle')?.setAttribute('aria-expanded','false');$('reelsEpisodePanel').setAttribute('aria-hidden','true');
  $('reelsMiniTitle').textContent=series.title;$('reelsMiniEpisode').textContent='EP 1 / '+series.episodes;
  $('reelsMiniPoster').src=reelsPoster(series)||'';renderReelsEpisodeButtons(0);
- $('reelsMiniPlayer').classList.remove('hidden');$('reelsPlayer').classList.remove('hidden');
+ $('reelsMiniPlayer').classList.remove('hidden');$('reelsPlayer').classList.remove('hidden');$('reelsPlayer').style.display='flex';$('reelsPlayer').style.visibility='visible';$('reelsPlayer').style.pointerEvents='auto';
  $('reelsDrawerTitle').textContent=series.title+' · '+series.episodes+' Episodes';
  const host=$('reelsPlayerFrame');
  if(reelsPlayer&&reelsPlayer.loadPlaylist){reelsPlayer.loadPlaylist({list:playlistId,listType:'playlist',index:0});return;}
@@ -693,13 +693,13 @@ window.handleReelsTouchEnd=event=>{
  }
 };
 
-window.minimizeReelsPlayer=()=>{$('reelsPlayer').classList.add('hidden');$('reelsMiniPlayer').classList.remove('hidden');};
-window.restoreReelsPlayer=()=>{$('reelsPlayer').classList.remove('hidden');$('reelsMiniPlayer').classList.remove('hidden');};
+window.minimizeReelsPlayer=()=>{$('reelsPlayer').classList.add('hidden');$('reelsPlayer').style.display='none';$('reelsPlayer').style.visibility='hidden';$('reelsPlayer').style.pointerEvents='none';$('reelsMiniPlayer').classList.remove('hidden');};
+window.restoreReelsPlayer=()=>{$('reelsPlayer').classList.remove('hidden');$('reelsPlayer').style.display='flex';$('reelsPlayer').style.visibility='visible';$('reelsPlayer').style.pointerEvents='auto';$('reelsMiniPlayer').classList.remove('hidden');};
 window.closeReelsPlayer=()=>{
  if(reelsMiniTimer)clearInterval(reelsMiniTimer);reelsMiniTimer=null;if(reelsNextTimer)clearTimeout(reelsNextTimer);reelsNextTimer=null;
  if(reelsPlayer&&reelsPlayer.destroy){reelsPlayer.destroy();reelsPlayer=null;}
  reelsPlayerReady=false;reelsCurrentSeries=null;$('reelsPlayerFrame').innerHTML='';$('reelsEpisodeButtons').innerHTML='';
- $('reelsPlayer').classList.add('hidden');$('reelsMiniPlayer').classList.add('hidden');
+ $('reelsPlayer').classList.add('hidden');$('reelsPlayer').style.display='none';$('reelsPlayer').style.visibility='hidden';$('reelsPlayer').style.pointerEvents='none';$('reelsMiniPlayer').classList.add('hidden');
 };
 async function loadReelsFeed(force) {
   if(reelsLoading)return; reelsLoading=true; renderReels();
