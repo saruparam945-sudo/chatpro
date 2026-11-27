@@ -574,13 +574,14 @@ function listenUsersAndGroups() {
 const SERIES_CATALOG = [];
 // Public browser key: restrict by HTTP referrer (https://saruparam945-sudo.github.io/*)
 // and API restriction (YouTube Data API v3) in Google Cloud Console.
-const YOUTUBE_DATA_API_KEY = 'AIzaSyD5A_zJnG0aruaySDp2ZXqUXDKm9GuCyYA';
-const REELS_API_CACHE_KEY = 'chatpro_korean_chinese_hindi_uploads_v17';
+// Catalog is served centrally from movies.json. No YouTube API key or API calls run in users' browsers.
+const MOVIES_JSON_URL = './movies.json';
+const REELS_API_CACHE_KEY = 'chatpro_central_movies_json_v1';
 const REELS_CHANNEL_ID_CACHE_KEY = 'chatpro_reels_channel_ids_v1';
-try{const old=JSON.parse(localStorage.getItem('chatpro_korean_chinese_hindi_uploads_v15')||'null');if(old&&Array.isArray(old.items)&&!localStorage.getItem(REELS_API_CACHE_KEY))localStorage.setItem(REELS_API_CACHE_KEY,JSON.stringify(old));}catch(e){}
+// Legacy browser-side API caches are intentionally no longer read.
 const REELS_API_CACHE_TTL = 24 * 60 * 60 * 1000;
-const REELS_PERMANENT_CACHE_KEY = 'chatpro_reels_permanent_catalog_v1';
-try{const previous=JSON.parse(localStorage.getItem('chatpro_korean_chinese_hindi_uploads_v16')||'null');if(previous&&Array.isArray(previous.items)){const current=JSON.parse(localStorage.getItem(REELS_PERMANENT_CACHE_KEY)||'null');const map=new Map([...(current?.items||[]),...previous.items].filter(x=>x&&x.videoId).map(x=>[x.videoId,x]));localStorage.setItem(REELS_PERMANENT_CACHE_KEY,JSON.stringify({savedAt:Date.now(),items:[...map.values()]}));}}catch(e){}
+const REELS_PERMANENT_CACHE_KEY = 'chatpro_central_movies_json_v1';
+try{localStorage.removeItem('chatpro_korean_chinese_hindi_uploads_v16');localStorage.removeItem('chatpro_reels_rss_catalog_v1');localStorage.removeItem('chatpro_reels_permanent_catalog_v1');localStorage.removeItem('chatpro_korean_chinese_hindi_uploads_v17');localStorage.removeItem('chatpro_central_movies_json_v1');}catch(e){}
 // Invalidate the previous wide-channel catalog and its poster cache immediately on startup.
 try{
  if(localStorage.getItem('chatpro_reels_catalog_cleanup_v17')!=='yes'){
@@ -591,11 +592,7 @@ try{
   localStorage.setItem('chatpro_reels_catalog_cleanup_v17','yes');
  }
 }catch(e){}
-const BUILTIN_VERIFIED_REELS = [
- {videoId:'eKwcg4mveTg',title:'Train To Busan | Hindi Dubbed Full Movie',durationSeconds:7080,durationLabel:'1घं 58मि',displayDurationLabel:'🎬 1h 58m • Full Movie',thumbnail:'https://i.ytimg.com/vi/eKwcg4mveTg/hqdefault.jpg',source:'World Movies Local Hindi',category:'popular',tags:['कोरियन ड्रामा','हिंदी डब्ड','फुल मूवी'],badge:'Catalog entry · duration needs recheck',priority:-10,publishedAt:'',builtin:true},
- {videoId:'SWh9u4fIKE4',title:'My Heart Belongs to His Bodyguard | Chinese Drama Hindi Dubbed Full Movie',durationSeconds:0,durationLabel:'अवधि जाँची जाएगी',displayDurationLabel:'🎬 अवधि जाँची जाएगी',thumbnail:'https://i.ytimg.com/vi/SWh9u4fIKE4/hqdefault.jpg',source:'F4 Central 1',category:'popular',tags:['चाइनीज ड्रामा','हिंदी डब्ड'],badge:'YouTube title verified · duration needs recheck',priority:-9,publishedAt:'',builtin:true},
- {videoId:'gBcGO_HD2Xk',title:'My Boyfriend is My CEO | Chinese Drama Hindi Dubbed Full Movie',durationSeconds:0,durationLabel:'अवधि जाँची जाएगी',displayDurationLabel:'🎬 अवधि जाँची जाएगी',thumbnail:'https://i.ytimg.com/vi/gBcGO_HD2Xk/hqdefault.jpg',source:'F4 Central 2',category:'popular',tags:['चाइनीज ड्रामा','हिंदी डब्ड'],badge:'YouTube title verified · duration needs recheck',priority:-8,publishedAt:'',builtin:true}
-];
+const BUILTIN_VERIFIED_REELS = [];
 const REELS_CHANNELS = [
 {name:'Drama Central - हिंदी',handle:'Chinesedramacentral',category:'popular',priority:0,tags:['कोरियन ड्रामा','चाइनीज ड्रामा','हिंदी डब्ड'],badge:'Hindi Dubbed'},
 {name:'Dyar Entertainment',handle:'DyarEntertainment',category:'popular',priority:1,tags:['कोरियन ड्रामा','चाइनीज ड्रामा','हिंदी डब्ड'],badge:'Hindi Dubbed'},
@@ -634,38 +631,14 @@ async function loadReelsPlaylistPosters() {
  }));
 }
 function getAllReelsSeries(){
- const seen=new Set();return [...BUILTIN_VERIFIED_REELS,...reelsApiCatalog].filter(x=>{
-  if(!x||!x.videoId||seen.has(x.videoId)||!isRssEligibleTitle(x.title)||isBlockedMovieTitle(x.title))return false;
-  if(typeof reelsRejectedShortIds!=='undefined'&&reelsRejectedShortIds.has(x.videoId))return false;
+ const seen=new Set();
+ return [...BUILTIN_VERIFIED_REELS,...reelsApiCatalog].filter(x=>{
+  if(!x||!x.videoId||seen.has(x.videoId)||isBlockedMovieTitle(x.title))return false;
   seen.add(x.videoId);return true;
  }).sort((a,b)=>(Number(a.priority)||0)-(Number(b.priority)||0)||(b.publishedAt||'').localeCompare(a.publishedAt||''));
 }
-async function youtubeApiRequest(resource,params){
- const url=new URL('https://www.googleapis.com/youtube/v3/'+resource);Object.entries({...params,key:YOUTUBE_DATA_API_KEY}).forEach(([k,v])=>url.searchParams.set(k,String(v)));
- const r=await fetch(url.toString()),d=await r.json();if(!r.ok)throw Error(d.error&&d.error.message||'YouTube API '+r.status);return d;
-}
-async function resolveReelsChannelId(c){
- if(c.channelId)return c.channelId;
- const handle=String(c.handle||'').replace(/^@/,'');if(!handle)throw Error('Channel handle missing for '+c.name);
- let ids={};try{ids=JSON.parse(localStorage.getItem(REELS_CHANNEL_ID_CACHE_KEY)||'{}')||{};}catch(e){}
- if(ids[handle]&&/^UC[\w-]{22}$/.test(ids[handle]))return ids[handle];
- const d=await youtubeApiRequest('channels',{part:'id',forHandle:handle,maxResults:1});const x=(d.items||[])[0];if(!x||!x.id)throw Error('Channel not found: '+handle);
- ids[handle]=x.id;try{localStorage.setItem(REELS_CHANNEL_ID_CACHE_KEY,JSON.stringify(ids));}catch(e){}return x.id;
-}
 function parseYouTubeDurationSeconds(iso){const m=String(iso||'').match(/^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/i);return m?(+m[1]||0)*3600+(+m[2]||0)*60+(+m[3]||0):0;}
 function formatReelsDuration(n){const v=Math.floor(+n||0),h=Math.floor(v/3600),m=Math.floor(v%3600/60);return h?h+'घं '+String(m).padStart(2,'0')+'मि':m+' मिनट';}
-async function fetchLimitedPages(resource,baseParams,maxPages){
- let pageToken='',items=[],pages=0;
- do{const params={...baseParams,maxResults:50};if(pageToken)params.pageToken=pageToken;
-  const data=await youtubeApiRequest(resource,params);items.push(...(data.items||[]));pageToken=data.nextPageToken||'';pages++;
- }while(pageToken&&pages<maxPages);return items;
-}
-async function fetchMovieChannelUploads(channel){
- const channelId=await resolveReelsChannelId(channel);if(!/^UC[\\w-]{22}$/.test(channelId))throw Error('Invalid channel ID for '+channel.name);
- const uploadsPlaylistId='UU'+channelId.slice(2);
- const items=await fetchLimitedPages('playlistItems',{part:'snippet,contentDetails',playlistId:uploadsPlaylistId},2);
- return items.map(item=>({videoId:item.contentDetails&&item.contentDetails.videoId,source:channel.name,category:channel.category,tags:channel.tags,badge:channel.badge,priority:channel.priority,origin:'channel uploads'})).filter(x=>x.videoId);
-}
 function isRssEligibleTitle(title){
  const t=String(title||'');
  if(/(?:#?shorts?|trailer|teaser|promo|clip|scene|episode|\bep\b|\bpart\b|\bpt\.?\b|भाग|एपिसोड|\bai\b|\benglish\b)/i.test(t))return false;
@@ -685,73 +658,57 @@ function isHindiDubbedMovie(title,description,source){
  return /hindi\s*dub(?:bed)?|dubbed\s*in\s*hindi|hindi\s*version|हिंदी\s*डब|हिन्दी\s*डब|हिंदी\s*में|हिन्दी\s*में/i.test(text);
 }
 function formatFullMovieDuration(seconds){const n=Math.floor(Number(seconds)||0),h=Math.floor(n/3600),m=Math.floor(n%3600/60);return h?h+'h '+m+'m':m+'m';}
-async function fetchAllMovieDetails(candidates){
- const ids=[...new Set(candidates.map(x=>x.videoId).filter(Boolean))],videos=[];
- for(let i=0;i<ids.length;i+=50){
-  try{const data=await youtubeApiRequest('videos',{part:'snippet,contentDetails',id:ids.slice(i,i+50).join(',')});videos.push(...(data.items||[]));}
-  catch(error){console.warn('Video details batch failed',i,error);}
- }
- const byId=new Map(videos.map(v=>[v.id,v])),seen=new Set(),out=[];
- for(const candidate of candidates){
-  if(seen.has(candidate.videoId))continue;seen.add(candidate.videoId);
-  const video=byId.get(candidate.videoId);if(!video)continue;
-  const snippet=video.snippet||{},title=(snippet.title||'').trim(),description=snippet.description||'';
-  const durationSeconds=parseYouTubeDurationSeconds(video.contentDetails&&video.contentDetails.duration);
-  if(durationSeconds<2100||!isFullMovieTitle(title)||isBlockedMovieTitle(title)||isBlockedMovieTitle(description)||
-     !isKoreanChineseDrama(title,description)||!isHindiDubbedMovie(title,description,candidate.source))continue;
-  const thumbs=snippet.thumbnails||{},thumbnail=(thumbs.maxres||thumbs.high||thumbs.medium||thumbs.default||{}).url||'';
-  out.push({videoId:video.id,title,durationSeconds,durationLabel:formatReelsDuration(durationSeconds),
-   displayDurationLabel:'🎬 '+formatFullMovieDuration(durationSeconds)+' • Full Movie',thumbnail,
-   source:candidate.source,category:candidate.category,tags:candidate.tags,badge:candidate.badge,
-   priority:candidate.priority,publishedAt:snippet.publishedAt||''});
- }
- return out;
-}
 async function forceRefreshOfficialPlaylists(){
- const button=document.getElementById('forceRefreshBtn');if(reelsLoading)return false;
- reelsLoading=true;if(button){button.disabled=true;button.textContent='🔄 नई फिल्में लोड हो रही हैं…';}
- let ok=false;try{ok=await loadOfficialReelsPlaylists(true);}finally{reelsLoading=false;}
- const current=document.getElementById('forceRefreshBtn');if(current){current.disabled=false;current.textContent='↻ नई फिल्में लोड करें';}
- if(activeTab==='reels')renderReels();
- if(typeof showToast==='function')showToast(ok?'नई फिल्में अपडेट हुईं।':'API उपलब्ध नहीं—सेव कैटलॉग सुरक्षित है।');return ok;
+ const button=document.getElementById('forceRefreshBtn');
+ if(reelsLoading)return false;
+ reelsLoading=true;
+ if(button){button.disabled=true;button.textContent='🔄 नई फिल्में लोड हो रही हैं…';}
+ let ok=false;
+ try{ok=await loadOfficialReelsPlaylists(true);}
+ finally{
+  reelsLoading=false;
+  const current=document.getElementById('forceRefreshBtn');
+  if(current){current.disabled=false;current.textContent='↻ नई फिल्में लोड करें';}
+  if(activeTab==='reels')renderReels();
+ }
+ if(typeof showToast==='function')showToast(ok?'Central catalog अपडेट हुआ।':'ऑफलाइन/त्रुटि—पिछली सेव सूची दिखाई जा रही है।');
+ return ok;
 }
 async function loadOfficialReelsPlaylists(force=false){
- const readSaved=()=>{
-  const pools=[];
-  for(const key of [REELS_PERMANENT_CACHE_KEY,REELS_API_CACHE_KEY]){
-   try{const c=JSON.parse(localStorage.getItem(key)||'null');if(c&&Array.isArray(c.items))pools.push(...c.items);}catch(e){}
-  }
-  const map=new Map([...BUILTIN_VERIFIED_REELS,...reelsApiCatalog,...pools].filter(x=>x&&x.videoId).map(x=>[x.videoId,x]));
-  reelsApiCatalog=[...map.values()].filter(x=>Number(x.durationSeconds)>=2100||x.builtin);
- };
- readSaved();
- if(!YOUTUBE_DATA_API_KEY||YOUTUBE_DATA_API_KEY==='PASTE_RESTRICTED_YOUTUBE_API_KEY_HERE'){
-  reelsApiStatus='YouTube API उपलब्ध नहीं—स्थानीय सेव कैटलॉग सुरक्षित है।';if(activeTab==='reels')renderReels();return false;
- }
- if(!force){
-  try{const c=JSON.parse(localStorage.getItem(REELS_API_CACHE_KEY)||'null');if(c&&Array.isArray(c.items)&&Date.now()-c.savedAt<REELS_API_CACHE_TTL){reelsApiStatus=getAllReelsSeries().length+' फिल्में · Built-in + स्थायी कैश';if(activeTab==='reels')renderReels();return true;}}catch(e){}
- }
- reelsApiStatus='4 आधिकारिक चैनलों के Uploads अपडेट हो रहे हैं…';if(activeTab==='reels')renderReels();
+ if(reelsLoading)return false;
+ reelsLoading=true;
+ const cacheKey='chatpro_central_movies_json_v1';
  try{
-  const candidates=[];
-  for(const channel of REELS_CHANNELS){try{candidates.push(...await fetchMovieChannelUploads(channel));}catch(error){console.warn('Channel uploads failed:',channel.name,error);}}
-  const fresh=await fetchAllMovieDetails(candidates);
-  const map=new Map([...reelsApiCatalog,...fresh].filter(x=>x&&x.videoId).map(x=>[x.videoId,x]));
-  reelsApiCatalog=[...map.values()].filter(x=>Number(x.durationSeconds)>=2100||x.builtin);
-  const payload={savedAt:Date.now(),items:reelsApiCatalog};
-  try{localStorage.setItem(REELS_API_CACHE_KEY,JSON.stringify(payload));localStorage.setItem(REELS_PERMANENT_CACHE_KEY,JSON.stringify(payload));}catch(error){console.warn('Permanent catalog storage failed',error);}
-  reelsApiStatus=getAllReelsSeries().length+' फिल्में · Built-in + API Merge · स्थायी कैश';
-  if(activeTab==='reels')renderReels();return true;
+  // Show the last known catalog immediately while the central JSON is refreshed.
+  try{
+   const saved=JSON.parse(localStorage.getItem(cacheKey)||'null');
+   if(saved&&Array.isArray(saved.movies))reelsApiCatalog=saved.movies;
+  }catch(e){}
+  if(activeTab==='reels')renderReels();
+  const url=MOVIES_JSON_URL+(force?'?t=':'?v=')+Date.now();
+  const response=await fetch(url,{cache:'no-store',headers:{Accept:'application/json'}});
+  if(!response.ok)throw new Error('movies.json HTTP '+response.status);
+  const data=await response.json();
+  const incoming=Array.isArray(data.movies)?data.movies:(Array.isArray(data.items)?data.items:[]);
+  const valid=incoming.filter(x=>x&&/^[A-Za-z0-9_-]{11}$/.test(String(x.videoId||''))&&Number(x.durationSeconds)>=3600&&!isBlockedMovieTitle(x.title));
+  const map=new Map([...reelsApiCatalog,...valid].map(x=>[x.videoId,x]));
+  reelsApiCatalog=[...map.values()];
+  try{localStorage.setItem(cacheKey,JSON.stringify({savedAt:Date.now(),movies:reelsApiCatalog}));}catch(e){console.warn('Catalog cache unavailable',e);}
+  reelsApiStatus=(data.updatedAt?'Updated '+data.updatedAt+' · ':'')+reelsApiCatalog.length+' verified catalog entries';
+  return true;
  }catch(error){
-  console.warn('Uploads catalog failed',error);readSaved();
-  reelsApiStatus='API/कोटा उपलब्ध नहीं—पुरानी सेव फिल्में सुरक्षित हैं।';
-  if(activeTab==='reels')renderReels();return false;
+  console.warn('Central movies.json load failed:',error);
+  reelsApiStatus='Central सूची अभी उपलब्ध नहीं—पिछली सेव सूची सुरक्षित है।';
+  return false;
+ }finally{
+  reelsLoading=false;
+  if(activeTab==='reels')renderReels();
  }
 }
 function renderReels(){
  const box=$('listArea');if(!box||activeTab!=='reels')return;
  const filters=[['all','सभी'],['popular','पॉपुलर'],['new','नया']],rows=getAllReelsSeries().filter(x=>reelsFilter==='all'||x.category===reelsFilter);
- box.innerHTML=`<section class="reels-page"><div class="reels-hero"><div class="reels-title">FreeReels <span class="text-violet-300">+</span> <span class="text-xs font-bold text-white/70">v7.0</span></div><div class="reels-sub">Built-in + 4 आधिकारिक चैनलों के Uploads · फुल ड्रामा</div><div class="text-[10px] text-gray-400 mt-3">केवल टाइटल-फ़िल्टर किए गए Hindi-dubbed ड्रामा · ${getAllReelsSeries().length} फिल्में</div><div class="text-[10px] text-gray-400 mt-2" id="reelsApiStatus">${reelsEscape(reelsApiStatus)}</div><button type="button" id="forceRefreshBtn" style="position:relative;z-index:999;pointer-events:auto;user-select:none;-webkit-user-select:none;cursor:pointer;touch-action:manipulation" class="reels-filter mt-2">↻ नई फिल्में लोड करें</button></div>
+ box.innerHTML=`<section class="reels-page"><div class="reels-hero"><div class="reels-title">FreeReels <span class="text-violet-300">+</span> <span class="text-xs font-bold text-white/70">v7.0</span></div><div class="reels-sub">Central JSON Catalog · सर्वर-साइड अपडेट</div><div class="text-[10px] text-gray-400 mt-3">केवल अवधि और टाइटल जाँची गई फ़िल्में · ${getAllReelsSeries().length} फिल्में</div><div class="text-[10px] text-gray-400 mt-2" id="reelsApiStatus">${reelsEscape(reelsApiStatus)}</div><button type="button" id="forceRefreshBtn" style="position:relative;z-index:9999;pointer-events:auto;user-select:none;-webkit-user-select:none;cursor:pointer;touch-action:manipulation" class="reels-filter mt-2">↻ नई फिल्में लोड करें</button></div>
  <div class="reels-filters">${filters.map(([k,l])=>`<button class="reels-filter ${reelsFilter===k?'active':''}" onclick="setReelsFilter('${k}')">${l}</button>`).join('')}</div>
  <div class="reels-grid">${rows.map(x=>{const poster=reelsPoster(x);return `<article class="reels-card" onclick="openReelsPlayer('${x.videoId}')"><div class="reels-poster-wrap">${poster?`<img class="reels-poster" loading="lazy" src="${reelsEscape(poster)}" alt="${reelsEscape(x.title)} poster" onerror="reelsFallbackImage(this)">`:''}<div class="reels-poster-fallback"><strong>${reelsEscape(x.title)}</strong><small>${reelsEscape(x.source)}</small></div><div class="reels-badges"><span class="reels-badge">${reelsEscape(x.badge)}</span><span class="reels-badge">${reelsEscape(x.displayDurationLabel||x.durationLabel)}</span></div><span class="reels-views">▶ फुल शो</span></div><div class="reels-card-body"><div class="reels-card-title">${reelsEscape(x.title)}</div><div class="reels-meta">${reelsEscape(x.source)} · ${reelsEscape(x.durationLabel)}</div><div class="reels-tags">${(x.tags||[]).map(t=>`<span class="reels-tag">${reelsEscape(t)}</span>`).join('')}</div></div></article>`;}).join('')}</div></section>`;
 }
@@ -976,7 +933,7 @@ window.switchTab = t => {
     box.scrollTop = 0;
   }
   renderLists();
-  if (t === 'reels') loadReelsFeed(false);
+  if (t === 'reels') loadOfficialReelsPlaylists(false);
 };
 
 // CLASSIC LUDO KING 52-STEP MAIN TRACK + HOME COLUMNS

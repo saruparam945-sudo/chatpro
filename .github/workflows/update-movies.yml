@@ -1,0 +1,126 @@
+name: Update central Hindi drama catalog
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-central-movies
+  cancel-in-progress: false
+
+jobs:
+  update-catalog:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Build movies.json from official channel uploads
+        env:
+          YOUTUBE_DATA_API_KEY: ${{ secrets.YOUTUBE_DATA_API_KEY }}
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const KEY = process.env.YOUTUBE_DATA_API_KEY;
+          if (!KEY) {
+            console.error('Missing repository secret YOUTUBE_DATA_API_KEY. Add it in Settings > Secrets and variables > Actions.');
+            process.exit(1);
+          }
+          const channels = [
+            { handle: 'Chinesedramacentral', name: 'Drama Central - Hindi' },
+            { handle: 'DyarEntertainment', name: 'Dyar Entertainment' },
+            { handle: 'KDramaHindi1', name: 'K-Drama Hindi' },
+            { handle: 'WorldMoviesLocalHindi', name: 'World Movies Local Hindi' }
+          ];
+          const seedIds = ['urmQEUUeEO8', 'xHFZiqjhSs8', 'EysFyDd6CKw'];
+          const blocked = /(?:#?shorts?|trailer|teaser|promo|clip|scene|episode|\\bep\\b|\\bpart\\b|\\bpt\\.?\\b|भाग|एपिसोड|\\bai\\b|\\benglish\\b|explain|explainer)/i;
+          const fullMovie = /full\\s*(?:movie|film|drama)|complete\\s*(?:movie|film)|पूरी\\s*फिल्म|फुल\\s*मूवी/i;
+          const asian = /\\b(korean|korea|k[- ]?drama|chinese|china|c[- ]?drama|cdrama)\\b|कोरियन|कोरियाई|चाइनीज|चीनी/i;
+          const hindi = /hindi\\s*dub(?:bed)?|dubbed\\s*in\\s*hindi|hindi\\s*version|हिंदी\\s*डब|हिन्दी\\s*डब|हिंदी\\s*में/i;
+          async function api(resource, params) {
+            const u = new URL('https://www.googleapis.com/youtube/v3/' + resource);
+            for (const [k,v] of Object.entries({...params,key:KEY})) u.searchParams.set(k,String(v));
+            const r = await fetch(u);
+            const j = await r.json();
+            if (!r.ok) throw new Error(resource + ': ' + (j.error?.message || r.status));
+            return j;
+          }
+          function duration(iso) {
+            const m = String(iso||'').match(/^PT(?:(\\d+)H)?(?:(\\d+)M)?(?:(\\d+)S)?$/);
+            return m ? (+m[1]||0)*3600 + (+m[2]||0)*60 + (+m[3]||0) : 0;
+          }
+          async function main() {
+            const old = JSON.parse(fs.readFileSync('movies.json','utf8'));
+            const found = new Map((old.movies||[]).map(x=>[x.videoId,x]));
+            const candidates = new Map(seedIds.map(id=>[id,{videoId:id,source:'web-discovered candidate'}]));
+            for (const ch of channels) {
+              try {
+                const c = await api('channels',{part:'id',forHandle:ch.handle,maxResults:1});
+                const id = c.items?.[0]?.id;
+                if (!id) { console.warn('Channel not resolved:',ch.handle); continue; }
+                let pageToken = '';
+                for (let page=0; page<3; page++) {
+                  const p = {part:'snippet,contentDetails',playlistId:'UU'+id.slice(2),maxResults:50};
+                  if (pageToken) p.pageToken = pageToken;
+                  const data = await api('playlistItems',p);
+                  for (const item of data.items||[]) {
+                    const videoId = item.contentDetails?.videoId;
+                    if (videoId && !candidates.has(videoId)) candidates.set(videoId,{videoId,source:ch.name});
+                  }
+                  pageToken = data.nextPageToken || '';
+                  if (!pageToken) break;
+                }
+              } catch (e) { console.warn('Channel skipped:',ch.handle,e.message); }
+            }
+            const ids = [...candidates.keys()];
+            for (let i=0; i<ids.length; i+=50) {
+              const data = await api('videos',{part:'snippet,contentDetails',id:ids.slice(i,i+50).join(',')});
+              for (const v of data.items||[]) {
+                const title = v.snippet?.title || '';
+                const desc = v.snippet?.description || '';
+                const text = title+' '+desc;
+                const seconds = duration(v.contentDetails?.duration);
+                if (seconds < 3600 || blocked.test(title) || blocked.test(desc) ||
+                    !fullMovie.test(title) || !asian.test(text) || !hindi.test(text)) continue;
+                const thumbs = v.snippet?.thumbnails || {};
+                const thumb = (thumbs.maxres||thumbs.high||thumbs.medium||thumbs.default||{}).url || '';
+                found.set(v.id,{
+                  videoId:v.id,title,durationSeconds:seconds,
+                  durationLabel:Math.floor(seconds/3600)+'h '+Math.floor(seconds%3600/60)+'m',
+                  displayDurationLabel:'🎬 '+Math.floor(seconds/3600)+'h '+Math.floor(seconds%3600/60)+'m • Full Movie',
+                  thumbnail:thumb,source:candidates.get(v.id)?.source||'Official channel uploads',
+                  publishedAt:v.snippet?.publishedAt||'',category:'popular',tags:['Korean/Chinese','Hindi Dubbed'],
+                  verifiedBy:'YouTube Data API v3 metadata',verifiedAt:new Date().toISOString()
+                });
+              }
+            }
+            const movies=[...found.values()].filter(x=>Number(x.durationSeconds)>=3600 && !blocked.test(x.title||''));
+            const output={schemaVersion:1,updatedAt:new Date().toISOString(),source:'Official channel uploads + verified public video metadata',minimumDurationSeconds:3600,movies,pendingCandidates:old.pendingCandidates||[]};
+            fs.writeFileSync('movies.json',JSON.stringify(output,null,2)+'\\n');
+            console.log('Catalog contains',movies.length,'verified 60+ minute candidates.');
+          }
+          main().catch(e=>{console.error(e);process.exit(1);});
+          NODE
+
+      - name: Commit updated catalog
+        run: |
+          if git diff --quiet -- movies.json; then
+            echo "No catalog changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add movies.json
+          git commit -m "chore: refresh central movie catalog"
+          git push
