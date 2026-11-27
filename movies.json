@@ -1,9 +1,248 @@
 {
   "schemaVersion": 1,
-  "updatedAt": null,
-  "source": "Central ChatPro catalog. Only entries with verified public metadata and durationSeconds >= 1800 are placed in movies.",
+  "updatedAt": "2026-11-27T19:29:33.692Z",
+  "source": "Official channel uploads + verified public video metadata",
   "minimumDurationSeconds": 1800,
-  "movies": [],
+  "movies": [
+    {
+      "videoId": "xHFZiqjhSs8",
+      "title": "Don Lee's The Bull | Hindi Dubbed Full movie | Korean Movie | Action Movie | IOF-Hindi",
+      "durationSeconds": 5988,
+      "durationLabel": "1h 39m",
+      "displayDurationLabel": "🎬 1h 39m • Full Movie",
+      "thumbnail": "https://i.ytimg.com/vi/xHFZiqjhSs8/maxresdefault.jpg",
+      "source": "web-discovered candidate",
+      "publishedAt": "2025-07-25T14:01:35Z",
+      "category": "popular",
+      "tags": [
+        "Korean/Chinese",
+        "Hindi Dubbed"
+      ],
+      "verifiedBy": "YouTube Data API v3 metadata",
+      "verifiedAt": "2026-11-27T19:29:32.376Z"
+    },
+    {
+      "videoId": "EysFyDd6CKw",
+      "title": "NOCTURNAL - Hollywood Hindi Dubbed Full Movie | Ha Jung-woo | Korean Action Movie In Hindi",
+      "durationSeconds": 5967,
+      "durationLabel": "1h 39m",
+      "displayDurationLabel": "🎬 1h 39m • Full Movie",
+      "thumbnail": "https://i.ytimg.com/vi/EysFyDd6CKw/maxresdefault.jpg",
+      "source": "web-discovered candidate",
+      "publishedAt": "2026-08-22T12:30:27Z",
+      "category": "popular",
+      "tags": [
+        "Korean/Chinese",
+        "Hindi Dubbed"
+      ],
+      "verifiedBy": "YouTube Data API v3 metadata",
+      "verifiedAt": "2026-11-27T19:29:32.376Z"
+    },
+    {
+      "videoId": "D9pq-imvmes",
+      "title": "【Full Movie】｜Naya C-Drama Alert! 🔥 “Overdo” 💕《Hindi DUB》✨",
+      "durationSeconds": 5310,
+      "durationLabel": "1h 28m",
+      "displayDurationLabel": "🎬 1h 28m • Full Movie",
+      "thumbnail": "https://i.ytimg.com/vi/D9pq-imvmes/maxresdefault.jpg",
+      "source": "Drama Central - Hindi",
+      "publishedAt": "2026-08-07T13:30:37Z",
+      "category": "popular",
+      "tags": [
+        "Korean/Chinese",
+        "Hindi Dubbed"
+      ],
+      "verifiedBy": "YouTube Data API v3 metadata",
+      "verifiedAt": "2026-11-27T19:29:32.548Z"
+    },
+    {
+      "videoId": "VjPpNazlyEw",
+      "title": "【FULL MOVIE】Misunderstanding ke baat, CEO Runs Behind Wife To Win Her Back🔥| Part3《Hindi Dub》",
+      "durationSeconds": 3999,
+      "durationLabel": "1h 6m",
+      "displayDurationLabel": "🎬 1h 6m • Full Movie",
+      "thumbnail": "https://i.ytimg.com/vi/VjPpNazlyEw/maxresdefault.jpg",
+      "source": "Drama Central - Hindi",
+      "publishedAt": "2026-07-25T13:30:30Z",
+      "category": "popular",
+      "tags": [
+        "Korean/Chinese",
+        "Hindi Dubbed"
+      ],
+      "verifiedBy": "YouTube Data API v3 metadata",
+      "verifiedAt": "2026-11-27T19:29:32.548Z"
+    },
+    {
+      "videoId": "KdNarIOQmEc",
+      "title": "【FULL MOVIE】ContractMarriageTurnsReal, Cute Programmer Changed Cold CEO’s Life💖 | Part2《Hindi Dub》",
+      "durationSeconds": 7859,
+      "durationLabel": "2h 10m",
+      "displayDurationLabel": "🎬 2h 10m • Full Movie",
+      "thumbnail": "https://i.ytimg.com/vi/KdNarIOQmEc/maxresdefault.jpg",
+      "source": "Drama Central - Hindi",
+      "publishedAt": "2026-07-20T12:30:03Z",
+      "category": "popular",
+      "tags": [
+        "Korean/Chinese",
+        "Hindi Dubbed"
+      ],
+      "verifiedBy": "YouTube Data API v3 metadata",
+      "verifiedAt": "2026-11-27T19:29:32.548Z"
+    },
+    {
+      "videoId": "-PTVSstJksI",
+      "title": "【FULL MOVIE】Disguised as Boy, She Enters Cold CEO’s Life—Chhupa Pyaar Sach Hua 💖 | Part1《Hindi Dub》",
+      "durationSeconds": 4450,
+      "durationLabel": "1h 14m",
+      "displayDurationLabel": "🎬 1h 14m • Full Movie",
+      "thumbnail": "https://i.ytimg.com/vi/-PTVSstJksI/maxresdefault.jpg",
+      "source": "Drama Central - Hindi",
+      "publishedAt": "2026-07-17T13:00:31Z",
+      "category": "popular",
+      "tags": [
+        "Korean/Chinese",
+        "Hindi Dubbed"
+      ],
+      "verifiedBy": "YouTube Data API v3 metadata",
+      "verifiedAt": "2026-11-27T19:29:32.548Z"
+    },
+    {
+      "videoId": "jrYFOTpCodU",
+      "title": "Urban Myths | Hindi Dubbed Full Movie | Horror Movie | Superhit Latest Hindi Dubbed | korean Movie",
+      "durationSeconds": 7219,
+      "durationLabel": "2h 0m",
+      "displayDurationLabel": "🎬 2h 0m • Full Movie",
+      "thumbnail": "https://i.ytimg.com/vi/jrYFOTpCodU/maxresdefault.jpg",
+      "source": "World Movies Local Hindi",
+      "publishedAt": "2026-07-31T10:30:06Z",
+      "category": "popular",
+      "tags": [
+        "Korean/Chinese",
+        "Hindi Dubbed"
+      ],
+      "verifiedBy": "YouTube Data API v3 metadata",
+      "verifiedAt": "2026-11-27T19:29:33.316Z"
+    },
+    {
+      "videoId": "ZHldU3HDToA",
+      "title": "Ransomed | Hindi Dubbed Full Movie | Action Thriller Movie | Korean Hindi Dubbed Full Movie",
+      "durationSeconds": 7931,
+      "durationLabel": "2h 12m",
+      "displayDurationLabel": "🎬 2h 12m • Full Movie",
+      "thumbnail": "https://i.ytimg.com/vi/ZHldU3HDToA/maxresdefault.jpg",
+      "source": "World Movies Local Hindi",
+      "publishedAt": "2026-04-30T10:30:07Z",
+      "category": "popular",
+      "tags": [
+        "Korean/Chinese",
+        "Hindi Dubbed"
+      ],
+      "verifiedBy": "YouTube Data API v3 metadata",
+      "verifiedAt": "2026-11-27T19:29:33.458Z"
+    },
+    {
+      "videoId": "VO4bVEuUr7U",
+      "title": "Smugglers | Hindi Dubbed Full Movie | Action Thriller Movie | Korean Hindi Dubbed Full Movie",
+      "durationSeconds": 7749,
+      "durationLabel": "2h 9m",
+      "displayDurationLabel": "🎬 2h 9m • Full Movie",
+      "thumbnail": "https://i.ytimg.com/vi/VO4bVEuUr7U/maxresdefault.jpg",
+      "source": "World Movies Local Hindi",
+      "publishedAt": "2026-03-20T10:30:06Z",
+      "category": "popular",
+      "tags": [
+        "Korean/Chinese",
+        "Hindi Dubbed"
+      ],
+      "verifiedBy": "YouTube Data API v3 metadata",
+      "verifiedAt": "2026-11-27T19:29:33.458Z"
+    },
+    {
+      "videoId": "HTFWQcLkRnY",
+      "title": "Hunt | Hindi Dubbed Full Movie | Action Thriller Movie | Korean Hindi Dubbed Full Movie",
+      "durationSeconds": 7467,
+      "durationLabel": "2h 4m",
+      "displayDurationLabel": "🎬 2h 4m • Full Movie",
+      "thumbnail": "https://i.ytimg.com/vi/HTFWQcLkRnY/maxresdefault.jpg",
+      "source": "World Movies Local Hindi",
+      "publishedAt": "2026-02-27T10:30:06Z",
+      "category": "popular",
+      "tags": [
+        "Korean/Chinese",
+        "Hindi Dubbed"
+      ],
+      "verifiedBy": "YouTube Data API v3 metadata",
+      "verifiedAt": "2026-11-27T19:29:33.458Z"
+    },
+    {
+      "videoId": "VCVFWjJtDEI",
+      "title": "The Childe | Hindi Dubbed Full Movie | Action Thriller Movie | Korean Hindi Dubbed Full Movie",
+      "durationSeconds": 7055,
+      "durationLabel": "1h 57m",
+      "displayDurationLabel": "🎬 1h 57m • Full Movie",
+      "thumbnail": "https://i.ytimg.com/vi/VCVFWjJtDEI/maxresdefault.jpg",
+      "source": "World Movies Local Hindi",
+      "publishedAt": "2026-02-06T10:30:06Z",
+      "category": "popular",
+      "tags": [
+        "Korean/Chinese",
+        "Hindi Dubbed"
+      ],
+      "verifiedBy": "YouTube Data API v3 metadata",
+      "verifiedAt": "2026-11-27T19:29:33.459Z"
+    },
+    {
+      "videoId": "J1UjJ0AN05k",
+      "title": "Emergency Declaration | Hindi Dubbed Full Movie |  Action Thriller Movie | Korean Hindi Dubbed Movie",
+      "durationSeconds": 8420,
+      "durationLabel": "2h 20m",
+      "displayDurationLabel": "🎬 2h 20m • Full Movie",
+      "thumbnail": "https://i.ytimg.com/vi/J1UjJ0AN05k/maxresdefault.jpg",
+      "source": "World Movies Local Hindi",
+      "publishedAt": "2025-09-05T10:30:18Z",
+      "category": "popular",
+      "tags": [
+        "Korean/Chinese",
+        "Hindi Dubbed"
+      ],
+      "verifiedBy": "YouTube Data API v3 metadata",
+      "verifiedAt": "2026-11-27T19:29:33.587Z"
+    },
+    {
+      "videoId": "eKwcg4mveTg",
+      "title": "Train To Busan | Hindi Dubbed Full Movie | Horror Action Movie | Superhit Korean Hindi Dubbed Movie",
+      "durationSeconds": 6646,
+      "durationLabel": "1h 50m",
+      "displayDurationLabel": "🎬 1h 50m • Full Movie",
+      "thumbnail": "https://i.ytimg.com/vi/eKwcg4mveTg/maxresdefault.jpg",
+      "source": "World Movies Local Hindi",
+      "publishedAt": "2025-05-22T10:30:03Z",
+      "category": "popular",
+      "tags": [
+        "Korean/Chinese",
+        "Hindi Dubbed"
+      ],
+      "verifiedBy": "YouTube Data API v3 metadata",
+      "verifiedAt": "2026-11-27T19:29:33.691Z"
+    },
+    {
+      "videoId": "vbySxfIOtu8",
+      "title": "द थीव्स | The Thieves | Korean Dubbed Full Movie | Superhit Action Comedy Movie | Latest Film",
+      "durationSeconds": 8124,
+      "durationLabel": "2h 15m",
+      "displayDurationLabel": "🎬 2h 15m • Full Movie",
+      "thumbnail": "https://i.ytimg.com/vi/vbySxfIOtu8/maxresdefault.jpg",
+      "source": "World Movies Local Hindi",
+      "publishedAt": "2024-07-12T11:30:26Z",
+      "category": "popular",
+      "tags": [
+        "Korean/Chinese",
+        "Hindi Dubbed"
+      ],
+      "verifiedBy": "YouTube Data API v3 metadata",
+      "verifiedAt": "2026-11-27T19:29:33.691Z"
+    }
+  ],
   "pendingCandidates": [
     {
       "videoId": "urmQEUUeEO8",
