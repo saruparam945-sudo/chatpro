@@ -750,40 +750,119 @@ function renderReels() {
 window.setReelsFilter=key=>{reelsFilter=key;renderReels();};
 loadReelsPlaylistPosters();
 loadOfficialReelsPlaylists();
-window.openReelsPlayer=function(playlistId){
+let reelsFullscreenYTPlayer=null;
+let reelsFullscreenPlaylistId=null;
+let reelsSwipeStartY=null;
+let reelsYTApiPromise=null;
+function loadReelsFullscreenAPI(){
+ if(window.YT&&window.YT.Player)return Promise.resolve();
+ if(reelsYTApiPromise)return reelsYTApiPromise;
+ reelsYTApiPromise=new Promise(resolve=>{
+  const previous=window.onYouTubeIframeAPIReady;
+  window.onYouTubeIframeAPIReady=function(){
+   if(typeof previous==='function')try{previous();}catch(e){}
+   resolve();
+  };
+  if(!document.querySelector('script[data-reels-fullscreen-api]')){
+   const script=document.createElement('script');
+   script.src='https://www.youtube.com/iframe_api';
+   script.dataset.reelsFullscreenApi='1';
+   document.head.appendChild(script);
+  }
+ });
+ return reelsYTApiPromise;
+}
+window.openReelsPlayer=async function(playlistId){
  const series=getAllReelsSeries().find(item=>item.playlistId===playlistId);
  if(!series)return;
  const box=document.getElementById('reelsPlayer');
  if(!box)return;
+ window.closeReelsPlayer(false);
  box.innerHTML='';
- box.style.display='block';
+ box.style.cssText='position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;background:#000;z-index:999999;overflow:hidden;display:block;touch-action:pan-y';
  box.setAttribute('aria-hidden','false');
  if(!reelsHistoryActive){
   history.pushState({reelsOpen:true},'');
   reelsHistoryActive=true;
  }
- const iframe=document.createElement('iframe');
- iframe.title=series.title||'YouTube playlist';
- iframe.width='100%';
- iframe.height='100%';
- iframe.style.cssText='width:100%;height:100%;border:0;display:block';
- iframe.setAttribute('allow','autoplay; encrypted-media; picture-in-picture; fullscreen');
- iframe.setAttribute('allowfullscreen','');
- iframe.src='https://www.youtube.com/embed/videoseries?list='+encodeURIComponent(playlistId)+'&autoplay=1&playsinline=1&rel=0';
- box.appendChild(iframe);
+ reelsFullscreenPlaylistId=playlistId;
+ const mount=document.createElement('div');
+ mount.id='reelsFullscreenYTMount';
+ mount.style.cssText='position:absolute;inset:0;width:100%;height:100%;overflow:hidden;background:#000';
+ box.appendChild(mount);
+ box.ontouchstart=function(event){
+  if(event.touches&&event.touches.length===1)reelsSwipeStartY=event.touches[0].clientY;
+ };
+ box.ontouchend=function(event){
+  if(reelsSwipeStartY===null||!event.changedTouches||!event.changedTouches.length)return;
+  const deltaY=event.changedTouches[0].clientY-reelsSwipeStartY;
+  reelsSwipeStartY=null;
+  if(Math.abs(deltaY)<50||!reelsFullscreenYTPlayer)return;
+  try{
+   if(deltaY < -50)reelsFullscreenYTPlayer.nextVideo();
+   else if(deltaY > 50)reelsFullscreenYTPlayer.previousVideo();
+  }catch(error){}
+ };
+ try{
+  await loadReelsFullscreenAPI();
+  if(!document.getElementById('reelsFullscreenYTMount')||!reelsFullscreenPlaylistId)return;
+  reelsFullscreenYTPlayer=new YT.Player('reelsFullscreenYTMount',{
+   width:'100%',height:'100%',
+   playerVars:{
+    listType:'playlist',
+    list:playlistId,
+    autoplay:1,
+    controls:0,
+    modestbranding:1,
+    rel:0,
+    playsinline:1
+   },
+   events:{
+    onReady:function(event){
+     const frame=event.target.getIframe();
+     if(frame){
+      frame.style.cssText='display:block;width:100%;height:100%;border:0;transform:scale(1.42);transform-origin:center center;pointer-events:none';
+     }
+     try{event.target.playVideo();}catch(error){}
+    }
+   }
+  });
+ }catch(error){
+  box.innerHTML='';
+  box.style.display='none';
+  box.setAttribute('aria-hidden','true');
+ }
 };
-window.closeReelsPlayer=function(){
+window.closeReelsPlayer=function(updateHistory){
  const box=document.getElementById('reelsPlayer');
  if(!box)return;
- const iframe=box.querySelector('iframe');
- if(iframe){iframe.src='';iframe.removeAttribute('src');}
+ box.ontouchstart=null;
+ box.ontouchend=null;
+ reelsSwipeStartY=null;
+ if(reelsFullscreenYTPlayer){
+  try{
+   const frame=reelsFullscreenYTPlayer.getIframe&&reelsFullscreenYTPlayer.getIframe();
+   if(frame){frame.src='';frame.removeAttribute('src');}
+   reelsFullscreenYTPlayer.destroy();
+  }catch(error){}
+ }
+ reelsFullscreenYTPlayer=null;
+ reelsFullscreenPlaylistId=null;
+ box.querySelectorAll('iframe').forEach(function(frame){
+  frame.src='';
+  frame.removeAttribute('src');
+ });
  box.innerHTML='';
  box.style.display='none';
  box.setAttribute('aria-hidden','true');
+ const hadHistory=reelsHistoryActive;
  reelsHistoryActive=false;
+ if(updateHistory!==false&&hadHistory){
+  // The phone Back action has already consumed the player history entry.
+ }
 };
 window.onpopstate=function(){
- if(reelsHistoryActive)window.closeReelsPlayer();
+ if(reelsHistoryActive)window.closeReelsPlayer(false);
 };
 async function loadReelsFeed(force) {
   if(reelsLoading)return; reelsLoading=true; renderReels();
