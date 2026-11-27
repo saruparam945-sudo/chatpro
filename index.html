@@ -138,6 +138,38 @@ body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#e5ddd5}
 .ludo-token.blue span { background:radial-gradient(circle at 32% 24%,#fff 0 5%,#b8efff 13%,#079ed4 54%,#005b94 100%); }
 .ludo-token.yellow span { background:radial-gradient(circle at 32% 24%,#fff 0 5%,#fff4a8 13%,#f6c900 54%,#a97700 100%); }
 
+
+/* ---------------- REELS / MINI SERIES ---------------- */
+.reels-page{min-height:100%;background:#080b12;color:#f8fafc;padding:14px}
+.reels-hero{border-radius:22px;padding:18px;background:radial-gradient(circle at 90% 0%,#6d28d9 0,transparent 42%),linear-gradient(135deg,#161b2b,#10131d 65%,#241044);border:1px solid #303044}
+.reels-title{font-size:25px;font-weight:900;letter-spacing:-.7px}
+.reels-sub{font-size:12px;color:#a8b0c3;margin-top:4px}
+.reels-tools{display:flex;gap:8px;margin-top:14px}
+.reels-tool{border:1px solid #35394b;background:#1b2030;color:#e5e7eb;border-radius:12px;padding:9px 12px;font-size:12px;font-weight:800}
+.reels-filters{display:flex;gap:8px;overflow-x:auto;padding:15px 0 12px;scrollbar-width:none}
+.reels-filters::-webkit-scrollbar{display:none}
+.reels-filter{white-space:nowrap;border:1px solid #34394a;color:#b8bfd0;background:#151a26;border-radius:999px;padding:9px 14px;font-size:12px;font-weight:800}
+.reels-filter.active{background:#7c3aed;border-color:#8b5cf6;color:white;box-shadow:0 5px 18px #7c3aed44}
+.reels-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.reels-card{min-width:0;overflow:hidden;border-radius:16px;background:#151a26;border:1px solid #252b3a}
+.reels-poster{width:100%;aspect-ratio:16/10;object-fit:cover;background:#222938;display:block}
+.reels-poster-wrap{position:relative;cursor:pointer}
+.reels-views{position:absolute;right:7px;bottom:7px;background:#080b12dc;color:#fff;border:1px solid #ffffff22;border-radius:7px;padding:4px 7px;font-size:10px;font-weight:800;backdrop-filter:blur(8px)}
+.reels-new{position:absolute;left:7px;top:7px;background:#e11d48;color:#fff;border-radius:6px;padding:4px 7px;font-size:9px;font-weight:900}
+.reels-card-body{padding:10px}
+.reels-card-title{font-size:12px;line-height:1.4;font-weight:800;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:34px}
+.reels-channel{font-size:10px;color:#9ba4b7;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.reels-card-actions{display:flex;gap:7px;margin-top:9px}
+.reels-action{flex:1;border-radius:9px;padding:7px 5px;background:#242b3c;color:#e5e7eb;font-size:10px;font-weight:800}
+.reels-action.play{background:#6d28d9;color:white}
+.reels-empty{grid-column:1/-1;text-align:center;padding:34px 14px;color:#9ca3af;font-size:13px}
+.reels-player-backdrop{position:fixed;inset:0;z-index:80;background:#000e;display:flex;align-items:center;justify-content:center;padding:14px}
+.reels-player-panel{width:100%;max-width:760px;background:#111827;border:1px solid #374151;border-radius:18px;overflow:hidden}
+.reels-player-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;color:white;font-weight:800}
+.reels-player-frame{width:100%;aspect-ratio:16/9;border:0;background:#000}
+@media(min-width:560px){.reels-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(min-width:850px){.reels-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
 </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden">
@@ -183,6 +215,7 @@ body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#e5ddd5}
       <button onclick="switchTab('chats')" id="tab-chats" class="flex-1 pb-2 border-b-2 border-white">CHATS</button>
       <button onclick="switchTab('ludo')" id="tab-ludo" class="flex-1 pb-2 border-b-2 border-transparent opacity-75">LUDO</button>
       <button onclick="switchTab('movie')" id="tab-movie" class="flex-1 pb-2 border-b-2 border-transparent opacity-75">MOVIE</button>
+      <button onclick="switchTab('reels')" id="tab-reels" class="flex-1 pb-2 border-b-2 border-transparent opacity-75">REELS</button>
       <button onclick="switchTab('status')" id="tab-status" class="flex-1 pb-2 border-b-2 border-transparent opacity-75">STATUS</button>
       <button onclick="switchTab('calls')" id="tab-calls" class="flex-1 pb-2 border-b-2 border-transparent opacity-75">CALLS</button>
       <button onclick="switchTab('friends')" id="tab-friends" class="flex-1 pb-2 border-b-2 border-transparent opacity-75">FRIENDS</button>
@@ -194,6 +227,13 @@ body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#e5ddd5}
   </div>
 
   <div id="listArea" class="flex-1 overflow-y-auto"></div>
+</div>
+
+<div id="reelsPlayer" class="reels-player-backdrop hidden" onclick="if(event.target===this)closeReelsPlayer()">
+  <div class="reels-player-panel">
+    <div class="reels-player-head"><span id="reelsPlayerTitle">Now Playing</span><button onclick="closeReelsPlayer()" class="text-2xl leading-none px-2" aria-label="Close player">&times;</button></div>
+    <iframe id="reelsPlayerFrame" class="reels-player-frame" src="" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+  </div>
 </div>
 
 <!-- CHAT ROOM SCREEN -->
@@ -460,10 +500,164 @@ function listenUsersAndGroups() {
   onSnapshot(query(collection(db, 'groups'), where('members', 'array-contains', currentUser.uid)), snap => { allGroups = snap.docs.map(d => ({ id: d.id, ...d.data() })); if(activeTab==='chats') renderLists(); });
 }
 
+
+/*
+ * ===================== REELS ADMIN / SOURCE SETUP =====================
+ * Add or replace your own public YouTube sources here.
+ * Channel: { name: 'Channel name', type: 'channel', id: 'UCxxxxxxxxxxxxxxxxxxxxxx', category: 'popular' }
+ * Playlist: { name: 'Playlist name', type: 'playlist', id: 'PLxxxxxxxxxxxxxxxxxxxxxx', category: 'hindi-dubbed' }
+ * Copy the ID from youtube.com/channel/UC... or the part after ?list= in a playlist URL.
+ * category may be: 'popular', 'hindi-dubbed', or 'new'.
+ * No API key and no Firebase Storage are used. Feed responses are cached in this device for 24 hours.
+ * The public RSS endpoint / free CORS proxies can occasionally be unavailable or rate-limited.
+ * RSS does not provide reliable view counts, so the poster badge says "YouTube" rather than inventing a count.
+ */
+const REELS_SOURCES = [
+  { name: 'The Viral Fever', type: 'channel', id: 'UCNJcSUSzUeFm8W9P7UUlSeQ', category: 'popular' },
+  { name: 'Dice Media', type: 'channel', id: 'UCC89oVFqenaffhBoyqxd6qw', category: 'popular' }
+];
+const REELS_CACHE_KEY = 'chatpro_reels_feed_v1';
+const REELS_SAVED_KEY = 'chatpro_reels_saved_v1';
+let reelsItems = [], reelsFilter = 'popular', reelsLoading = false, reelsLastLoaded = 0;
+let reelsSaved = new Set(JSON.parse(localStorage.getItem(REELS_SAVED_KEY) || '[]'));
+
+function reelsEscape(value) {
+  return String(value || '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+function reelsFeedUrl(source) {
+  const key = source.type === 'playlist' ? 'playlist_id' : 'channel_id';
+  return 'https://www.youtube.com/feeds/videos.xml?' + key + '=' + encodeURIComponent(source.id);
+}
+async function fetchReelsXml(source) {
+  const target = reelsFeedUrl(source);
+  const proxies = [
+    'https://api.allorigins.win/raw?url=' + encodeURIComponent(target),
+    'https://corsproxy.io/?url=' + encodeURIComponent(target)
+  ];
+  let lastError;
+  for (const url of proxies) {
+    try {
+      const response = await fetch(url, { cache: 'no-store' });
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      const xmlText = await response.text();
+      if (!xmlText.includes('<feed') && !xmlText.includes(':feed')) throw new Error('RSS/Atom feed नहीं मिला');
+      return xmlText;
+    } catch (error) { lastError = error; }
+  }
+  throw lastError || new Error('Feed unavailable');
+}
+function parseReelsFeed(xmlText, source) {
+  const xml = new DOMParser().parseFromString(xmlText, 'text/xml');
+  if (xml.querySelector('parsererror')) throw new Error('Feed XML पढ़ा नहीं जा सका');
+  return [...xml.getElementsByTagName('entry')].map(entry => {
+    const get = name => entry.getElementsByTagName(name)[0]?.textContent || '';
+    const videoId = get('yt:videoId') || get('videoId') || (entry.querySelector('link[href*="watch"]')?.getAttribute('href') || '').match(/[?&]v=([^&]+)/)?.[1] || '';
+    if (!videoId) return null;
+    const title = get('title');
+    const published = get('published') || get('updated');
+    const author = entry.getElementsByTagName('author')[0]?.getElementsByTagName('name')[0]?.textContent || source.name;
+    const stats = entry.getElementsByTagName('media:statistics')[0];
+    const views = stats?.getAttribute('views') || '';
+    return { id: videoId, title, published, author, source: source.name, category: source.category || 'popular', views };
+  }).filter(Boolean);
+}
+function reelsFormatViews(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n < 0) return '';
+  if (n >= 1e7) return (n/1e7).toFixed(1).replace(/\.0$/,'') + 'Cr';
+  if (n >= 1e5) return (n/1e5).toFixed(1).replace(/\.0$/,'') + 'L';
+  if (n >= 1e3) return (n/1e3).toFixed(1).replace(/\.0$/,'') + 'K';
+  return String(n);
+}
+function renderReels() {
+  const box = $('listArea');
+  if (!box || activeTab !== 'reels') return;
+  const now = Date.now(), week = 7 * 24 * 60 * 60 * 1000;
+  const filtered = reelsItems.filter(item => {
+    if (reelsFilter === 'saved') return reelsSaved.has(item.id);
+    if (reelsFilter === 'hindi-dubbed') return /hindi\s*dub|हिंदी\s*डब|dubbed in hindi/i.test(item.title);
+    if (reelsFilter === 'new') return item.published && now - new Date(item.published).getTime() <= week;
+    return true;
+  }).sort((a,b) => new Date(b.published || 0) - new Date(a.published || 0));
+  const filters = [
+    ['popular','पॉपुलर'],['hindi-dubbed','हिंदी डब्ड'],['new','नया'],['saved','मेरी सूची']
+  ];
+  box.innerHTML = `<section class="reels-page">
+    <div class="reels-hero">
+      <div class="flex items-center justify-between gap-3">
+        <div><div class="reels-title">FreeReels <span class="text-violet-300">+</span></div><div class="reels-sub">हिंदी वेब सीरीज़ • मिनी ड्रामा • नए एपिसोड</div></div>
+        <div class="text-3xl text-violet-300"><i class="fas fa-clapperboard"></i></div>
+      </div>
+      <div class="reels-tools"><button class="reels-tool" onclick="loadReelsFeed(true)"><i class="fas fa-rotate mr-1"></i> Refresh</button><span class="text-[10px] text-gray-400 self-center">${reelsLastLoaded ? 'अपडेट: '+new Date(reelsLastLoaded).toLocaleString() : 'YouTube public feeds'}</span></div>
+    </div>
+    <div class="reels-filters">${filters.map(([key,label])=>`<button class="reels-filter ${reelsFilter===key?'active':''}" onclick="setReelsFilter('${key}')">${label}</button>`).join('')}</div>
+    ${reelsLoading && !reelsItems.length ? '<div class="reels-empty"><i class="fas fa-spinner fa-spin text-2xl mb-3"></i><br>नए एपिसोड लोड हो रहे हैं…</div>' : ''}
+    ${!reelsLoading && !filtered.length ? '<div class="reels-empty"><i class="fas fa-film text-3xl mb-3"></i><br>इस कैटेगरी में अभी वीडियो नहीं मिले।<br><span class="text-xs">ऊपर REELS_SOURCES में चैनल/प्लेलिस्ट ID जोड़ें या Refresh करें।</span></div>' : ''}
+    <div class="reels-grid">${filtered.map(item => {
+      const isNew = item.published && now - new Date(item.published).getTime() < week;
+      const badge = item.views ? '👁 '+reelsFormatViews(item.views) : '▶ YouTube';
+      return `<article class="reels-card">
+        <div class="reels-poster-wrap" onclick="openReelsPlayer('${item.id}')">
+          <img class="reels-poster" loading="lazy" src="https://i.ytimg.com/vi/${item.id}/hqdefault.jpg" alt="${reelsEscape(item.title)}">
+          ${isNew?'<span class="reels-new">NEW</span>':''}
+          <span class="reels-views">${badge}</span>
+        </div>
+        <div class="reels-card-body">
+          <div class="reels-card-title">${reelsEscape(item.title)}</div>
+          <div class="reels-channel">${reelsEscape(item.source || item.author)} · ${item.published ? new Date(item.published).toLocaleDateString() : ''}</div>
+          <div class="reels-card-actions">
+            <button class="reels-action play" onclick="openReelsPlayer('${item.id}')"><i class="fas fa-play mr-1"></i>चलाएँ</button>
+            <button class="reels-action" onclick="toggleReelSaved('${item.id}')"><i class="fas fa-bookmark mr-1"></i>${reelsSaved.has(item.id)?'Saved':'Save'}</button>
+          </div>
+        </div>
+      </article>`;
+    }).join('')}</div>
+  </section>`;
+}
+window.setReelsFilter = key => { reelsFilter = key; renderReels(); };
+window.toggleReelSaved = id => {
+  if (reelsSaved.has(id)) reelsSaved.delete(id); else reelsSaved.add(id);
+  localStorage.setItem(REELS_SAVED_KEY, JSON.stringify([...reelsSaved]));
+  renderReels();
+};
+window.openReelsPlayer = id => {
+  const item = reelsItems.find(x => x.id === id);
+  if (!item) return;
+  $('reelsPlayerTitle').textContent = item.title;
+  $('reelsPlayerFrame').src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(id) + '?autoplay=1&playsinline=1&rel=0';
+  $('reelsPlayer').classList.remove('hidden');
+};
+window.closeReelsPlayer = () => {
+  $('reelsPlayerFrame').src = '';
+  $('reelsPlayer').classList.add('hidden');
+};
+async function loadReelsFeed(force) {
+  if (reelsLoading) return;
+  const cached = JSON.parse(localStorage.getItem(REELS_CACHE_KEY) || '{}');
+  if (!force && cached.items?.length && Date.now() - cached.loadedAt < 24*60*60*1000) {
+    reelsItems = cached.items; reelsLastLoaded = cached.loadedAt; renderReels(); return;
+  }
+  reelsLoading = true; renderReels();
+  const results = await Promise.allSettled(REELS_SOURCES.map(async source => parseReelsFeed(await fetchReelsXml(source), source)));
+  const items = results.flatMap(result => result.status === 'fulfilled' ? result.value : []);
+  if (items.length) {
+    const unique = new Map(items.map(item => [item.id, item]));
+    reelsItems = [...unique.values()];
+    reelsLastLoaded = Date.now();
+    localStorage.setItem(REELS_CACHE_KEY, JSON.stringify({loadedAt:reelsLastLoaded,items:reelsItems}));
+  } else if (cached.items?.length) {
+    reelsItems = cached.items; reelsLastLoaded = cached.loadedAt;
+  } else {
+    reelsItems = [];
+  }
+  reelsLoading = false; renderReels();
+  if (!items.length) console.warn('YouTube RSS feeds unavailable. Check channel IDs or retry later.');
+}
+
 window.switchTab = t => {
-  if (!['chats','ludo','movie','status','calls','friends'].includes(t)) t = 'chats';
+  if (!['chats','ludo','movie','reels','status','calls','friends'].includes(t)) t = 'chats';
   activeTab = t;
-  ['chats','ludo','movie','status','calls','friends'].forEach(x => {
+  ['chats','ludo','movie','reels','status','calls','friends'].forEach(x => {
     const tab = $('tab-'+x);
     if (!tab) return;
     tab.classList.toggle('border-white', x === t);
@@ -482,6 +676,7 @@ window.switchTab = t => {
     box.scrollTop = 0;
   }
   renderLists();
+  if (t === 'reels') loadReelsFeed(false);
 };
 
 // CLASSIC LUDO KING 52-STEP MAIN TRACK + HOME COLUMNS
@@ -864,6 +1059,7 @@ window.renderLists = () => {
   const box = $('listArea');
   if (!box) return;
   box.dataset.activeTab = activeTab;
+  if (activeTab === 'reels') { renderReels(); return; }
   if (activeTab === 'chats') {
     const q = $('searchBox').value.toLowerCase();
     let html = '<div class="divide-y dark:divide-gray-800">';
