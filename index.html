@@ -569,9 +569,7 @@ function listenUsersAndGroups() {
 // firstVideoId is the first episode's YouTube ID; its thumbnail becomes the poster.
 // SERIES_CATALOG: केवल single-show playlists रखें — एक ही शो के पूरे episodes क्रम से हों।
 // नए शो जोड़ने से पहले official channel पर playlist की episode list जाँचें; mixed/clip collections न जोड़ें.
-// TVF official channel: https://www.youtube.com/@TheViralFever
-// Drama Central Hindi official channel: https://www.youtube.com/@Chinesedramacentral
-// Dynamic-only catalog: no hardcoded series. Cards come only from the three official channels below.
+// Dynamic-only catalog: cards are fetched from the configured vertical micro-drama channels below.
 const SERIES_CATALOG = [];
 // Public browser key: restrict by HTTP referrer (https://saruparam945-sudo.github.io/*)
 // and API restriction (YouTube Data API v3) in Google Cloud Console.
