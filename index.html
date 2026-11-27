@@ -327,6 +327,7 @@ const db = getFirestore(app);
 window.$ = id => document.getElementById(id);
 let isSignup = false, currentUser = null, allUsers = [], allGroups = [], activeTab = 'chats', myDiscoveryCity = '', myDiscoverable = false, friendsFilter = 'city';
 let myBlockedUsers = [];
+let friendRequests = [];
 let activeChat = null, unsubMsgs = null, replyData = null;
 let peer = null, myPeerId = null, localStream = null, ludoStream = null, ludoCalls = [], currentCallObj = null, currentCallDocId = null, ringInterval = null, audioCtx = null, isMuted = false;
 let roomVoiceStream = null, roomVoiceCalls = [], roomVoiceAudio = new Map(), roomVoiceMode = null, roomVoiceRoomId = null, roomVoicePeerIds = new Set(), roomVoicePendingCalls = [];
@@ -431,11 +432,19 @@ function initPeer() {
 }
 
 
+function friendPairId(a,b){return [a,b].sort().join('_');}
+function friendRequestFor(uid){return friendRequests.find(r=>r.id===friendPairId(currentUser.uid,uid));}
+function areFriends(uid){return friendRequestFor(uid)?.status==='accepted';}
+async function sendFriendRequest(uid){if(!uid||uid===currentUser.uid)return;const r=friendRequestFor(uid);if(r?.status==='accepted')return alert('आप पहले से दोस्त हैं।');if(r?.status==='pending'&&r.receiverUid===currentUser.uid)return acceptFriendRequest(uid);if(r?.status==='pending')return alert('Friend request पहले से भेजी गई है।');try{await setDoc(doc(db,'friend_requests',friendPairId(currentUser.uid,uid)),{senderUid:currentUser.uid,receiverUid:uid,status:'pending',createdAt:serverTimestamp(),updatedAt:serverTimestamp()});alert('Friend request भेज दी गई।');}catch(e){alert('Request नहीं भेजी जा सकी: '+e.message);}}
+async function acceptFriendRequest(uid){try{await updateDoc(doc(db,'friend_requests',friendPairId(currentUser.uid,uid)),{status:'accepted',acceptedAt:serverTimestamp(),updatedAt:serverTimestamp()});alert('Friend request स्वीकार हो गई।');renderLists();}catch(e){alert('Request स्वीकार नहीं हुई: '+e.message);}}
+async function rejectFriendRequest(uid){try{await updateDoc(doc(db,'friend_requests',friendPairId(currentUser.uid,uid)),{status:'rejected',updatedAt:serverTimestamp()});renderLists();}catch(e){alert('Request reject नहीं हुई: '+e.message);}}
+function friendActionHtml(u){const r=friendRequestFor(u.uid);if(r?.status==='accepted')return '<button onclick="openChat(\''+escapeFriendHtml(u.uid)+'\',\''+escapeFriendHtml(u.name||'Friend')+'\',false)" class="px-3 py-2 rounded-lg bg-[#075E54] text-white text-xs font-bold">Chat</button>';if(r?.status==='pending'&&r.receiverUid===currentUser.uid)return '<div class="flex gap-1"><button onclick="acceptFriendRequest(\''+escapeFriendHtml(u.uid)+'\')" class="px-2 py-2 rounded-lg bg-green-600 text-white text-xs font-bold">Accept</button><button onclick="rejectFriendRequest(\''+escapeFriendHtml(u.uid)+'\')" class="px-2 py-2 rounded-lg bg-gray-500 text-white text-xs font-bold">Reject</button></div>';if(r?.status==='pending')return '<span class="text-xs text-amber-600 font-semibold">Request sent</span>';return '<button onclick="sendFriendRequest(\''+escapeFriendHtml(u.uid)+'\')" class="px-3 py-2 rounded-lg bg-[#075E54] text-white text-xs font-bold">Add Friend</button>';}
 function isChatBlocked(uid){if(!uid||!currentUser)return false;const other=allUsers.find(u=>u.uid===uid);return myBlockedUsers.includes(uid)||(Array.isArray(other?.blockedUsers)&&other.blockedUsers.includes(currentUser.uid));}
 function renderChatBlockState(){if(!activeChat||activeChat.isGroup)return;const blocked=isChatBlocked(activeChat.id),own=myBlockedUsers.includes(activeChat.id),btn=$('blockUserBtn');if(btn){btn.textContent=own?'Unblock':'Block';btn.classList.toggle('bg-red-600',!own);btn.classList.toggle('bg-green-600',own);}['chatInviteBar','chatComposer'].forEach(id=>{const el=$(id);if(el)el.classList.toggle('hidden',blocked);});if($('callBtns'))$('callBtns').classList.toggle('hidden',blocked);if(blocked&&$('msgBox'))$('msgBox').innerHTML='<div class="m-4 p-4 rounded-xl bg-red-100 text-red-800 text-center text-sm">'+(own?'आपने इस यूज़र को ब्लॉक किया है।':'इस यूज़र ने आपको ब्लॉक किया है।')+' चैट और कॉल बंद हैं।</div>';}
 window.toggleChatBlock=async()=>{if(!activeChat||activeChat.isGroup||!currentUser)return;const uid=activeChat.id;try{if(myBlockedUsers.includes(uid)){await updateDoc(doc(db,'users',currentUser.uid),{blockedUsers:arrayRemove(uid)});myBlockedUsers=myBlockedUsers.filter(x=>x!==uid);alert('यूज़र अनब्लॉक कर दिया गया।');}else{await updateDoc(doc(db,'users',currentUser.uid),{blockedUsers:arrayUnion(uid)});myBlockedUsers=[...new Set([...myBlockedUsers,uid])];if(currentCallDocId)await updateDoc(doc(db,'calls',currentCallDocId),{status:'ended'}).catch(()=>{});alert('यूज़र ब्लॉक कर दिया गया।');}renderChatBlockState();}catch(e){alert('Block/Unblock नहीं हो सका: '+e.message);}};
 
 function listenUsersAndGroups() {
+  onSnapshot(query(collection(db,'friend_requests'),where('senderUid','==',currentUser.uid)), sentSnap => { const sent=sentSnap.docs.map(d=>({id:d.id,...d.data()})); onSnapshot(query(collection(db,'friend_requests'),where('receiverUid','==',currentUser.uid)), recvSnap => { const received=recvSnap.docs.map(d=>({id:d.id,...d.data()})); friendRequests=[...new Map([...sent,...received].map(x=>[x.id,x])).values()]; if(activeTab==='friends'||activeTab==='chats')renderLists(); }); });
   onSnapshot(collection(db, 'users'), snap => { allUsers = snap.docs.map(d => d.data()).filter(u => u.uid !== currentUser.uid); if(activeTab==='chats'||activeTab==='friends') renderLists(); if(activeChat && !activeChat.isGroup) renderChatBlockState(); });
   onSnapshot(collection(db, 'groups'), snap => { allGroups = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(g => g.members?.includes(currentUser.uid)); if(activeTab==='chats') renderLists(); });
 }
@@ -881,7 +890,7 @@ window.renderLists = () => {
       </section>
       <div class="flex items-center justify-between"><h3 class="font-bold"> ${friendsFilter==='india'?'पूरे भारत में':friendsFilter==='online'?'अभी ऑनलाइन':city?'आपके शहर में':'नए दोस्त'} </h3><span class="text-xs text-gray-500">${eligible.length} मिले</span></div>
       <div class="space-y-2">
-        ${friendsFilter==='city' && !city ? '<div class="text-center p-6 text-sm text-gray-500">शहर वाले फ़िल्टर के लिए पहले अपना शहर लिखें और सेव करें। All India या Online फ़िल्टर चुनकर दूसरे शहरों के सदस्य भी देख सकते हैं।</div>' : eligible.length ? eligible.map(u => `<div class="flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-[#202c33] border border-gray-100 dark:border-gray-700"><div class="w-11 h-11 rounded-full bg-[#25D366] text-white flex items-center justify-center text-lg font-bold">${escapeFriendHtml((u.name||'U').charAt(0).toUpperCase())}</div><div class="flex-1 min-w-0"><div class="font-bold truncate">${escapeFriendHtml(u.name||'ChatPro user')}</div><div class="text-xs text-gray-500">${escapeFriendHtml(u.city||'')}</div></div><button onclick="openChat('${escapeFriendHtml(u.uid)}','${escapeFriendHtml(u.name||'Friend')}',false)" class="px-3 py-2 rounded-lg bg-[#075E54] text-white text-xs font-bold">Chat</button></div>`).join('') : '<div class="text-center p-6 text-sm text-gray-500">इस फ़िल्टर में अभी कोई ऐसा सदस्य नहीं मिला जिसने अपनी प्रोफ़ाइल खोजने योग्य रखी हो।</div>'}
+        ${friendsFilter==='city' && !city ? '<div class="text-center p-6 text-sm text-gray-500">शहर वाले फ़िल्टर के लिए पहले अपना शहर लिखें और सेव करें। All India या Online फ़िल्टर चुनकर दूसरे शहरों के सदस्य भी देख सकते हैं।</div>' : eligible.length ? eligible.map(u => `<div class="flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-[#202c33] border border-gray-100 dark:border-gray-700"><div class="w-11 h-11 rounded-full bg-[#25D366] text-white flex items-center justify-center text-lg font-bold">${escapeFriendHtml((u.name||'U').charAt(0).toUpperCase())}</div><div class="flex-1 min-w-0"><div class="font-bold truncate">${escapeFriendHtml(u.name||'ChatPro user')}</div><div class="text-xs text-gray-500">${escapeFriendHtml(u.city||'')}</div></div>${friendActionHtml(u)}</div>`).join('') : '<div class="text-center p-6 text-sm text-gray-500">इस फ़िल्टर में अभी कोई ऐसा सदस्य नहीं मिला जिसने अपनी प्रोफ़ाइल खोजने योग्य रखी हो।</div>'}
       </div>
     </div>`;
   } else if (activeTab === 'ludo') {
@@ -953,7 +962,8 @@ window.renderLists = () => {
   }
 };
 
-window.openChat = (id, name, isGroup) => {
+window.openChat = async (id, name, isGroup) => {
+  if (!isGroup && !areFriends(id)) { alert('पहले FRIENDS टैब से Add Friend भेजें। चैट शुरू करने के लिए सामने वाले की स्वीकृति जरूरी है।'); switchTab('friends'); return; }
   const roomId = isGroup ? 'grp_' + id : [currentUser.uid, id].sort().join('_');
   activeChat = { id, name, isGroup, roomId };
   $('blockUserBtn').classList.toggle('hidden', !!isGroup);
@@ -989,6 +999,7 @@ window.delMsg = id => deleteDoc(doc(db, 'rooms', activeChat.roomId, 'messages', 
 
 window.sendLudoInvite = async () => {
   if (!activeChat || !currentUser) return;
+  if (!activeChat.isGroup && !areFriends(activeChat.id)) return alert('Invite भेजने के लिए पहले दोस्ती स्वीकार होना जरूरी है।');
   if (!activeChat.isGroup && isChatBlocked(activeChat.id)) return alert('Block होने पर invite नहीं भेज सकते।');
   try {
     const code = Math.random().toString(36).substring(2, 7).toUpperCase();
@@ -1044,6 +1055,7 @@ window.joinChatInvite = async (type, code) => {
 window.sendMsg = async () => {
   const txt = $('msgInput').value.trim();
   if (!txt || !activeChat) return;
+  if (!activeChat.isGroup && !areFriends(activeChat.id)) return alert('मैसेज के लिए पहले दोस्ती स्वीकार होना जरूरी है।');
   if (!activeChat.isGroup && isChatBlocked(activeChat.id)) return alert('Block होने पर message नहीं भेज सकते।');
   $('msgInput').value = ''; const rep = replyData; cancelReply();
   const senderName = currentUser.displayName || 'ChatPro User';
@@ -1054,6 +1066,7 @@ window.sendMsg = async () => {
 window.sendMedia = e => {
   const file = e.target.files[0];
   if (!file || !activeChat) return;
+  if (!activeChat.isGroup && !areFriends(activeChat.id)) { alert('Media भेजने के लिए पहले दोस्ती स्वीकार होना जरूरी है।'); e.target.value=''; return; }
   if (!activeChat.isGroup && isChatBlocked(activeChat.id)) { alert('Block होने पर media नहीं भेज सकते।'); e.target.value=''; return; }
   if (file.size > 900 * 1024) { alert("Select a photo or short video under 1 MB!"); return; }
   const reader = new FileReader();
@@ -1077,6 +1090,7 @@ function stopRingtone() { if (ringInterval) clearInterval(ringInterval); if (aud
 
 window.startCall = async type => {
   if (!activeChat || activeChat.isGroup) return;
+  if (!areFriends(activeChat.id)) return alert('कॉल के लिए पहले Friend Request स्वीकार होना जरूरी है।');
   if (isChatBlocked(activeChat.id)) return alert('Block होने पर कॉल नहीं कर सकते।');
   try {
     localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: type === 'video' });
@@ -1098,7 +1112,7 @@ window.startCall = async type => {
 function listenIncomingCalls() {
   onSnapshot(query(collection(db, 'calls'), where('receiverId', '==', currentUser.uid), where('status', '==', 'ringing')), snap => {
     snap.docChanges().forEach(chg => {
-      if (chg.type === 'added') { const c = chg.doc.data(); if (isChatBlocked(c.callerId)) { updateDoc(doc(db,'calls',chg.doc.id),{status:'rejected'}).catch(()=>{}); return; } currentCallDocId = chg.doc.id; window.pendingCall = c; $('inCallerName').textContent = c.callerName; $('inCallType').textContent = `Incoming ${c.type} Call...`; $('incomingModal').classList.remove('hidden'); playRingtone(); }
+      if (chg.type === 'added') { const c = chg.doc.data(); if (isChatBlocked(c.callerId) || !areFriends(c.callerId)) { updateDoc(doc(db,'calls',chg.doc.id),{status:'rejected'}).catch(()=>{}); return; } currentCallDocId = chg.doc.id; window.pendingCall = c; $('inCallerName').textContent = c.callerName; $('inCallType').textContent = `Incoming ${c.type} Call...`; $('incomingModal').classList.remove('hidden'); playRingtone(); }
     });
   });
 }
