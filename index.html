@@ -542,7 +542,8 @@ const SERIES_CATALOG = [
 ];
 const REELS_CACHE_KEY = 'chatpro_series_catalog_v2';
 let reelsFilter = 'all', reelsLoading = false, reelsPlayer = null, reelsCurrentSeries = null, reelsPlayerReady = false, reelsMiniTimer = null;
-let reelsPosterMap = {};\ntry { reelsPosterMap=JSON.parse(localStorage.getItem('chatpro_reels_posters_v1')||'{}')||{}; } catch(e) { reelsPosterMap={}; }
+let reelsPosterMap = {};
+try { reelsPosterMap=JSON.parse(localStorage.getItem('chatpro_reels_posters_v1')||'{}')||{}; } catch(e) { reelsPosterMap={}; }
 function reelsEscape(value) { return String(value || '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
 function reelsPoster(series) { return reelsPosterMap[series.playlistId] || ''; }
 function reelsFallbackImage(img) {
@@ -590,7 +591,8 @@ function renderReels() {
   </section>`;
 }
 window.setReelsFilter=key=>{reelsFilter=key;renderReels();};
-loadReelsPlaylistPosters();\nfunction loadYouTubeIframeAPI() {
+loadReelsPlaylistPosters();
+function loadYouTubeIframeAPI() {
   if(window.YT&&window.YT.Player) return Promise.resolve();
   if(window.reelsYTApiPromise) return window.reelsYTApiPromise;
   window.reelsYTApiPromise=new Promise(resolve=>{
@@ -617,7 +619,8 @@ window.openReelsPlayer=async playlistId=>{
  $('reelsMiniTitle').textContent=series.title;$('reelsMiniEpisode').textContent='EP 1 / '+series.episodes;
  $('reelsMiniPoster').src=reelsPoster(series)||'';renderReelsEpisodeButtons(0);
  $('reelsMiniPlayer').classList.remove('hidden');$('reelsPlayer').classList.remove('hidden');
- $('reelsDrawerTitle').textContent=series.title+' · '+series.episodes+' Episodes';\n const host=$('reelsPlayerFrame');
+ $('reelsDrawerTitle').textContent=series.title+' · '+series.episodes+' Episodes';
+ const host=$('reelsPlayerFrame');
  if(reelsPlayer&&reelsPlayer.loadPlaylist){reelsPlayer.loadPlaylist({list:playlistId,listType:'playlist',index:0});return;}
  host.innerHTML='<div id="reelsYoutubePlayer" style="width:100%;height:100%"></div>';
  try{
