@@ -660,16 +660,28 @@ function isHindiDubbedMovie(title,description,source){
 function formatFullMovieDuration(seconds){const n=Math.floor(Number(seconds)||0),h=Math.floor(n/3600),m=Math.floor(n%3600/60);return h?h+'h '+m+'m':m+'m';}
 async function forceRefreshOfficialPlaylists(){
  const button=document.getElementById('forceRefreshBtn');
- if(reelsLoading)return false;
- reelsLoading=true;
- if(button){button.disabled=true;button.textContent='🔄 नई फिल्में लोड हो रही हैं…';}
+ if(reelsLoading||!button)return false;
+ button.disabled=true;
+ button.textContent='🔄 लोड हो रहा है...';
+ const startedAt=Date.now();
  let ok=false;
- try{ok=await loadOfficialReelsPlaylists(true);}
- finally{
-  reelsLoading=false;
+ try{
+  // Force a fresh request to ./movies.json?t=Date.now() (cache bypass).
+  const refreshPromise=loadOfficialReelsPlaylists(true);
+  const [result]=await Promise.all([refreshPromise,new Promise(resolve=>setTimeout(resolve,Math.max(0,1000-(Date.now()-startedAt))))]);
+  ok=result;
+ }catch(error){
+  console.warn('Manual movie refresh failed:',error);
+ }finally{
   const current=document.getElementById('forceRefreshBtn');
-  if(current){current.disabled=false;current.textContent='↻ नई फिल्में लोड करें';}
-  if(activeTab==='reels')renderReels();
+  if(current){
+   current.disabled=true;
+   current.textContent=ok?'✅ सभी फिल्में ताज़ा हैं!':'⚠️ सूची लोड नहीं हुई';
+   setTimeout(()=>{
+    const latest=document.getElementById('forceRefreshBtn');
+    if(latest){latest.disabled=false;latest.textContent='↻ नई फिल्में लोड करें';}
+   },1000);
+  }
  }
  if(typeof showToast==='function')showToast(ok?'Central catalog अपडेट हुआ।':'ऑफलाइन/त्रुटि—पिछली सेव सूची दिखाई जा रही है।');
  return ok;
@@ -708,7 +720,7 @@ async function loadOfficialReelsPlaylists(force=false){
 function renderReels(){
  const box=$('listArea');if(!box||activeTab!=='reels')return;
  const filters=[['all','सभी'],['popular','पॉपुलर'],['new','नया']],rows=getAllReelsSeries().filter(x=>reelsFilter==='all'||x.category===reelsFilter);
- box.innerHTML=`<section class="reels-page"><div class="reels-hero"><div class="reels-title">FreeReels <span class="text-violet-300">+</span> <span class="text-xs font-bold text-white/70">v7.0</span></div><div class="reels-sub">Central JSON Catalog · सर्वर-साइड अपडेट</div><div class="text-[10px] text-gray-400 mt-3">केवल अवधि और टाइटल जाँची गई फ़िल्में · ${getAllReelsSeries().length} फिल्में</div><div class="text-[10px] text-gray-400 mt-2" id="reelsApiStatus">${reelsEscape(reelsApiStatus)}</div><button type="button" id="forceRefreshBtn" style="position:relative;z-index:9999;pointer-events:auto;user-select:none;-webkit-user-select:none;cursor:pointer;touch-action:manipulation" class="reels-filter mt-2">↻ नई फिल्में लोड करें</button></div>
+ box.innerHTML=`<section class="reels-page"><div class="reels-hero"><div class="reels-title">FreeReels <span class="text-violet-300">+</span> <span class="text-xs font-bold text-white/70">v7.0</span></div><div class="reels-sub">Central JSON Catalog · सर्वर-साइड अपडेट</div><div class="text-[10px] text-gray-400 mt-3">केवल अवधि और टाइटल जाँची गई फ़िल्में · ${getAllReelsSeries().length} फिल्में</div><div class="text-[10px] text-gray-400 mt-2" id="reelsApiStatus">${reelsEscape(reelsApiStatus)}</div><button type="button" id="forceRefreshBtn" onclick="forceRefreshOfficialPlaylists()" style="position:relative;z-index:9999;pointer-events:auto;user-select:none;-webkit-user-select:none;cursor:pointer;touch-action:manipulation" class="reels-filter mt-2">↻ नई फिल्में लोड करें</button></div>
  <div class="reels-filters">${filters.map(([k,l])=>`<button class="reels-filter ${reelsFilter===k?'active':''}" onclick="setReelsFilter('${k}')">${l}</button>`).join('')}</div>
  <div class="reels-grid">${rows.map(x=>{const poster=reelsPoster(x);return `<article class="reels-card" onclick="openReelsPlayer('${x.videoId}')"><div class="reels-poster-wrap">${poster?`<img class="reels-poster" loading="lazy" src="${reelsEscape(poster)}" alt="${reelsEscape(x.title)} poster" onerror="reelsFallbackImage(this)">`:''}<div class="reels-poster-fallback"><strong>${reelsEscape(x.title)}</strong><small>${reelsEscape(x.source)}</small></div><div class="reels-badges"><span class="reels-badge">${reelsEscape(x.badge)}</span><span class="reels-badge">${reelsEscape(x.displayDurationLabel||x.durationLabel)}</span></div><span class="reels-views">▶ फुल शो</span></div><div class="reels-card-body"><div class="reels-card-title">${reelsEscape(x.title)}</div><div class="reels-meta">${reelsEscape(x.source)} · ${reelsEscape(x.durationLabel)}</div><div class="reels-tags">${(x.tags||[]).map(t=>`<span class="reels-tag">${reelsEscape(t)}</span>`).join('')}</div></div></article>`;}).join('')}</div></section>`;
 }
