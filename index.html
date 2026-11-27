@@ -166,8 +166,8 @@ body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#e5ddd5}
 .reels-tag{font-size:9px;color:#c4b5fd;background:#312e81aa;border:1px solid #6d5ca533;border-radius:999px;padding:3px 7px}
 .reels-player-backdrop{position:fixed;inset:0;z-index:80;background:#05070d;display:flex;align-items:stretch;justify-content:center;padding:0;overflow:hidden;width:100vw;height:100vh;height:100dvh;pointer-events:auto}.reels-player-backdrop.hidden,#reelsPlayer.hidden{display:none!important;visibility:hidden!important;pointer-events:none!important}.reels-player-backdrop:not(.hidden){visibility:visible;pointer-events:auto}
 .reels-player-panel{position:relative;width:100vw;height:100vh;height:100dvh;max-width:none;min-height:0;background:#090d16;border:0;border-radius:0;overflow:hidden}
-.reels-player-head{display:flex;align-items:center;justify-content:flex-end;padding:calc(10px + env(safe-area-inset-top)) 12px 10px;position:absolute;z-index:2147483647;isolation:isolate;top:0;left:0;right:0;background:transparent;pointer-events:none}.reels-player-head button{position:relative;z-index:2147483647;pointer-events:auto;touch-action:manipulation;width:38px;height:38px;padding:0;border-radius:50%;border:1px solid #ffffff66;background:#11182766;color:#fff;font-size:22px;line-height:1;backdrop-filter:blur(10px);box-shadow:0 2px 12px #0005}
-.reels-player-frame{position:absolute;z-index:0;inset:0;width:100%;height:100%;aspect-ratio:auto;border:0;background:#000;display:block;max-height:none;overflow:hidden}.reels-player-frame iframe{position:absolute!important;top:50%!important;left:50%!important;width:max(100vw,170vh)!important;height:max(100vh,56.25vw)!important;max-width:none!important;max-height:none!important;transform:translate(-50%,-50%) scale(.97)!important;transform-origin:center center!important;border:0!important}.reels-touch-overlay{position:absolute;z-index:5;left:0;right:0;top:64px;bottom:118px;background:transparent;touch-action:pan-y;pointer-events:auto}.reels-seekbar{position:absolute;z-index:9998;left:12px;right:12px;bottom:max(9px,env(safe-area-inset-bottom));display:flex;align-items:center;gap:9px;padding:7px 10px;border:1px solid #ffffff35;border-radius:14px;background:#10182766;color:#fff;backdrop-filter:blur(12px);pointer-events:auto}.reels-seek-time{min-width:42px;font-size:10px;font-weight:800;font-variant-numeric:tabular-nums;text-align:center;color:#ffffffdf}.reels-seek-range{flex:1;min-width:0;height:4px;accent-color:#a78bfa;cursor:pointer;touch-action:pan-x}.reels-seek-range:disabled{opacity:.45}.reels-episodes{display:grid;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));gap:7px;padding:10px 12px 18px;max-height:30vh;overflow-y:auto;max-width:1200px;margin:0 auto}.reels-ep-btn{background:#1b2231;color:#cbd5e1;border:1px solid #354052;border-radius:9px;padding:10px 5px;font-size:12px;font-weight:900}.reels-ep-btn.active{background:#7c3aed;border-color:#a78bfa;color:#fff;box-shadow:0 0 0 2px #8b5cf633}.reels-episode-drawer{position:absolute;z-index:25;left:0;right:0;bottom:0;padding:0 0 max(8px,env(safe-area-inset-bottom));background:transparent;pointer-events:none}
+.reels-player-head{display:none!important}
+.reels-player-frame{position:absolute;z-index:0;inset:0;width:100%;height:100%;aspect-ratio:auto;border:0;background:#000;display:block;max-height:none;overflow:hidden}.reels-player-frame{display:flex;align-items:center;justify-content:center;background:#000}.reels-player-frame iframe{position:absolute!important;inset:50% auto auto 50%!important;width:100vw!important;height:min(56.25vw,75vh)!important;max-width:100vw!important;max-height:75vh!important;transform:translate(-50%,-50%)!important;transform-origin:center center!important;border:0!important}.reels-touch-overlay{position:absolute;z-index:5;left:0;right:0;top:64px;bottom:118px;background:transparent;touch-action:pan-y;pointer-events:auto}.reels-seekbar{position:absolute;z-index:9998;left:12px;right:12px;bottom:max(9px,env(safe-area-inset-bottom));display:flex;align-items:center;gap:9px;padding:7px 10px;border:1px solid #ffffff35;border-radius:14px;background:#10182766;color:#fff;backdrop-filter:blur(12px);pointer-events:auto}.reels-seek-time{min-width:42px;font-size:10px;font-weight:800;font-variant-numeric:tabular-nums;text-align:center;color:#ffffffdf}.reels-seek-range{flex:1;min-width:0;height:4px;accent-color:#a78bfa;cursor:pointer;touch-action:pan-x}.reels-seek-range:disabled{opacity:.45}.reels-episodes{display:grid;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));gap:7px;padding:10px 12px 18px;max-height:30vh;overflow-y:auto;max-width:1200px;margin:0 auto}.reels-ep-btn{background:#1b2231;color:#cbd5e1;border:1px solid #354052;border-radius:9px;padding:10px 5px;font-size:12px;font-weight:900}.reels-ep-btn.active{background:#7c3aed;border-color:#a78bfa;color:#fff;box-shadow:0 0 0 2px #8b5cf633}.reels-episode-drawer{position:absolute;z-index:25;left:0;right:0;bottom:0;padding:0 0 max(8px,env(safe-area-inset-bottom));background:transparent;pointer-events:none}
 .reels-floating-bar{display:flex;position:relative;z-index:26;pointer-events:auto;align-items:center;justify-content:flex-end;gap:0;margin:0 10px;padding:0;border:0;background:transparent;box-shadow:none;backdrop-filter:none}
 .reels-floating-title{display:none}
 .reels-episodes-toggle{display:flex;align-items:center;justify-content:center;min-width:64px;height:34px;padding:0 10px;border-radius:18px;background:#11182766;border:1px solid #ffffff45;color:#fff;font-size:11px;font-weight:900;white-space:nowrap;backdrop-filter:blur(10px);box-shadow:0 2px 12px #0005}
@@ -623,7 +623,7 @@ const REELS_CHANNELS = [
 ];
 let reelsApiCatalog = [];
 let reelsHistoryActive=false, reelsClosingHistory=false;
-window.addEventListener('popstate',()=>{if(reelsClosingHistory){reelsClosingHistory=false;return;}if(reelsHistoryActive){reelsHistoryActive=false;if(reelsCurrentSeries)minimizeReelsPlayer();}});
+window.onpopstate=function(){if(reelsClosingHistory){reelsClosingHistory=false;return;}if(reelsHistoryActive){reelsHistoryActive=false;if(reelsCurrentSeries)minimizeReelsPlayer();}};
 let reelsApiStatus = 'API key सेट करने पर ऑफिशियल चैनलों की प्लेलिस्ट लोड होंगी।';
 let reelsFilter = 'all', reelsLoading = false, reelsPlayer = null, reelsCurrentSeries = null, reelsPlayerReady = false, reelsMiniTimer = null, reelsSeeking = false;
 let reelsPosterMap = {};
@@ -702,6 +702,21 @@ async function fetchAllChannelPlaylists(channel){
   };
  });
 }
+async function forceRefreshOfficialPlaylists(){
+ const button=$('reelsRefreshBtn');
+ if(reelsLoading)return;
+ if(button){button.disabled=true;button.textContent='Refreshing...';}
+ reelsApiCatalog=[];
+ try{
+  localStorage.removeItem(REELS_API_CACHE_KEY);
+  localStorage.removeItem('chatpro_reels_posters_v1');
+ }catch(e){}
+ try{
+  await loadOfficialReelsPlaylists(true);
+ }finally{
+  if(button){button.disabled=false;button.textContent='↻ Refresh official playlists';}
+ }
+}
 async function loadOfficialReelsPlaylists(force=false){
  if(!YOUTUBE_DATA_API_KEY||YOUTUBE_DATA_API_KEY==='PASTE_RESTRICTED_YOUTUBE_API_KEY_HERE'){
   reelsApiStatus='ऑफिशियल प्लेलिस्ट्स लोड करने के लिए index.html के YOUTUBE_DATA_API_KEY में अपनी नई restricted API key डालें।';
@@ -743,7 +758,7 @@ function renderReels() {
   const filters=[['all','सभी'],['popular','पॉपुलर'],['hindi-dubbed','हिंदी डब्ड'],['new','नया']];
   const rows=getAllReelsSeries().filter(x=>reelsFilter==='all'||x.category===reelsFilter);
   box.innerHTML=`<section class="reels-page">
-    <div class="reels-hero"><div class="reels-title">FreeReels <span class="text-violet-300">+</span></div><div class="reels-sub">पूरी वेब सीरीज़ • Episode 1 से आखिरी एपिसोड तक</div><div class="text-[10px] text-gray-400 mt-3">YouTube Playlist Player · ${getAllReelsSeries().length} प्लेलिस्ट</div><div class="text-[10px] text-gray-400 mt-2" id="reelsApiStatus">${reelsEscape(reelsApiStatus)}</div><button class="reels-filter reels-refresh-btn mt-2" onclick="loadOfficialReelsPlaylists(true)">↻ Refresh official playlists</button></div>
+    <div class="reels-hero"><div class="reels-title">FreeReels <span class="text-violet-300">+</span> <span class="text-xs font-bold text-white/70">v5.0</span></div><div class="reels-sub">पूरी वेब सीरीज़ • Episode 1 से आखिरी एपिसोड तक</div><div class="text-[10px] text-gray-400 mt-3">YouTube Playlist Player · ${getAllReelsSeries().length} प्लेलिस्ट</div><div class="text-[10px] text-gray-400 mt-2" id="reelsApiStatus">${reelsEscape(reelsApiStatus)}</div><button id="reelsRefreshBtn" class="reels-filter reels-refresh-btn mt-2" onclick="forceRefreshOfficialPlaylists()">↻ Refresh official playlists</button></div>
     <div class="reels-filters">${filters.map(([key,label])=>`<button class="reels-filter ${reelsFilter===key?'active':''}" onclick="setReelsFilter('${key}')">${label}</button>`).join('')}</div>
     <div class="reels-grid">${rows.map(series=>{
       const poster=reelsPoster(series);
@@ -877,16 +892,27 @@ window.handleReelsTouchEnd=event=>{
  }
 };
 
-window.minimizeReelsPlayer=()=>{$('reelsPlayer').classList.add('hidden');$('reelsPlayer').style.display='none';$('reelsPlayer').style.visibility='hidden';$('reelsPlayer').style.pointerEvents='none';$('reelsMiniPlayer').classList.remove('hidden');};
+window.minimizeReelsPlayer=()=>{
+ // Keep the same YouTube iframe alive in a compact floating player rather than display:none.
+ const player=$('reelsPlayer'),panel=player.querySelector('.reels-player-panel'),frame=$('reelsPlayerFrame');
+ player.classList.remove('hidden');player.classList.add('reels-minimized');player.style.display='block';player.style.visibility='visible';player.style.pointerEvents='none';
+ panel.style.cssText='position:fixed!important;left:10px!important;right:10px!important;bottom:calc(68px + env(safe-area-inset-bottom))!important;top:auto!important;width:auto!important;height:110px!important;max-width:none!important;border-radius:14px!important;overflow:hidden!important;box-shadow:0 8px 30px #0009!important;pointer-events:auto!important;';
+ frame.style.cssText='position:absolute!important;left:0!important;top:0!important;width:145px!important;height:82px!important;inset:auto!important;overflow:hidden!important;pointer-events:none!important;';
+ $('reelsMiniPlayer').classList.remove('hidden');$('reelsMiniPlayer').style.display='flex';$('reelsMiniPlayer').style.position='fixed';$('reelsMiniPlayer').style.left='160px';$('reelsMiniPlayer').style.right='10px';$('reelsMiniPlayer').style.bottom='calc(68px + env(safe-area-inset-bottom))';$('reelsMiniPlayer').style.zIndex='10001';$('reelsMiniPlayer').style.background='#171b29';$('reelsMiniPlayer').style.borderRadius='14px';$('reelsMiniPlayer').style.minHeight='110px';
+ $('reelsMiniPoster').style.display='none';
+};
 window.restoreReelsPlayer=()=>{
  if(!reelsHistoryActive){history.pushState({reelsPlayer:true},'',location.href);reelsHistoryActive=true;}
- $('reelsPlayer').classList.remove('hidden');$('reelsPlayer').style.display='flex';$('reelsPlayer').style.visibility='visible';$('reelsPlayer').style.pointerEvents='auto';$('reelsMiniPlayer').classList.remove('hidden');
+ const player=$('reelsPlayer'),panel=player.querySelector('.reels-player-panel'),frame=$('reelsPlayerFrame');
+ player.classList.remove('reels-minimized');player.classList.remove('hidden');player.style.cssText='';player.style.display='flex';player.style.visibility='visible';player.style.pointerEvents='auto';
+ panel.style.cssText='';frame.style.cssText='';
+ $('reelsMiniPlayer').classList.add('hidden');$('reelsMiniPlayer').style.cssText='';$('reelsMiniPoster').style.display='';
 };
 window.closeReelsPlayer=()=>{
  if(reelsHistoryActive){reelsHistoryActive=false;reelsClosingHistory=true;history.back();}
  if(reelsMiniTimer)clearInterval(reelsMiniTimer);reelsMiniTimer=null;if(reelsNextTimer)clearTimeout(reelsNextTimer);reelsNextTimer=null;
  if(reelsPlayer&&reelsPlayer.destroy){reelsPlayer.destroy();reelsPlayer=null;}
- reelsPlayerReady=false;reelsCurrentSeries=null;$('reelsPlayerFrame').innerHTML='';$('reelsEpisodeButtons').innerHTML='';
+ reelsPlayerReady=false;reelsCurrentSeries=null;$('reelsPlayerFrame').innerHTML='';$('reelsEpisodeButtons').innerHTML='';$('reelsPlayer').querySelector('.reels-player-panel').style.cssText='';$('reelsPlayerFrame').style.cssText='';$('reelsMiniPlayer').style.cssText='';$('reelsMiniPoster').style.display='';$('reelsPlayer').classList.remove('reels-minimized');
  $('reelsPlayer').classList.add('hidden');$('reelsPlayer').style.display='none';$('reelsPlayer').style.visibility='hidden';$('reelsPlayer').style.pointerEvents='none';$('reelsMiniPlayer').classList.add('hidden');
 };
 async function loadReelsFeed(force) {
