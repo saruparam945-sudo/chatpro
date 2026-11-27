@@ -542,11 +542,31 @@ const SERIES_CATALOG = [
 ];
 const REELS_CACHE_KEY = 'chatpro_series_catalog_v2';
 let reelsFilter = 'all', reelsLoading = false, reelsPlayer = null, reelsCurrentSeries = null, reelsPlayerReady = false, reelsMiniTimer = null;
-let reelsPosterMap = {};
+let reelsPosterMap = {};\ntry { reelsPosterMap=JSON.parse(localStorage.getItem('chatpro_reels_posters_v1')||'{}')||{}; } catch(e) { reelsPosterMap={}; }
 function reelsEscape(value) { return String(value || '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
-function reelsPoster(series) {
-  if (series.firstVideoId) return 'https://i.ytimg.com/vi/'+encodeURIComponent(series.posterVideoId)+'/hqdefault.jpg';
-  return reelsPosterMap[series.playlistId] || '';
+function reelsPoster(series) { return reelsPosterMap[series.playlistId] || ''; }
+function reelsFallbackImage(img) {
+ img.style.display='none';
+ if(img.nextElementSibling) img.nextElementSibling.classList.add('visible');
+}
+async function loadReelsPlaylistPosters() {
+ await Promise.all(SERIES_CATALOG.map(async series=>{
+  if(reelsPosterMap[series.playlistId]) return;
+  try {
+   const feed='https://www.youtube.com/feeds/videos.xml?playlist_id='+encodeURIComponent(series.playlistId);
+   const url='https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent(feed);
+   const response=await fetch(url);
+   if(!response.ok) throw new Error('RSS '+response.status);
+   const data=await response.json();
+   const first=(data.items||[])[0];
+   const thumbnail=first && first.thumbnail;
+   if(thumbnail) {
+    reelsPosterMap[series.playlistId]=thumbnail;
+    try { localStorage.setItem('chatpro_reels_posters_v1',JSON.stringify(reelsPosterMap)); } catch(e) {}
+    if(activeTab==='reels') renderReels();
+   }
+  } catch(error) { console.warn('Playlist poster unavailable',series.title,error); }
+ }));
 }
 function renderReels() {
   const box=$('listArea'); if(!box || activeTab!=='reels') return;
@@ -559,7 +579,7 @@ function renderReels() {
       const poster=reelsPoster(series);
       return `<article class="reels-card" onclick="openReelsPlayer('${series.playlistId}')">
         <div class="reels-poster-wrap">
-          ${poster?`<img class="reels-poster" loading="lazy" src="${reelsEscape(poster)}" alt="${reelsEscape(series.title)} poster" onerror="this.style.display='none';this.nextElementSibling.classList.add('visible')">`:''}
+          ${poster?`<img class="reels-poster" loading="lazy" src="${reelsEscape(poster)}" alt="${reelsEscape(series.title)} poster" onerror="reelsFallbackImage(this)" onload="if(this.naturalWidth<=120)reelsFallbackImage(this)">`:''}
           <div class="reels-poster-fallback"><strong>${reelsEscape(series.title)}</strong><small>${reelsEscape(series.season)}</small></div>
           <div class="reels-badges"><span class="reels-badge ${series.badge==='HOT'?'hot':''}">${reelsEscape(series.badge)}</span><span class="reels-badge">${series.category==='hindi-dubbed'?'HINDI DUBBED':'HINDI'}</span></div>
           <span class="reels-views">▶ ${series.episodes} EP</span>
@@ -570,7 +590,7 @@ function renderReels() {
   </section>`;
 }
 window.setReelsFilter=key=>{reelsFilter=key;renderReels();};
-function loadYouTubeIframeAPI() {
+loadReelsPlaylistPosters();\nfunction loadYouTubeIframeAPI() {
   if(window.YT&&window.YT.Player) return Promise.resolve();
   if(window.reelsYTApiPromise) return window.reelsYTApiPromise;
   window.reelsYTApiPromise=new Promise(resolve=>{
