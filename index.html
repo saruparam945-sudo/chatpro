@@ -173,6 +173,7 @@ body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#e5ddd5}
 
 .reels-player-fullscreen{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;background:#000;z-index:999999;display:none;overflow:hidden}
 .reels-player-fullscreen iframe{display:block;width:100%;height:100%;border:0;background:#000}
+#reelsPlaybackControls.visible{opacity:1!important;pointer-events:auto!important}
 </style>
 <!-- ChatPro SW migration: remove legacy /chatpro/sw.js registrations and app caches before installing the current worker. -->
 <script>
@@ -574,25 +575,26 @@ const SERIES_CATALOG = [];
 // Public browser key: restrict by HTTP referrer (https://saruparam945-sudo.github.io/*)
 // and API restriction (YouTube Data API v3) in Google Cloud Console.
 const YOUTUBE_DATA_API_KEY = 'AIzaSyD5A_zJnG0aruaySDp2ZXqUXDKm9GuCyYA';
-const REELS_API_CACHE_KEY = 'chatpro_youtube_reels_catalog_v6';
+const REELS_API_CACHE_KEY = 'chatpro_youtube_reels_catalog_v7';
 const REELS_API_CACHE_TTL = 12 * 60 * 60 * 1000;
 // Invalidate the previous wide-channel catalog and its poster cache immediately on startup.
 try{
- if(localStorage.getItem('chatpro_reels_mobile_only_migrated_v5')!=='yes'){
+ if(localStorage.getItem('chatpro_reels_catalog_cleanup_v6')!=='yes'){
   localStorage.removeItem('chatpro_youtube_public_playlists_v1');
   localStorage.removeItem('chatpro_youtube_vertical_playlists_v2');
   localStorage.removeItem('chatpro_youtube_hindi_vertical_playlists_v3');
   localStorage.removeItem('chatpro_reels_posters_v1');
   localStorage.removeItem('chatpro_youtube_verified_vertical_playlists_v4');
   localStorage.removeItem('chatpro_youtube_reels_catalog_v5');
+  localStorage.removeItem('chatpro_youtube_reels_catalog_v6');
   localStorage.removeItem('chatpro_youtube_verified_vertical_playlists_v4');
   localStorage.removeItem('chatpro_reels_posters_v1');
-  localStorage.setItem('chatpro_reels_mobile_only_migrated_v5','yes');
+  localStorage.setItem('chatpro_reels_catalog_cleanup_v6','yes');
  }
 }catch(e){}
 const REELS_CHANNELS = [
- { name:'Kuku TV', handle:'Kuku_TV_Hindi', category:'popular', tags:['हिंदी','9:16','माइक्रो-ड्रामा'], badge:'पॉपुलर हिंदी', minItems:2 },
- { name:'Vertical TV', handle:'VerticalDekho', category:'new', tags:['हिंदी','9:16','माइक्रो-ड्रामा'], badge:'नया हिंदी', minItems:2 }
+ { name:'Kuku TV', handle:'Kuku_TV_Hindi', category:'popular', tags:['हिंदी','9:16','माइक्रो-ड्रामा'], badge:'पॉपुलर हिंदी', minItems:1 },
+ { name:'Vertical TV', handle:'VerticalDekho', category:'new', tags:['हिंदी','9:16','माइक्रो-ड्रामा'], badge:'नया हिंदी', minItems:1 }
 ];
 let reelsApiCatalog = [];
 let reelsHistoryActive=false;
@@ -669,10 +671,16 @@ async function fetchAllChannelPlaylists(channel){
   const data=await youtubeApiRequest('playlists',params);
   items.push(...(data.items||[]));pageToken=data.nextPageToken||'';
  }while(pageToken);
- return items.filter(item=>(Number(item.contentDetails&&item.contentDetails.itemCount)||0)>=(channel.minItems||1))
+ return items.filter(item=>{
+   const snippet=item.snippet||{}, title=(snippet.title||'').trim();
+   const thumbs=snippet.thumbnails||{}, count=Number(item.contentDetails&&item.contentDetails.itemCount)||0;
+   const unwantedTitle=/\benglish\b|freedrama\s*english|\bshorts?\b|\bpromo(?:tion)?\b|\btrailer\b|\bteaser\b|\bpreview\b|\bcoming soon\b/i.test(title);
+   const hasUsablePoster=!!(thumbs.maxres||thumbs.high||thumbs.medium);
+   return count>=(channel.minItems||1)&&!unwantedTitle&&hasUsablePoster&&!!title;
+  })
   .map(item=>{
    const snippet=item.snippet||{},thumbs=snippet.thumbnails||{};
-   const poster=(thumbs.maxres||thumbs.high||thumbs.medium||thumbs.default||{}).url;
+   const poster=(thumbs.maxres||thumbs.high||thumbs.medium).url;
    if(poster)reelsPosterMap[item.id]=poster;
    return {title:snippet.title||'Untitled playlist',
     season:channel.category==='popular'?'पॉपुलर हिंदी माइक्रो-ड्रामा':'नया हिंदी माइक्रो-ड्रामा',
@@ -710,13 +718,13 @@ async function loadOfficialReelsPlaylists(force=false){
   try{
    const cached=JSON.parse(localStorage.getItem(REELS_API_CACHE_KEY)||'null');
    if(cached&&Array.isArray(cached.items)&&Date.now()-cached.savedAt<REELS_API_CACHE_TTL){
-    reelsApiCatalog=cached.items;reelsApiStatus='Kuku TV + Vertical TV · 12 घंटे का कैश';
+    reelsApiCatalog=cached.items;reelsApiStatus='Kuku TV + Vertical TV · फ़िल्टर की गई प्लेलिस्ट · 12 घंटे का कैश';
     if(activeTab==='reels')renderReels();
     return true;
    }
   }catch(e){}
  }
- reelsApiStatus='Kuku TV और Vertical TV की सभी सार्वजनिक प्लेलिस्ट लोड हो रही हैं…';
+ reelsApiStatus='Kuku TV और Vertical TV के सभी पेज लोड और फ़िल्टर हो रहे हैं…';
  if(activeTab==='reels')renderReels();
  try{
   const channelGroups=await Promise.all(REELS_CHANNELS.map(async channel=>({channel,items:await fetchAllChannelPlaylists(channel)})));
@@ -825,13 +833,33 @@ function handleReelsFullscreenTouchEnd(event){
   }catch(error){}
   return;
  }
- if(Math.abs(deltaY)<14&&Math.abs(deltaX)<14&&elapsed<500&&reelsFullscreenYTPlayer){
-  try{
-   const state=reelsFullscreenYTPlayer.getPlayerState();
-   if(state===YT.PlayerState.PLAYING)reelsFullscreenYTPlayer.pauseVideo();
-   else reelsFullscreenYTPlayer.playVideo();
-  }catch(error){}
- }
+ if(Math.abs(deltaY)<14&&Math.abs(deltaX)<14&&elapsed<500)showReelsControls();
+}
+function formatReelsTime(seconds){
+ const value=Math.max(0,Math.floor(Number(seconds)||0));
+ const h=Math.floor(value/3600),m=Math.floor((value%3600)/60),s=value%60;
+ return h?String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0'):String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+let reelsControlsTimer=null,reelsProgressTimer=null;
+function showReelsControls(){
+ const panel=document.getElementById('reelsPlaybackControls');if(!panel)return;
+ panel.classList.add('visible');updateReelsControls();clearTimeout(reelsControlsTimer);
+ reelsControlsTimer=setTimeout(()=>{if(!reelsSeeking)panel.classList.remove('visible');},4000);
+}
+function updateReelsControls(){
+ const player=reelsFullscreenYTPlayer,panel=document.getElementById('reelsPlaybackControls');if(!player||!panel)return;
+ try{
+  const duration=player.getDuration()||0,current=player.getCurrentTime()||0;
+  const range=panel.querySelector('#reelsSeekRange'),now=panel.querySelector('#reelsCurrentTime'),total=panel.querySelector('#reelsTotalTime'),toggle=panel.querySelector('#reelsPlayPause');
+  if(range&&!reelsSeeking){range.max=String(Math.max(1,duration));range.value=String(Math.min(current,duration||current));}
+  if(now)now.textContent=formatReelsTime(current);if(total)total.textContent=formatReelsTime(duration);
+  if(toggle)toggle.textContent=player.getPlayerState()===YT.PlayerState.PLAYING?'❚❚':'▶';
+ }catch(e){}
+}
+function seekReelsVideo(value){if(!reelsFullscreenYTPlayer)return;try{reelsFullscreenYTPlayer.seekTo(Number(value)||0,true);updateReelsControls();}catch(e){}}
+function toggleReelsPlayback(){
+ if(!reelsFullscreenYTPlayer)return;
+ try{if(reelsFullscreenYTPlayer.getPlayerState()===YT.PlayerState.PLAYING)reelsFullscreenYTPlayer.pauseVideo();else reelsFullscreenYTPlayer.playVideo();updateReelsControls();showReelsControls();}catch(e){}
 }
 window.openReelsPlayer=async function(playlistId){
  const series=getAllReelsSeries().find(item=>item.playlistId===playlistId);
@@ -859,6 +887,10 @@ window.openReelsPlayer=async function(playlistId){
  touchLayer.addEventListener('touchend',handleReelsFullscreenTouchEnd,{passive:false});
  touchLayer.addEventListener('touchcancel',function(){reelsSwipeStartY=null;reelsTouchStartX=null;},{passive:true});
  box.appendChild(touchLayer);
+ const controls=document.createElement('div');controls.id='reelsPlaybackControls';
+ controls.style.cssText='position:absolute;left:0;right:0;bottom:0;z-index:12;padding:44px 16px max(18px,env(safe-area-inset-bottom));background:linear-gradient(transparent,rgba(0,0,0,.78));display:flex;align-items:center;gap:12px;opacity:0;pointer-events:none;transition:opacity .2s';
+ controls.innerHTML='<button id="reelsPlayPause" type="button" aria-label="Play or pause" style="color:#fff;font-size:22px;background:transparent;border:0;padding:8px;pointer-events:auto" onclick="event.stopPropagation();toggleReelsPlayback()">▶</button><span id="reelsCurrentTime" style="color:#fff;font-size:12px;min-width:42px">00:00</span><input id="reelsSeekRange" type="range" min="0" max="1" value="0" step="0.1" aria-label="वीडियो आगे पीछे करें" style="flex:1;min-width:0;accent-color:#a78bfa;pointer-events:auto" onpointerdown="reelsSeeking=true;clearTimeout(reelsControlsTimer)" oninput="seekReelsVideo(this.value)" onpointerup="reelsSeeking=false;showReelsControls()" ontouchend="reelsSeeking=false;showReelsControls()"><span id="reelsTotalTime" style="color:#fff;font-size:12px;min-width:42px">00:00</span>';
+ box.appendChild(controls);
  try{
   await loadReelsFullscreenAPI();
   if(!document.getElementById('reelsFullscreenYTMount')||!reelsFullscreenPlaylistId)return;
@@ -879,6 +911,7 @@ window.openReelsPlayer=async function(playlistId){
    events:{
     onReady:function(event){
      sizeReelsFullscreenPlayer();
+     clearInterval(reelsProgressTimer);reelsProgressTimer=setInterval(updateReelsControls,500);
      try{event.target.playVideo();}catch(error){}
     }
    }
@@ -895,10 +928,12 @@ window.addEventListener('orientationchange',sizeReelsFullscreenPlayer,{passive:t
 window.closeReelsPlayer=function(updateHistory){
  const box=document.getElementById('reelsPlayer');
  if(!box)return;
+ clearTimeout(reelsControlsTimer);clearInterval(reelsProgressTimer);reelsControlsTimer=null;reelsProgressTimer=null;reelsSeeking=false;
  const layer=document.getElementById('reelsFullscreenTouchLayer');
  if(layer){
   layer.replaceWith(layer.cloneNode(false));
  }
+ const controls=document.getElementById('reelsPlaybackControls');if(controls)controls.remove();
  reelsSwipeStartY=null;
  reelsTouchStartX=null;
  if(reelsFullscreenYTPlayer){
