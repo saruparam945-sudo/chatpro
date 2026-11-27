@@ -1,22 +1,24 @@
 {
   "name": "ChatPro",
   "short_name": "ChatPro",
-  "display": "fullscreen",
   "start_url": "/chatpro/",
   "scope": "/chatpro/",
-  "background_color": "#075E54",
-  "theme_color": "#075E54",
-  "description": "Fast, private messaging, voice and video calling app.",
+  "display": "standalone",
+  "background_color": "#0b141a",
+  "theme_color": "#075e54",
+  "description": "ChatPro messaging and calling app.",
   "icons": [
+    {
+      "src": "icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
     {
       "src": "icon.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
-  ],
-  "display_override": [
-    "fullscreen",
-    "standalone"
   ]
 }
