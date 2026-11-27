@@ -562,7 +562,19 @@ const SERIES_CATALOG = [
   { title:'TVF Aspirants', season:'Season 1', playlistId:'PLTB0eCoUXErY_KvRNKOERQtYSDPjOb8jw', episodes:5, category:'popular', tags:['हिंदी','ड्रामा','मोटिवेशन'], badge:'HOT', firstVideoId:'ViOutJqDI-0', source:'The Viral Fever' },
   { title:'FLAMES', season:'Season 1', playlistId:'PLbZboRRHE3b14pFvT26golxysQKbWGOSg', episodes:5, category:'popular', tags:['हिंदी','रोमांस','युथ'], badge:'HIT', firstVideoId:'f8t4S84d9fA', source:'The Viral Fever' }
 ];
-const REELS_CACHE_KEY = 'chatpro_series_catalog_v2';
+// Add a NEW YouTube Data API key here only after restricting it in Google Cloud
+// (HTTP referrers = your GitHub Pages domain; API restriction = YouTube Data API v3).
+// The previously pasted key is intentionally NOT embedded in this public file.
+const YOUTUBE_DATA_API_KEY = 'PASTE_RESTRICTED_YOUTUBE_API_KEY_HERE';
+const REELS_API_CACHE_KEY = 'chatpro_youtube_public_playlists_v1';
+const REELS_API_CACHE_TTL = 12 * 60 * 60 * 1000;
+const REELS_CHANNELS = [
+ { name:'Drama Central - हिंदी', handle:'Chinesedramacentral', category:'hindi-dubbed', tags:['हिंदी डब्ड','ड्रामा'], badge:'DUBBED' },
+ { name:'The Viral Fever', channelId:'UCNJcSUSzUeFm8W9P7UUlSeQ', category:'popular', tags:['हिंदी','वेब सीरीज़'], badge:'HIT' },
+ { name:'Dice Media', handle:'DiceMediaIndia', category:'popular', tags:['हिंदी','ड्रामा'], badge:'HOT' }
+];
+let reelsApiCatalog = [];
+let reelsApiStatus = 'API key सेट करने पर ऑफिशियल चैनलों की प्लेलिस्ट लोड होंगी।';
 let reelsFilter = 'all', reelsLoading = false, reelsPlayer = null, reelsCurrentSeries = null, reelsPlayerReady = false, reelsMiniTimer = null, reelsSeeking = false;
 let reelsPosterMap = {};
 try { reelsPosterMap=JSON.parse(localStorage.getItem('chatpro_reels_posters_v1')||'{}')||{}; } catch(e) { reelsPosterMap={}; }
@@ -573,7 +585,7 @@ function reelsFallbackImage(img) {
  if(img.nextElementSibling) img.nextElementSibling.classList.add('visible');
 }
 async function loadReelsPlaylistPosters() {
- await Promise.all(SERIES_CATALOG.map(async series=>{
+ await Promise.all(getAllReelsSeries().map(async series=>{
   if(reelsPosterMap[series.playlistId]) return;
   try {
    const feed='https://www.youtube.com/feeds/videos.xml?playlist_id='+encodeURIComponent(series.playlistId);
@@ -591,12 +603,97 @@ async function loadReelsPlaylistPosters() {
   } catch(error) { console.warn('Playlist poster unavailable',series.title,error); }
  }));
 }
+function getAllReelsSeries(){
+ const seen=new Set();
+ return [...SERIES_CATALOG,...reelsApiCatalog].filter(item=>{
+  if(!item||!item.playlistId||seen.has(item.playlistId))return false;
+  seen.add(item.playlistId);return true;
+ });
+}
+async function youtubeApiRequest(resource,params){
+ const url=new URL('https://www.googleapis.com/youtube/v3/'+resource);
+ Object.entries({...params,key:YOUTUBE_DATA_API_KEY}).forEach(([k,v])=>url.searchParams.set(k,String(v)));
+ const response=await fetch(url.toString());
+ const data=await response.json();
+ if(!response.ok)throw new Error(data.error&&data.error.message||'YouTube API '+response.status);
+ return data;
+}
+async function resolveReelsChannelId(channel){
+ if(channel.channelId)return channel.channelId;
+ const data=await youtubeApiRequest('channels',{part:'id,snippet',forHandle:channel.handle,maxResults:1});
+ const found=(data.items||[])[0];
+ if(!found)throw new Error('Channel not found: '+channel.name);
+ return found.id;
+}
+async function fetchAllChannelPlaylists(channel){
+ const channelId=await resolveReelsChannelId(channel);
+ let pageToken='',items=[];
+ do{
+  const params={part:'snippet,contentDetails',channelId,maxResults:50};
+  if(pageToken)params.pageToken=pageToken;
+  const data=await youtubeApiRequest('playlists',params);
+  items.push(...(data.items||[]));
+  pageToken=data.nextPageToken||'';
+ }while(pageToken);
+ const excluded=/(shorts|trailer|promo|music)/i;
+ return items.filter(item=>{
+  const title=(item.snippet&&item.snippet.title)||'';
+  const count=Number(item.contentDetails&&item.contentDetails.itemCount)||0;
+  return count>=4&&!excluded.test(title);
+ }).map(item=>{
+  const thumbs=item.snippet&&item.snippet.thumbnails||{};
+  const thumb=(thumbs.maxres||thumbs.high||thumbs.medium||thumbs.default||{}).url;
+  if(thumb)reelsPosterMap[item.id]=thumb;
+  return {
+   title:item.snippet.title,season:'Official playlist',playlistId:item.id,
+   episodes:Number(item.contentDetails.itemCount),category:channel.category,
+   tags:[...channel.tags],badge:channel.badge,source:channel.name,
+   firstVideoId:''
+  };
+ });
+}
+async function loadOfficialReelsPlaylists(force=false){
+ if(!YOUTUBE_DATA_API_KEY||YOUTUBE_DATA_API_KEY==='PASTE_RESTRICTED_YOUTUBE_API_KEY_HERE'){
+  reelsApiStatus='ऑफिशियल प्लेलिस्ट्स लोड करने के लिए index.html के YOUTUBE_DATA_API_KEY में अपनी नई restricted API key डालें।';
+  if(activeTab==='reels')renderReels();
+  return;
+ }
+ if(!force){
+  try{
+   const cached=JSON.parse(localStorage.getItem(REELS_API_CACHE_KEY)||'null');
+   if(cached&&Array.isArray(cached.items)&&Date.now()-cached.savedAt<REELS_API_CACHE_TTL){
+    reelsApiCatalog=cached.items;reelsApiStatus='ऑफिशियल चैनल लाइब्रेरी · 12 घंटे का कैश';
+    if(activeTab==='reels')renderReels();
+    return;
+   }
+  }catch(e){}
+ }
+ reelsApiStatus='ऑफिशियल चैनलों की प्लेलिस्ट लोड हो रही हैं…';
+ if(activeTab==='reels')renderReels();
+ try{
+  const groups=await Promise.all(REELS_CHANNELS.map(async channel=>({channel,items:await fetchAllChannelPlaylists(channel)})));
+  reelsApiCatalog=groups.flatMap(group=>group.items);
+  try{
+   localStorage.setItem(REELS_API_CACHE_KEY,JSON.stringify({savedAt:Date.now(),items:reelsApiCatalog}));
+   localStorage.setItem('chatpro_reels_posters_v1',JSON.stringify(reelsPosterMap));
+  }catch(e){}
+  reelsApiStatus='ऑफिशियल चैनल प्लेलिस्ट्स अपडेट · '+reelsApiCatalog.length+' फ़िल्टर की गई प्लेलिस्ट';
+ }catch(error){
+  console.warn('Official Reels playlist fetch failed',error);
+  reelsApiStatus='YouTube API लोड नहीं हुआ: '+(error.message||'कृपया API key और referrer restriction जाँचें।');
+  try{
+   const cached=JSON.parse(localStorage.getItem(REELS_API_CACHE_KEY)||'null');
+   if(cached&&Array.isArray(cached.items))reelsApiCatalog=cached.items;
+  }catch(e){}
+ }
+ if(activeTab==='reels')renderReels();
+}
 function renderReels() {
   const box=$('listArea'); if(!box || activeTab!=='reels') return;
   const filters=[['all','सभी'],['popular','पॉपुलर'],['hindi-dubbed','हिंदी डब्ड'],['new','नया']];
-  const rows=SERIES_CATALOG.filter(x=>reelsFilter==='all'||x.category===reelsFilter);
+  const rows=getAllReelsSeries().filter(x=>reelsFilter==='all'||x.category===reelsFilter);
   box.innerHTML=`<section class="reels-page">
-    <div class="reels-hero"><div class="reels-title">FreeReels <span class="text-violet-300">+</span></div><div class="reels-sub">पूरी वेब सीरीज़ • Episode 1 से आखिरी एपिसोड तक</div><div class="text-[10px] text-gray-400 mt-3">YouTube Playlist Player · ${SERIES_CATALOG.length} सीरीज़</div></div>
+    <div class="reels-hero"><div class="reels-title">FreeReels <span class="text-violet-300">+</span></div><div class="reels-sub">पूरी वेब सीरीज़ • Episode 1 से आखिरी एपिसोड तक</div><div class="text-[10px] text-gray-400 mt-3">YouTube Playlist Player · ${getAllReelsSeries().length} प्लेलिस्ट</div><div class="text-[10px] text-gray-400 mt-2" id="reelsApiStatus">${reelsEscape(reelsApiStatus)}</div><button class="reels-filter mt-2" onclick="loadOfficialReelsPlaylists(true)">↻ Refresh official playlists</button></div>
     <div class="reels-filters">${filters.map(([key,label])=>`<button class="reels-filter ${reelsFilter===key?'active':''}" onclick="setReelsFilter('${key}')">${label}</button>`).join('')}</div>
     <div class="reels-grid">${rows.map(series=>{
       const poster=reelsPoster(series);
@@ -614,6 +711,7 @@ function renderReels() {
 }
 window.setReelsFilter=key=>{reelsFilter=key;renderReels();};
 loadReelsPlaylistPosters();
+loadOfficialReelsPlaylists();
 function loadYouTubeIframeAPI() {
   if(window.YT&&window.YT.Player) return Promise.resolve();
   if(window.reelsYTApiPromise) return window.reelsYTApiPromise;
