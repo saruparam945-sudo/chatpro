@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "io.github.saruparam945_sudo.twa",
+      "sha256_cert_fingerprints": [
+        "BD:83:A6:CC:DB:5A:01:6F:6A:65:5B:1E:9F:86:FF:B0:6E:AB:28:1F:3E:75:30:B4:5C:3A:58:BB:39:06:55:76"
+      ]
+    }
+  }
+]
