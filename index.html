@@ -531,7 +531,7 @@ window.joinLudoRoom = async (codeInput) => {
   if (!assigned) {
     assigned = order.find(c => !data.players[c]);
     if (!assigned) return alert('Room is full (4 players)');
-    await updateDoc(ref, { [`players.${assigned}`]: { uid: currentUser.uid, name: currentUser.displayName || 'Player', peerId: myPeerId } });
+    await updateDoc(ref, { hostUid: data.hostUid || data.players.red?.uid, [`players.${assigned}`]: { uid: currentUser.uid, name: currentUser.displayName || 'Player', peerId: myPeerId } });
   }
   myColor = assigned; ludoRoomId = code;
   if (unsubLudo) unsubLudo();
@@ -735,7 +735,9 @@ window.joinWatchRoom = async (codeInp) => {
   watchRoomId = code; const ref=doc(db,'watch_rooms',code);
   const initial=await getDoc(ref);
   if(!initial.exists()){watchRoomId=null;return alert('Room not found');}
-  await updateDoc(ref,{[`players.${currentUser.uid}`]:{uid:currentUser.uid,name:currentUser.displayName||'Player',peerId:myPeerId}});
+  const hostUid = initial.data().hostUid || Object.keys(initial.data().players || {})[0];
+  if (!hostUid) { watchRoomId=null; return alert('Watch Party host जानकारी उपलब्ध नहीं है।'); }
+  await updateDoc(ref,{hostUid,[`players.${currentUser.uid}`]:{uid:currentUser.uid,name:currentUser.displayName||'Player',peerId:myPeerId}});
   if(unsubWatch) unsubWatch();
   unsubWatch=onSnapshot(ref,snap=>{
     if(!snap.exists()) return;
