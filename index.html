@@ -575,35 +575,33 @@ const SERIES_CATALOG = [];
 // Public browser key: restrict by HTTP referrer (https://saruparam945-sudo.github.io/*)
 // and API restriction (YouTube Data API v3) in Google Cloud Console.
 const YOUTUBE_DATA_API_KEY = 'AIzaSyD5A_zJnG0aruaySDp2ZXqUXDKm9GuCyYA';
-const REELS_API_CACHE_KEY = 'chatpro_vertical_real_hindi_catalog_v11';
-const REELS_API_CACHE_TTL = 12 * 60 * 60 * 1000;
+const REELS_API_CACHE_KEY = 'chatpro_full_hindi_movies_catalog_v12';
+const REELS_API_CACHE_TTL = 24 * 60 * 60 * 1000;
 // Invalidate the previous wide-channel catalog and its poster cache immediately on startup.
 try{
- if(localStorage.getItem('chatpro_reels_catalog_cleanup_v10')!=='yes'){
-  localStorage.removeItem('chatpro_youtube_public_playlists_v1');
-  localStorage.removeItem('chatpro_youtube_vertical_playlists_v2');
-  localStorage.removeItem('chatpro_youtube_hindi_vertical_playlists_v3');
-  localStorage.removeItem('chatpro_reels_posters_v1');
-  localStorage.removeItem('chatpro_youtube_verified_vertical_playlists_v4');
-  localStorage.removeItem('chatpro_youtube_reels_catalog_v5');
-  localStorage.removeItem('chatpro_youtube_reels_catalog_v6');
-  localStorage.removeItem('chatpro_youtube_reels_catalog_v7');
-  localStorage.removeItem('chatpro_youtube_reels_catalog_v8');
-  localStorage.removeItem('chatpro_youtube_uploads_catalog_v10');
-  localStorage.removeItem('chatpro_vertical_real_hindi_catalog_v11');
-  localStorage.removeItem('chatpro_youtube_verified_vertical_playlists_v4');
-  localStorage.removeItem('chatpro_reels_posters_v1');
-  localStorage.setItem('chatpro_reels_catalog_cleanup_v9','yes');
+ if(localStorage.getItem('chatpro_reels_catalog_cleanup_v11')!=='yes'){
+  ['chatpro_youtube_public_playlists_v1','chatpro_youtube_vertical_playlists_v2','chatpro_youtube_hindi_vertical_playlists_v3',
+   'chatpro_youtube_verified_vertical_playlists_v4','chatpro_youtube_reels_catalog_v5','chatpro_youtube_reels_catalog_v6',
+   'chatpro_youtube_reels_catalog_v7','chatpro_youtube_reels_catalog_v8','chatpro_youtube_uploads_catalog_v10',
+   'chatpro_vertical_real_hindi_catalog_v11','chatpro_full_hindi_movies_catalog_v12','chatpro_reels_posters_v1'].forEach(k=>localStorage.removeItem(k));
+  localStorage.setItem('chatpro_reels_catalog_cleanup_v11','yes');
  }
 }catch(e){}
 const REELS_CHANNELS = [
- { name:'Vertical TV Hindi', handle:'VerticalDekho', category:'new', priority:0, tags:['हिंदी','वर्टिकल ड्रामा'], badge:'नया हिंदी' },
- { name:'Inplay Vertical Shows Hindi', channelId:'UCrj6b6NZy_EY_hmIfI9e63Q', category:'new', priority:1, tags:['हिंदी','वर्टिकल ड्रामा'], badge:'हिंदी ड्रामा' },
- { name:'Drama Box Originals Hindi', channelId:'UCyYLkxq15cez7YY7I7yQ4Kw', category:'popular', priority:2, tags:['हिंदी','वर्टिकल ड्रामा'], badge:'हिंदी ड्रामा' }
+ {name:'Goldmines',handle:'GoldminesTelefilms',category:'popular',priority:0,tags:['हिंदी','फुल मूवी'],badge:'Goldmines'},
+ {name:'Shemaroo Movies',handle:'ShemarooMovies',category:'popular',priority:1,tags:['हिंदी','फुल मूवी'],badge:'Shemaroo'},
+ {name:'Rajshri',handle:'rajshri',category:'popular',priority:2,tags:['हिंदी','फुल मूवी'],badge:'Rajshri'},
+ {name:'Ultra Movie Parlour',handle:'UltraMovieParlour',category:'popular',priority:3,tags:['हिंदी','फुल मूवी'],badge:'Ultra'},
+ {name:'Pen Movies',handle:'PenMovies',category:'new',priority:4,tags:['हिंदी','फुल मूवी'],badge:'Pen Movies'},
+ {name:'Aditya Movies',handle:'AdityaMovies',category:'popular',priority:5,tags:['हिंदी','फुल मूवी'],badge:'Aditya'},
+ {name:'Eros Now Movies',handle:'ErosNowMovies',category:'popular',priority:6,tags:['हिंदी','फुल मूवी'],badge:'Eros Now'},
+ {name:'B4U Movies',handle:'B4UMovies',category:'popular',priority:7,tags:['हिंदी','फुल मूवी'],badge:'B4U'},
+ {name:'Drama Central',handle:'Chinesedramacentral',category:'new',priority:8,tags:['हिंदी डब्ड','फुल मूवी'],badge:'Drama Central'},
+ {name:'Mini Drama Hindi',handle:'minidramahindii',category:'new',priority:9,tags:['हिंदी','फुल मूवी'],badge:'Mini Drama Hindi'}
 ];
 let reelsApiCatalog = [];
 let reelsHistoryActive=false;
-let reelsApiStatus = 'तीन चुने हुए हिंदी वर्टिकल चैनलों के Uploads और प्लेलिस्ट लोड होंगे।';
+let reelsApiStatus = '10 चैनलों के हिंदी फुल-मूवी Uploads और YouTube Search परिणाम लोड होंगे।';
 let reelsFilter = 'all', reelsLoading = false, reelsPlayer = null, reelsCurrentSeries = null, reelsPlayerReady = false, reelsMiniTimer = null, reelsSeeking = false;
 let reelsPosterMap = {};
 try { reelsPosterMap=JSON.parse(localStorage.getItem('chatpro_reels_posters_v1')||'{}')||{}; } catch(e) { reelsPosterMap={}; }
@@ -643,67 +641,88 @@ async function youtubeApiRequest(resource,params){
 async function resolveReelsChannelId(c){if(c.channelId)return c.channelId;const d=await youtubeApiRequest('channels',{part:'id',forHandle:c.handle,maxResults:1}),x=(d.items||[])[0];if(!x)throw Error('Channel not found: '+c.handle);return x.id;}
 function parseYouTubeDurationSeconds(iso){const m=String(iso||'').match(/^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/i);return m?(+m[1]||0)*3600+(+m[2]||0)*60+(+m[3]||0):0;}
 function formatReelsDuration(n){const v=Math.floor(+n||0),h=Math.floor(v/3600),m=Math.floor(v%3600/60);return h?h+'घं '+String(m).padStart(2,'0')+'मि':m+' मिनट';}
-async function fetchAllPages(resource,baseParams){
+async function fetchLimitedPages(resource,baseParams,maxPages){
  let pageToken='',items=[],pages=0;
  do{const params={...baseParams,maxResults:50};if(pageToken)params.pageToken=pageToken;
-  const data=await youtubeApiRequest(resource,params);items.push(...(data.items||[]));pageToken=data.nextPageToken||'';
-  if(++pages>200)throw Error('Pagination safety limit reached for '+resource);
- }while(pageToken);return items;
+  const data=await youtubeApiRequest(resource,params);items.push(...(data.items||[]));pageToken=data.nextPageToken||'';pages++;
+ }while(pageToken&&pages<maxPages);return items;
 }
-async function fetchAllChannelUploads(c){
- const channelId=await resolveReelsChannelId(c);if(!/^UC[\w-]{22}$/.test(channelId))throw Error('Invalid channel ID '+c.name);
+async function fetchMovieChannelUploads(channel){
+ const channelId=await resolveReelsChannelId(channel);if(!/^UC[\w-]{22}$/.test(channelId))throw Error('Invalid channel ID for '+channel.name);
  const uploadsPlaylistId='UU'+channelId.slice(2);
- const [uploads,channelPlaylists]=await Promise.all([
-  fetchAllPages('playlistItems',{part:'snippet,contentDetails',playlistId:uploadsPlaylistId}),
-  fetchAllPages('playlists',{part:'snippet,contentDetails',channelId})
- ]);
- const candidates=uploads.map(item=>({item,playlistId:uploadsPlaylistId,collectionTitle:'Channel Uploads'}));
- for(const playlist of channelPlaylists){
-  if(!playlist.id)continue;
-  const entries=await fetchAllPages('playlistItems',{part:'snippet,contentDetails',playlistId:playlist.id});
-  for(const item of entries)candidates.push({item,playlistId:playlist.id,collectionTitle:(playlist.snippet&&playlist.snippet.title)||'Series Playlist'});
+ const items=await fetchLimitedPages('playlistItems',{part:'snippet,contentDetails',playlistId:uploadsPlaylistId},3);
+ return items.map(item=>({videoId:item.contentDetails&&item.contentDetails.videoId,source:channel.name,category:channel.category,
+  tags:channel.tags,badge:channel.badge,priority:channel.priority,origin:'channel uploads'})).filter(x=>x.videoId);
+}
+async function fetchHindiMovieSearch(query,priority){
+ const out=[];let pageToken='';
+ for(let page=0;page<2;page++){
+  const params={part:'snippet',type:'video',videoDuration:'long',relevanceLanguage:'hi',regionCode:'IN',maxResults:50,q:query};
+  if(pageToken)params.pageToken=pageToken;
+  const data=await youtubeApiRequest('search',params);
+  for(const item of data.items||[]){const id=item.id&&item.id.videoId;if(id)out.push({videoId:id,source:'YouTube Search',category:'popular',tags:['हिंदी','फुल मूवी'],badge:'Search',priority,origin:'search'});}
+  pageToken=data.nextPageToken||'';if(!pageToken)break;
  }
- const ids=[...new Set(candidates.map(x=>x.item.contentDetails&&x.item.contentDetails.videoId).filter(Boolean))],videos=[];
- for(let i=0;i<ids.length;i+=50){const data=await youtubeApiRequest('videos',{part:'snippet,contentDetails',id:ids.slice(i,i+50).join(',')});videos.push(...(data.items||[]));}
- const byId=new Map(videos.map(v=>[v.id,v]));
- const blocked=/\b(ai|a\.?i\.?|artificial intelligence|english|eng dub|english dubbed|trailer|teaser|promo|promotional|announcement|behind the scenes|making of|recap|review|official song|music video|shorts?)\b|अंग्रेज़ी|अंग्रेजी|ट्रेलर|टीज़र|प्रोमो|प्रचार|रिव्यू/i;
- const out=[];
+ return out;
+}
+function isFullMovieTitle(title){
+ return /(full\s*(?:hindi\s*)?(?:movie|film)|complete\s*(?:hindi\s*)?(?:movie|film)|full[- ]length\s*(?:movie|film)|पूरी\s*फिल्म|फुल\s*मूवी|संपूर्ण\s*फिल्म|हिंदी\s*फुल\s*मूवी)/i.test(String(title||''));
+}
+function isBlockedMovieTitle(title){
+ return /\b(episode|ep\.?|part|pt\.?|chapter|season|s\d+\s*e\d+|ai|a\.i\.|trailer|promo|teaser|jukebox|songs?|english|eng(?:lish)?\s*dub(?:bed)?)\b|भाग|एपिसोड|कड़ी|ट्रेलर|टीज़र|प्रोमो|गीत|गाने/i.test(String(title||''));
+}
+function formatFullMovieDuration(seconds){const n=Math.floor(Number(seconds)||0),h=Math.floor(n/3600),m=Math.floor(n%3600/60);return h?h+'h '+m+'m':m+'m';}
+async function fetchAllMovieDetails(candidates){
+ const ids=[...new Set(candidates.map(x=>x.videoId).filter(Boolean))],videos=[];
+ for(let i=0;i<ids.length;i+=50){
+  try{const data=await youtubeApiRequest('videos',{part:'snippet,contentDetails',id:ids.slice(i,i+50).join(',')});videos.push(...(data.items||[]));}
+  catch(error){console.warn('Video details batch failed',i,error);}
+ }
+ const byId=new Map(videos.map(v=>[v.id,v])),seen=new Set(),out=[];
  for(const candidate of candidates){
-  const videoId=candidate.item.contentDetails&&candidate.item.contentDetails.videoId,v=byId.get(videoId);if(!v)continue;
-  const sn=v.snippet||{},title=(sn.title||'').trim(),description=sn.description||'';
-  const durationSeconds=parseYouTubeDurationSeconds(v.contentDetails&&v.contentDetails.duration);
-  if(!title||durationSeconds<900||blocked.test(title)||blocked.test(description))continue;
-  const t=sn.thumbnails||{},thumbnail=(t.maxres||t.high||t.medium||t.default||{}).url||'';
-  out.push({videoId,title,durationSeconds,durationLabel:formatReelsDuration(durationSeconds),thumbnail,channelId,
-   playlistId:candidate.playlistId,collectionTitle:candidate.collectionTitle,source:c.name,category:c.category,tags:c.tags,
-   badge:c.badge,priority:c.priority,publishedAt:sn.publishedAt||'',description});
+  if(seen.has(candidate.videoId))continue;seen.add(candidate.videoId);
+  const video=byId.get(candidate.videoId);if(!video)continue;
+  const snippet=video.snippet||{},title=(snippet.title||'').trim();
+  const durationSeconds=parseYouTubeDurationSeconds(video.contentDetails&&video.contentDetails.duration);
+  if(durationSeconds<1800||!isFullMovieTitle(title)||isBlockedMovieTitle(title))continue;
+  const thumbs=snippet.thumbnails||{},thumbnail=(thumbs.maxres||thumbs.high||thumbs.medium||thumbs.default||{}).url||'';
+  out.push({videoId:video.id,title,durationSeconds,durationLabel:formatReelsDuration(durationSeconds),
+   displayDurationLabel:'🎬 '+formatFullMovieDuration(durationSeconds)+' • Full Movie',thumbnail,
+   source:candidate.source,category:candidate.category,tags:candidate.tags,badge:candidate.badge,
+   priority:candidate.priority,publishedAt:snippet.publishedAt||''});
  }
  return out;
 }
 async function forceRefreshOfficialPlaylists(){
  const button=document.getElementById('forceRefreshBtn');if(reelsLoading)return;
- if(button){button.disabled=true;button.textContent='🔄 तीनों चैनलों के Uploads/प्लेलिस्ट जाँचे जा रहे हैं...';}
+ if(button){button.disabled=true;button.textContent='🔄 10 चैनल + Search अपडेट हो रहे हैं…';}
  reelsApiCatalog=[];try{localStorage.removeItem(REELS_API_CACHE_KEY);localStorage.removeItem('chatpro_reels_posters_v1');reelsPosterMap={};}catch(e){}
- let ok=false;try{ok=await loadOfficialReelsPlaylists(true)===true;}catch(e){reelsApiStatus='अपडेट नहीं हुआ: '+(e.message||'API error');}
- if(ok)reelsApiStatus='✅ '+reelsApiCatalog.length+' हिंदी वीडियो · 15+ मिनट · AI/English फ़िल्टर';
+ let ok=false;try{ok=await loadOfficialReelsPlaylists(true)===true;}catch(error){reelsApiStatus='अपडेट नहीं हुआ: '+(error.message||'API error');}
+ if(ok)reelsApiStatus='✅ '+reelsApiCatalog.length+' अलग हिंदी फुल मूवीज़ · 30+ मिनट';
  if(activeTab==='reels')renderReels();
- const current=document.getElementById('forceRefreshBtn');if(current){current.disabled=false;current.textContent=ok?'✅ अपडेट हो गया!':'↻ फिर कोशिश करें';}
- if(typeof showToast==='function')showToast(ok?'✅ नए चैनलों के शो लोड हुए!':'अपडेट नहीं हो सका।');return ok;
+ const current=document.getElementById('forceRefreshBtn');if(current){current.disabled=false;current.textContent=ok?'✅ मूवी कैटलॉग अपडेट हुआ':'↻ फिर कोशिश करें';}
+ if(typeof showToast==='function')showToast(ok?'✅ फुल-मूवी कैटलॉग अपडेट हुआ!':'कैटलॉग अपडेट नहीं हो सका।');return ok;
 }
 async function loadOfficialReelsPlaylists(force=false){
  if(!YOUTUBE_DATA_API_KEY||YOUTUBE_DATA_API_KEY==='PASTE_RESTRICTED_YOUTUBE_API_KEY_HERE'){reelsApiStatus='YOUTUBE_DATA_API_KEY सेट करें।';if(activeTab==='reels')renderReels();return false;}
  if(!force){try{const cached=JSON.parse(localStorage.getItem(REELS_API_CACHE_KEY)||'null');
   if(cached&&Array.isArray(cached.items)&&Date.now()-cached.savedAt<REELS_API_CACHE_TTL){
-   reelsApiCatalog=cached.items.filter(x=>x&&x.source!=='Kuku TV'&&Number(x.durationSeconds)>=900);
-   reelsApiStatus='3 चैनल · Uploads + पूरी प्लेलिस्ट · 15+ मिनट फ़िल्टर';if(activeTab==='reels')renderReels();return true;
+   reelsApiCatalog=cached.items.filter(x=>x&&Number(x.durationSeconds)>=1800&&isFullMovieTitle(x.title)&&!isBlockedMovieTitle(x.title));
+   reelsApiStatus=reelsApiCatalog.length+' हिंदी फुल मूवीज़ · 24 घंटे कैश';if(activeTab==='reels')renderReels();return true;
   }}catch(e){}}
- reelsApiStatus='तीनों चैनलों के Uploads और सभी प्लेलिस्ट की जाँच हो रही है…';if(activeTab==='reels')renderReels();
+ reelsApiStatus='10 चैनलों के 150-150 Uploads और Search परिणाम जाँचे जा रहे हैं…';if(activeTab==='reels')renderReels();
  try{
-  const groups=await Promise.all(REELS_CHANNELS.map(async channel=>({items:await fetchAllChannelUploads(channel)})));
-  const seen=new Set();reelsApiCatalog=groups.flatMap(g=>g.items).filter(item=>{if(seen.has(item.videoId))return false;seen.add(item.videoId);return true;});
-  try{localStorage.setItem(REELS_API_CACHE_KEY,JSON.stringify({savedAt:Date.now(),items:reelsApiCatalog}));}catch(e){}
-  reelsApiStatus='3 चैनल · '+reelsApiCatalog.length+' वीडियो · 15+ मिनट · Uploads + प्लेलिस्ट';
- }catch(error){console.warn('Hindi vertical catalogue load failed',error);reelsApiStatus='YouTube API लोड नहीं हुआ: '+(error.message||'API key/referrer जाँचें।');reelsApiCatalog=[];}
+  const jobs=await Promise.allSettled([
+   ...REELS_CHANNELS.map(channel=>fetchMovieChannelUploads(channel)),
+   fetchHindiMovieSearch('Bollywood full movie hindi',20),
+   fetchHindiMovieSearch('South Indian Hindi dubbed full movie',21)
+  ]);
+  const candidates=[];jobs.forEach((result,index)=>{if(result.status==='fulfilled')candidates.push(...result.value);else console.warn('Movie source failed:',index,result.reason);});
+  const unique=await fetchAllMovieDetails(candidates);
+  reelsApiCatalog=unique.sort((a,b)=>(Number(a.priority)||0)-(Number(b.priority)||0)||(b.publishedAt||'').localeCompare(a.publishedAt||''));
+  try{localStorage.setItem(REELS_API_CACHE_KEY,JSON.stringify({savedAt:Date.now(),items:reelsApiCatalog}));}catch(error){console.warn('Movie cache unavailable',error);}
+  reelsApiStatus=reelsApiCatalog.length+' अलग हिंदी फुल मूवीज़ · 30+ मिनट · 24 घंटे कैश'+(reelsApiCatalog.length<1000?' (1,000+ उपलब्ध होने की गारंटी नहीं)':'');
+ }catch(error){console.warn('Hindi full-movie catalog failed',error);reelsApiStatus='YouTube API लोड नहीं हुआ: '+(error.message||'API key/referrer जाँचें।');reelsApiCatalog=[];}
  if(activeTab==='reels')renderReels();return !reelsApiStatus.startsWith('YouTube API लोड नहीं हुआ');
 }
 document.addEventListener('click',function(event){
@@ -715,12 +734,12 @@ document.addEventListener('click',function(event){
 function renderReels(){
  const box=$('listArea');if(!box||activeTab!=='reels')return;
  const filters=[['all','सभी'],['popular','पॉपुलर'],['new','नया']],rows=getAllReelsSeries().filter(x=>reelsFilter==='all'||x.category===reelsFilter);
- box.innerHTML=`<section class="reels-page"><div class="reels-hero"><div class="reels-title">FreeReels <span class="text-violet-300">+</span> <span class="text-xs font-bold text-white/70">v7.0</span></div><div class="reels-sub">चुने हुए हिंदी चैनलों के Uploads + प्लेलिस्ट · 15+ मिनट</div><div class="text-[10px] text-gray-400 mt-3">Vertical TV · Inplay · Drama Box · ${getAllReelsSeries().length} फुल शो</div><div class="text-[10px] text-gray-400 mt-2" id="reelsApiStatus">${reelsEscape(reelsApiStatus)}</div><button type="button" id="forceRefreshBtn" style="position:relative;z-index:999;pointer-events:auto;user-select:none;-webkit-user-select:none;cursor:pointer;touch-action:manipulation" class="reels-filter mt-2">↻ Refresh channel Uploads</button></div>
+ box.innerHTML=`<section class="reels-page"><div class="reels-hero"><div class="reels-title">FreeReels <span class="text-violet-300">+</span> <span class="text-xs font-bold text-white/70">v7.0</span></div><div class="reels-sub">10 चैनलों के हिंदी Full Movie Uploads + Search · 30+ मिनट</div><div class="text-[10px] text-gray-400 mt-3">Goldmines · Shemaroo · Rajshri · Ultra · Pen · Aditya · Eros · B4U · Drama Central · Mini Drama · ${getAllReelsSeries().length} फिल्में</div><div class="text-[10px] text-gray-400 mt-2" id="reelsApiStatus">${reelsEscape(reelsApiStatus)}</div><button type="button" id="forceRefreshBtn" style="position:relative;z-index:999;pointer-events:auto;user-select:none;-webkit-user-select:none;cursor:pointer;touch-action:manipulation" class="reels-filter mt-2">↻ Refresh channel Uploads</button></div>
  <div class="reels-filters">${filters.map(([k,l])=>`<button class="reels-filter ${reelsFilter===k?'active':''}" onclick="setReelsFilter('${k}')">${l}</button>`).join('')}</div>
- <div class="reels-grid">${rows.map(x=>{const poster=reelsPoster(x);return `<article class="reels-card" onclick="openReelsPlayer('${x.videoId}')"><div class="reels-poster-wrap">${poster?`<img class="reels-poster" loading="lazy" src="${reelsEscape(poster)}" alt="${reelsEscape(x.title)} poster" onerror="reelsFallbackImage(this)">`:''}<div class="reels-poster-fallback"><strong>${reelsEscape(x.title)}</strong><small>${reelsEscape(x.source)}</small></div><div class="reels-badges"><span class="reels-badge">${reelsEscape(x.badge)}</span><span class="reels-badge">${reelsEscape(x.durationLabel)}</span></div><span class="reels-views">▶ फुल शो</span></div><div class="reels-card-body"><div class="reels-card-title">${reelsEscape(x.title)}</div><div class="reels-meta">${reelsEscape(x.source)} · ${reelsEscape(x.durationLabel)}</div><div class="reels-tags">${(x.tags||[]).map(t=>`<span class="reels-tag">${reelsEscape(t)}</span>`).join('')}</div></div></article>`;}).join('')}</div></section>`;
+ <div class="reels-grid">${rows.map(x=>{const poster=reelsPoster(x);return `<article class="reels-card" onclick="openReelsPlayer('${x.videoId}')"><div class="reels-poster-wrap">${poster?`<img class="reels-poster" loading="lazy" src="${reelsEscape(poster)}" alt="${reelsEscape(x.title)} poster" onerror="reelsFallbackImage(this)">`:''}<div class="reels-poster-fallback"><strong>${reelsEscape(x.title)}</strong><small>${reelsEscape(x.source)}</small></div><div class="reels-badges"><span class="reels-badge">${reelsEscape(x.badge)}</span><span class="reels-badge">${reelsEscape(x.displayDurationLabel||x.durationLabel)}</span></div><span class="reels-views">▶ फुल शो</span></div><div class="reels-card-body"><div class="reels-card-title">${reelsEscape(x.title)}</div><div class="reels-meta">${reelsEscape(x.source)} · ${reelsEscape(x.durationLabel)}</div><div class="reels-tags">${(x.tags||[]).map(t=>`<span class="reels-tag">${reelsEscape(t)}</span>`).join('')}</div></div></article>`;}).join('')}</div></section>`;
 }
 window.setReelsFilter=key=>{reelsFilter=key;renderReels();};
-loadOfficialReelsPlaylists(true).then(()=>loadReelsPlaylistPosters());
+loadOfficialReelsPlaylists(false).then(()=>loadReelsPlaylistPosters());
 let reelsFullscreenYTPlayer=null;
 let reelsFullscreenPlaylistId=null;
 let reelsQueueIndex=-1;
@@ -752,9 +771,9 @@ function sizeReelsFullscreenPlayer(){
  if(!box||!mount||box.style.display==='none')return;
  const width=Math.max(1,window.innerWidth||document.documentElement.clientWidth);
  const height=Math.max(1,window.innerHeight||document.documentElement.clientHeight);
- mount.style.cssText='position:absolute;inset:0;width:'+width+'px;height:'+height+'px;overflow:hidden;background:#000;touch-action:none';
+ mount.style.cssText='position:absolute;inset:0;width:'+width+'px;height:'+height+'px;overflow:hidden;background:#000;touch-action:none;display:flex;align-items:center;justify-content:center';
  const frame=reelsFullscreenYTPlayer&&reelsFullscreenYTPlayer.getIframe?reelsFullscreenYTPlayer.getIframe():null;
- if(frame)frame.style.cssText='position:absolute;inset:0;display:block;width:100%;height:100%;border:0;transform:scale(1.14);transform-origin:center center;pointer-events:none';
+ if(frame)frame.style.cssText='position:absolute;inset:0;display:block;width:100%;height:100%;border:0;object-fit:contain;transform:none;transform-origin:center center;pointer-events:none';
  if(reelsFullscreenYTPlayer&&typeof reelsFullscreenYTPlayer.setSize==='function'){
   try{reelsFullscreenYTPlayer.setSize(width,height);}catch(e){}
  }
