@@ -207,13 +207,13 @@ body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#e5ddd5}
         <div id="chatSub" class="text-[11px] text-green-200 truncate">online</div>
       </div>
     </div>
-    <div id="callBtns" class="flex items-center gap-4 text-lg pr-1">
+    <div class="flex items-center gap-2"><button id="blockUserBtn" onclick="toggleChatBlock()" class="text-xs font-bold px-2.5 py-2 rounded-lg bg-red-600 text-white">Block</button><div id="callBtns" class="flex items-center gap-4 text-lg pr-1">
       <button onclick="startCall('video')" class="p-1.5 hover:bg-white/10 rounded-full"><i class="fas fa-video"></i></button>
       <button onclick="startCall('audio')" class="p-1.5 hover:bg-white/10 rounded-full"><i class="fas fa-phone"></i></button>
-    </div>
+    </div></div>
   </div>
 
-  <div class="flex gap-2 px-3 py-2 bg-white dark:bg-[#17232b] border-b dark:border-gray-800">
+  <div id="chatInviteBar" class="flex gap-2 px-3 py-2 bg-white dark:bg-[#17232b] border-b dark:border-gray-800">
     <button onclick="sendLudoInvite()" class="flex-1 py-2 rounded-xl bg-[#075E54] text-white text-xs sm:text-sm font-bold shadow-sm"><i class="fas fa-dice mr-1"></i> Ludo Invite</button>
     <button onclick="sendMovieInvite()" class="flex-1 py-2 rounded-xl bg-[#7c3aed] text-white text-xs sm:text-sm font-bold shadow-sm"><i class="fas fa-film mr-1"></i> Movie Invite</button>
   </div>
@@ -225,7 +225,7 @@ body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#e5ddd5}
 
   <div id="msgBox" class="flex-1 overflow-y-auto p-3 space-y-2 chat-bg"></div>
 
-  <div class="p-2 bg-[#f0f2f5] dark:bg-[#202c33] flex items-center gap-2">
+  <div id="chatComposer" class="p-2 bg-[#f0f2f5] dark:bg-[#202c33] flex items-center gap-2">
     <label class="w-10 h-10 rounded-full bg-white dark:bg-[#2a3942] flex items-center justify-center text-gray-600 dark:text-gray-300 cursor-pointer shadow-sm shrink-0">
       <i class="fas fa-photo-video text-lg text-[#075E54] dark:text-[#25D366]"></i>
       <input id="mediaInput" type="file" accept="image/*,video/*" class="hidden" onchange="sendMedia(event)">
@@ -307,7 +307,7 @@ body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#e5ddd5}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getFirestore, collection, doc, setDoc, getDoc, addDoc, updateDoc, deleteDoc, query, orderBy, onSnapshot, where, serverTimestamp, deleteField } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, collection, doc, setDoc, getDoc, addDoc, updateDoc, deleteDoc, query, orderBy, onSnapshot, where, serverTimestamp, deleteField, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyB6ZQGTrXS6Eqp4Za2y993Vnja5FNU_HRA",
@@ -326,6 +326,7 @@ const db = getFirestore(app);
 
 window.$ = id => document.getElementById(id);
 let isSignup = false, currentUser = null, allUsers = [], allGroups = [], activeTab = 'chats', myDiscoveryCity = '', myDiscoverable = false, friendsFilter = 'city';
+let myBlockedUsers = [];
 let activeChat = null, unsubMsgs = null, replyData = null;
 let peer = null, myPeerId = null, localStream = null, ludoStream = null, ludoCalls = [], currentCallObj = null, currentCallDocId = null, ringInterval = null, audioCtx = null, isMuted = false;
 let roomVoiceStream = null, roomVoiceCalls = [], roomVoiceAudio = new Map(), roomVoiceMode = null, roomVoiceRoomId = null, roomVoicePeerIds = new Set(), roomVoicePendingCalls = [];
@@ -397,6 +398,7 @@ onAuthStateChanged(auth, async user => {
     const ownData = ownProfile.exists() ? ownProfile.data() : {};
     myDiscoveryCity = typeof ownData.city === 'string' ? ownData.city : '';
     myDiscoverable = ownData.discoverable === true;
+    myBlockedUsers = Array.isArray(ownData.blockedUsers) ? ownData.blockedUsers : [];
     await setDoc(doc(db, 'users', user.uid), { uid: user.uid, name: user.displayName || user.email.split('@')[0], email: user.email, online: true }, { merge: true });
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     OneSignalDeferred.push(async function(OneSignal) { await OneSignal.login(user.uid); });
@@ -428,8 +430,13 @@ function initPeer() {
   });
 }
 
+
+function isChatBlocked(uid){if(!uid||!currentUser)return false;const other=allUsers.find(u=>u.uid===uid);return myBlockedUsers.includes(uid)||(Array.isArray(other?.blockedUsers)&&other.blockedUsers.includes(currentUser.uid));}
+function renderChatBlockState(){if(!activeChat||activeChat.isGroup)return;const blocked=isChatBlocked(activeChat.id),own=myBlockedUsers.includes(activeChat.id),btn=$('blockUserBtn');if(btn){btn.textContent=own?'Unblock':'Block';btn.classList.toggle('bg-red-600',!own);btn.classList.toggle('bg-green-600',own);}['chatInviteBar','chatComposer'].forEach(id=>{const el=$(id);if(el)el.classList.toggle('hidden',blocked);});if($('callBtns'))$('callBtns').classList.toggle('hidden',blocked);if(blocked&&$('msgBox'))$('msgBox').innerHTML='<div class="m-4 p-4 rounded-xl bg-red-100 text-red-800 text-center text-sm">'+(own?'आपने इस यूज़र को ब्लॉक किया है।':'इस यूज़र ने आपको ब्लॉक किया है।')+' चैट और कॉल बंद हैं।</div>';}
+window.toggleChatBlock=async()=>{if(!activeChat||activeChat.isGroup||!currentUser)return;const uid=activeChat.id;try{if(myBlockedUsers.includes(uid)){await updateDoc(doc(db,'users',currentUser.uid),{blockedUsers:arrayRemove(uid)});myBlockedUsers=myBlockedUsers.filter(x=>x!==uid);alert('यूज़र अनब्लॉक कर दिया गया।');}else{await updateDoc(doc(db,'users',currentUser.uid),{blockedUsers:arrayUnion(uid)});myBlockedUsers=[...new Set([...myBlockedUsers,uid])];if(currentCallDocId)await updateDoc(doc(db,'calls',currentCallDocId),{status:'ended'}).catch(()=>{});alert('यूज़र ब्लॉक कर दिया गया।');}renderChatBlockState();}catch(e){alert('Block/Unblock नहीं हो सका: '+e.message);}};
+
 function listenUsersAndGroups() {
-  onSnapshot(collection(db, 'users'), snap => { allUsers = snap.docs.map(d => d.data()).filter(u => u.uid !== currentUser.uid); if(activeTab==='chats'||activeTab==='friends') renderLists(); });
+  onSnapshot(collection(db, 'users'), snap => { allUsers = snap.docs.map(d => d.data()).filter(u => u.uid !== currentUser.uid); if(activeTab==='chats'||activeTab==='friends') renderLists(); if(activeChat && !activeChat.isGroup) renderChatBlockState(); });
   onSnapshot(collection(db, 'groups'), snap => { allGroups = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(g => g.members?.includes(currentUser.uid)); if(activeTab==='chats') renderLists(); });
 }
 
@@ -949,11 +956,14 @@ window.renderLists = () => {
 window.openChat = (id, name, isGroup) => {
   const roomId = isGroup ? 'grp_' + id : [currentUser.uid, id].sort().join('_');
   activeChat = { id, name, isGroup, roomId };
+  $('blockUserBtn').classList.toggle('hidden', !!isGroup);
   $('chatTitle').textContent = name; $('chatAvatar').textContent = name[0].toUpperCase();
   $('callBtns').classList.toggle('hidden', isGroup); $('chatScreen').classList.remove('hidden');
+  renderChatBlockState();
   if (unsubMsgs) unsubMsgs();
   unsubMsgs = onSnapshot(query(collection(db, 'rooms', roomId, 'messages'), orderBy('createdAt', 'asc')), snap => {
     const box = $('msgBox');
+    if (!activeChat || (!activeChat.isGroup && isChatBlocked(activeChat.id))) { renderChatBlockState(); return; }
     box.innerHTML = snap.docs.map(d => {
       const m = d.data(), me = m.senderId === currentUser.uid;
       let mediaHtml = '';
@@ -979,6 +989,7 @@ window.delMsg = id => deleteDoc(doc(db, 'rooms', activeChat.roomId, 'messages', 
 
 window.sendLudoInvite = async () => {
   if (!activeChat || !currentUser) return;
+  if (!activeChat.isGroup && isChatBlocked(activeChat.id)) return alert('Block होने पर invite नहीं भेज सकते।');
   try {
     const code = Math.random().toString(36).substring(2, 7).toUpperCase();
     const initData = {
@@ -998,6 +1009,7 @@ window.sendLudoInvite = async () => {
 
 window.sendMovieInvite = async () => {
   if (!activeChat || !currentUser) return;
+  if (!activeChat.isGroup && isChatBlocked(activeChat.id)) return alert('Block होने पर invite नहीं भेज सकते।');
   const url = (prompt('Movie का direct MP4 video link डालें:') || '').trim();
   if (!url) return;
   try {
@@ -1032,6 +1044,7 @@ window.joinChatInvite = async (type, code) => {
 window.sendMsg = async () => {
   const txt = $('msgInput').value.trim();
   if (!txt || !activeChat) return;
+  if (!activeChat.isGroup && isChatBlocked(activeChat.id)) return alert('Block होने पर message नहीं भेज सकते।');
   $('msgInput').value = ''; const rep = replyData; cancelReply();
   const senderName = currentUser.displayName || 'ChatPro User';
   await addDoc(collection(db, 'rooms', activeChat.roomId, 'messages'), { senderId: currentUser.uid, senderName, text: txt, reply: rep, createdAt: serverTimestamp() });
@@ -1041,6 +1054,7 @@ window.sendMsg = async () => {
 window.sendMedia = e => {
   const file = e.target.files[0];
   if (!file || !activeChat) return;
+  if (!activeChat.isGroup && isChatBlocked(activeChat.id)) { alert('Block होने पर media नहीं भेज सकते।'); e.target.value=''; return; }
   if (file.size > 900 * 1024) { alert("Select a photo or short video under 1 MB!"); return; }
   const reader = new FileReader();
   reader.onload = async () => {
@@ -1063,6 +1077,7 @@ function stopRingtone() { if (ringInterval) clearInterval(ringInterval); if (aud
 
 window.startCall = async type => {
   if (!activeChat || activeChat.isGroup) return;
+  if (isChatBlocked(activeChat.id)) return alert('Block होने पर कॉल नहीं कर सकते।');
   try {
     localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: type === 'video' });
     $('localVideo').srcObject = localStream; $('localVideo').classList.toggle('hidden', type !== 'video'); $('audioOnlyOverlay').classList.toggle('hidden', type === 'video');
@@ -1083,13 +1098,14 @@ window.startCall = async type => {
 function listenIncomingCalls() {
   onSnapshot(query(collection(db, 'calls'), where('receiverId', '==', currentUser.uid), where('status', '==', 'ringing')), snap => {
     snap.docChanges().forEach(chg => {
-      if (chg.type === 'added') { const c = chg.doc.data(); currentCallDocId = chg.doc.id; window.pendingCall = c; $('inCallerName').textContent = c.callerName; $('inCallType').textContent = `Incoming ${c.type} Call...`; $('incomingModal').classList.remove('hidden'); playRingtone(); }
+      if (chg.type === 'added') { const c = chg.doc.data(); if (isChatBlocked(c.callerId)) { updateDoc(doc(db,'calls',chg.doc.id),{status:'rejected'}).catch(()=>{}); return; } currentCallDocId = chg.doc.id; window.pendingCall = c; $('inCallerName').textContent = c.callerName; $('inCallType').textContent = `Incoming ${c.type} Call...`; $('incomingModal').classList.remove('hidden'); playRingtone(); }
     });
   });
 }
 
 window.acceptIncomingCall = async () => {
   stopRingtone(); $('incomingModal').classList.add('hidden'); const c = window.pendingCall; if (!c) return;
+  if (isChatBlocked(c.callerId)) { await updateDoc(doc(db,'calls',currentCallDocId),{status:'rejected'}).catch(()=>{}); return alert('यह यूज़र ब्लॉक है।'); }
   try {
     localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: c.type === 'video' });
     $('localVideo').srcObject = localStream; $('localVideo').classList.toggle('hidden', c.type !== 'video'); $('audioOnlyOverlay').classList.toggle('hidden', c.type === 'video');
