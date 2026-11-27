@@ -164,51 +164,15 @@ body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#e5ddd5}
 .reels-meta{font-size:10px;color:#9ba4b7;margin-top:5px}
 .reels-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
 .reels-tag{font-size:9px;color:#c4b5fd;background:#312e81aa;border:1px solid #6d5ca533;border-radius:999px;padding:3px 7px}
-.reels-player-backdrop{position:fixed;inset:0;z-index:80;background:#05070d;display:flex;align-items:stretch;justify-content:center;padding:0;overflow:hidden;width:100vw;height:100vh;height:100dvh;pointer-events:auto}.reels-player-backdrop.hidden,#reelsPlayer.hidden{display:none!important;visibility:hidden!important;pointer-events:none!important}.reels-player-backdrop:not(.hidden){visibility:visible;pointer-events:auto}
-.reels-player-panel{position:relative;width:100vw;height:100vh;height:100dvh;max-width:none;min-height:0;background:#090d16;border:0;border-radius:0;overflow:hidden}
-.reels-player-head{display:none!important}
-.reels-player-frame{position:absolute;z-index:0;inset:0;width:100%;height:100%;aspect-ratio:auto;border:0;background:#000;display:block;max-height:none;overflow:hidden}.reels-player-frame{position:relative!important;width:100%!important;height:100%!important;max-height:82vh!important;display:flex;align-items:center;justify-content:center;background:#000;overflow:hidden}.reels-player-frame iframe{position:relative!important;inset:auto!important;width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;transform:none!important;object-fit:contain;border:0!important}.reels-minimized .reels-touch-overlay{display:none!important;pointer-events:none!important}.reels-minimized .reels-player-frame iframe{transform:translate(0,0)!important;pointer-events:none!important}.reels-mini iframe,.reels-minimized iframe{pointer-events:none!important}.reels-mini button{position:relative!important;z-index:99999!important;pointer-events:auto!important}.reels-touch-overlay{position:absolute;z-index:5;left:0;right:0;top:64px;bottom:118px;background:transparent;touch-action:pan-y;pointer-events:auto}.reels-seekbar{position:absolute;z-index:9998;left:12px;right:12px;bottom:max(9px,env(safe-area-inset-bottom));display:flex;align-items:center;gap:9px;padding:7px 10px;border:1px solid #ffffff35;border-radius:14px;background:#10182766;color:#fff;backdrop-filter:blur(12px);pointer-events:auto}.reels-seek-time{min-width:42px;font-size:10px;font-weight:800;font-variant-numeric:tabular-nums;text-align:center;color:#ffffffdf}.reels-seek-range{flex:1;min-width:0;height:4px;accent-color:#a78bfa;cursor:pointer;touch-action:pan-x}.reels-seek-range:disabled{opacity:.45}.reels-episodes{display:grid;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));gap:7px;padding:10px 12px 18px;max-height:30vh;overflow-y:auto;max-width:1200px;margin:0 auto}.reels-ep-btn{background:#1b2231;color:#cbd5e1;border:1px solid #354052;border-radius:9px;padding:10px 5px;font-size:12px;font-weight:900}.reels-ep-btn.active{background:#7c3aed;border-color:#a78bfa;color:#fff;box-shadow:0 0 0 2px #8b5cf633}.reels-episode-drawer{position:absolute;z-index:25;left:0;right:0;bottom:0;padding:0 0 max(8px,env(safe-area-inset-bottom));background:transparent;pointer-events:none}
-.reels-floating-bar{display:flex;position:relative;z-index:26;pointer-events:auto;align-items:center;justify-content:flex-end;gap:0;margin:0 10px;padding:0;border:0;background:transparent;box-shadow:none;backdrop-filter:none}
 .reels-floating-title{display:none}
-.reels-episodes-toggle{display:flex;align-items:center;justify-content:center;min-width:64px;height:34px;padding:0 10px;border-radius:18px;background:#11182766;border:1px solid #ffffff45;color:#fff;font-size:11px;font-weight:900;white-space:nowrap;backdrop-filter:blur(10px);box-shadow:0 2px 12px #0005}
-.reels-episodes-toggle span:last-child{color:#d8c7ff;font-size:11px}
-.reels-episode-panel{max-height:0;overflow:hidden;opacity:0;transform:translateY(18px);transition:max-height .28s ease,opacity .22s ease,transform .28s ease;background:#0c1220f2;border:1px solid #ffffff24;border-bottom:0;border-radius:18px 18px 0 0;backdrop-filter:blur(18px);pointer-events:none}
-.reels-episode-drawer.open .reels-episode-panel{max-height:42vh;overflow-y:auto;opacity:1;transform:translateY(0);pointer-events:auto}
-.reels-episode-panel .reels-episodes{max-height:34vh;padding-bottom:12px}.reels-episodes-label{max-width:1200px;margin:0 auto;padding:0 12px 8px;color:#aab4c6;font-size:12px;font-weight:800}
-.reels-mini{position:fixed;z-index:99999;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));display:flex;flex-direction:row;align-items:center;gap:10px;padding:8px;border:1px solid #373737;border-radius:14px;background:#090909f5;color:#fff;box-shadow:0 8px 30px #0009;backdrop-filter:blur(12px);pointer-events:auto;min-height:72px}
-.reels-mini-poster,.reels-mini-video-box{width:90px!important;height:56px!important;flex:0 0 90px;object-fit:cover;border-radius:7px;background:#171717;pointer-events:none!important;overflow:hidden}
-.reels-mini-video-box{position:relative!important;inset:auto!important;max-width:90px!important;max-height:56px!important}
-.reels-mini-video-box iframe{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;transform:none!important;border:0!important;pointer-events:none!important}
-.reels-mini-info{min-width:0;flex:1}
-.reels-mini-title{font-size:12px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.reels-mini-ep{font-size:10px;color:#b8b2c8;margin-top:3px}
-.reels-mini button{position:relative!important;z-index:99999!important;pointer-events:auto!important;touch-action:manipulation;padding:7px;color:#fff;font-size:16px;flex:0 0 auto}
-.reels-mini button[aria-label="Close"]{background:#dc2626;border-radius:10px}
-.reels-minimized .reels-touch-overlay,.reels-minimized .reels-seekbar{display:none!important;pointer-events:none!important}
-.reels-minimized .reels-player-frame iframe{pointer-events:none!important}
 @media(min-width:560px){.reels-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(min-width:850px){.reels-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
 
 
 /* FreeReels clean player v7: no transparent touch layer; controls sit below video. */
-.reels-player-backdrop{position:fixed!important;inset:0!important;z-index:10000!important;display:flex;align-items:stretch;justify-content:center;background:#000!important;padding:0!important;overflow:hidden!important}
-.reels-player-backdrop.hidden{display:none!important}
-.reels-clean-player{display:flex!important;flex-direction:column!important;width:100vw!important;height:100vh!important;height:100dvh!important;max-width:none!important;min-height:0!important;background:#000!important;overflow:hidden!important}
-.reels-clean-player .reels-player-frame{position:relative!important;inset:auto!important;flex:1 1 0!important;width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;display:block!important;overflow:hidden!important;background:#000!important}
-.reels-clean-player .reels-player-frame iframe{display:block!important;width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;transform:scale(1.12)!important;transform-origin:center center!important;border:0!important}
-.reels-clean-controls{position:relative!important;flex:0 0 auto!important;background:#10131b!important;color:#fff!important;padding:10px 12px calc(12px + env(safe-area-inset-bottom))!important;z-index:2!important}
-.reels-clean-title{font-size:15px;font-weight:800;margin:3px 0 9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.reels-clean-actions{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
-.reels-clean-actions button{border:1px solid #ffffff30;border-radius:9px;background:#252a36;color:#fff;padding:9px 11px;font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation}
-.reels-clean-actions .reels-clean-close{background:#dc2626;border-color:#ef4444;margin-left:auto;font-size:14px}
-.reels-clean-controls .reels-episode-panel{display:none;position:relative;inset:auto;max-height:25vh;overflow:auto;margin-top:9px;background:#191e2a;border-radius:10px;padding:9px}
-.reels-clean-controls .reels-episode-panel.open{display:block}
-.reels-clean-controls .reels-seekbar{position:relative!important;inset:auto!important;display:flex!important;align-items:center;gap:8px;width:100%;padding:0!important;margin:0!important;background:transparent!important}
-.reels-clean-controls .reels-seek-range{flex:1;min-width:0}
-.reels-clean-controls .reels-episodes{display:flex;flex-wrap:wrap;gap:6px}
-.reels-clean-controls .reels-ep-btn{padding:7px 9px;border-radius:7px;background:#303746;color:#fff}
-.reels-clean-controls .reels-ep-btn.active{background:#6d28d9}
 
+.reels-player-fullscreen{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;background:#000;z-index:999999;display:none;overflow:hidden}
+.reels-player-fullscreen iframe{display:block;width:100%;height:100%;border:0;background:#000}
 </style>
 <!-- ChatPro SW migration: remove legacy /chatpro/sw.js registrations and app caches before installing the current worker. -->
 <script>
@@ -320,36 +284,7 @@ body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#e5ddd5}
   <div id="listArea" class="flex-1 overflow-y-auto"></div>
 </div>
 
-<div id="reelsPlayer" class="reels-player-backdrop hidden" aria-hidden="true">
-  <div class="reels-player-panel reels-clean-player">
-    <div id="reelsPlayerFrame" class="reels-player-frame"></div>
-    <section class="reels-clean-controls" aria-label="वीडियो कंट्रोल">
-      <div class="reels-seekbar" id="reelsSeekbar" aria-label="Video timeline">
-        <span class="reels-seek-time" id="reelsCurrentTime">00:00</span>
-        <input id="reelsSeekRange" class="reels-seek-range" type="range" min="0" max="0" value="0" step="1" disabled aria-label="Seek video position" onpointerdown="beginReelsSeek()" onpointerup="finishReelsSeek()" onpointercancel="finishReelsSeek()" oninput="seekReelsVideo(this.value)" onchange="finishReelsSeek()">
-        <span class="reels-seek-time" id="reelsDuration">00:00</span>
-      </div>
-      <div class="reels-clean-title" id="reelsCleanTitle">Series</div>
-      <div class="reels-clean-actions">
-        <button type="button" onclick="playReelsEpisode(Math.max(0,(reelsPlayer?.getPlaylistIndex?.()||0)-1))">⏮ पिछला EP</button>
-        <button type="button" id="reelsEpisodesToggle" class="reels-episodes-toggle" onclick="toggleReelsEpisodes()" aria-expanded="false">📂 सभी EP (<span id="reelsEpisodeCount">EP. 1/1</span>)</button>
-        <button type="button" onclick="playReelsEpisode(Math.min((reelsCurrentSeries?.episodes||1)-1,(reelsPlayer?.getPlaylistIndex?.()||0)+1))">अगला EP ⏭</button>
-        <button type="button" class="reels-clean-close" onclick="destroyReelsPlayer()">✕ बंद करें</button>
-      </div>
-      <div class="reels-episode-panel" id="reelsEpisodePanel" aria-hidden="true">
-        <div class="reels-episodes-label" id="reelsDrawerTitle">एपिसोड चुनें</div>
-        <div id="reelsEpisodeButtons" class="reels-episodes"></div>
-      </div>
-    </section>
-  </div>
-</div>
-<div id="reelsMiniPlayer" class="reels-mini hidden">
-  <img id="reelsMiniPoster" class="reels-mini-poster" src="" alt="">
-  <div class="reels-mini-info"><div id="reelsMiniTitle" class="reels-mini-title">Series</div><div id="reelsMiniEpisode" class="reels-mini-ep">EP 1</div></div>
-  <button onclick="toggleReelsPlayback()" aria-label="Play or pause"><i id="reelsMiniPlayIcon" class="fas fa-pause"></i></button>
-  <button onclick="restoreReelsPlayer()" aria-label="Open player"><i class="fas fa-expand"></i></button>
-  <button type="button" onclick="destroyReelsPlayer()" aria-label="Close" style="position:relative;z-index:99999;pointer-events:auto;user-select:none;background:#dc2626;border-radius:10px;padding:8px"><i class="fas fa-times"></i></button>
-</div>
+<div id="reelsPlayer" class="reels-player-fullscreen" style="display:none" aria-hidden="true"></div>
 
 <!-- CHAT ROOM SCREEN -->
 <div id="chatScreen" class="hidden fixed inset-0 z-30 flex flex-col max-w-2xl w-full mx-auto bg-[#efeae2] dark:bg-[#0b141a]">
@@ -649,8 +584,7 @@ const REELS_CHANNELS = [
  { name:'Dice Media', handle:'DiceMediaIndia', category:'popular', tags:['हिंदी','ड्रामा'], badge:'HOT' }
 ];
 let reelsApiCatalog = [];
-let reelsHistoryActive=false, reelsClosingHistory=false;
-window.onpopstate=function(){if(reelsClosingHistory){reelsClosingHistory=false;return;}if(reelsHistoryActive){reelsHistoryActive=false;if(reelsCurrentSeries)minimizeReelsPlayer();}};
+let reelsHistoryActive=false;
 let reelsApiStatus = 'API key सेट करने पर ऑफिशियल चैनलों की प्लेलिस्ट लोड होंगी।';
 let reelsFilter = 'all', reelsLoading = false, reelsPlayer = null, reelsCurrentSeries = null, reelsPlayerReady = false, reelsMiniTimer = null, reelsSeeking = false;
 let reelsPosterMap = {};
@@ -816,188 +750,41 @@ function renderReels() {
 window.setReelsFilter=key=>{reelsFilter=key;renderReels();};
 loadReelsPlaylistPosters();
 loadOfficialReelsPlaylists();
-function loadYouTubeIframeAPI() {
-  if(window.YT&&window.YT.Player) return Promise.resolve();
-  if(window.reelsYTApiPromise) return window.reelsYTApiPromise;
-  window.reelsYTApiPromise=new Promise(resolve=>{
-    const old=window.onYouTubeIframeAPIReady;
-    window.onYouTubeIframeAPIReady=()=>{if(typeof old==='function')old();resolve();};
-    if(!document.querySelector('script[data-reels-yt-api]')){const tag=document.createElement('script');tag.src='https://www.youtube.com/iframe_api';tag.dataset.reelsYtApi='1';document.head.appendChild(tag);}
-  });
-  return window.reelsYTApiPromise;
-}
-
-function renderReelsEpisodeButtons(activeIndex=0){
- const box=$('reelsEpisodeButtons');if(!box||!reelsCurrentSeries)return;
- box.innerHTML=Array.from({length:reelsCurrentSeries.episodes},(_,i)=>'<button type="button" class="reels-ep-btn '+(i===activeIndex?'active':'')+'" onclick="playReelsEpisode('+i+')">EP. '+(i+1)+'</button>').join('');
-}
-window.playReelsEpisode=index=>{
- if(!reelsPlayer||!reelsCurrentSeries||index<0||index>=reelsCurrentSeries.episodes)return;
- if(typeof reelsPlayer.playVideoAt==='function')reelsPlayer.playVideoAt(index);
- else reelsPlayer.loadPlaylist({list:reelsCurrentSeries.playlistId,listType:'playlist',index});
- updateReelsMiniState();
- $('reelsEpisodePanel').classList.remove('open');$('reelsEpisodesToggle').setAttribute('aria-expanded','false');$('reelsEpisodePanel').setAttribute('aria-hidden','true');
-};
-window.toggleReelsEpisodes=()=>{const panel=$('reelsEpisodePanel'),open=panel.classList.toggle('open');$('reelsEpisodesToggle').setAttribute('aria-expanded',open?'true':'false');panel.setAttribute('aria-hidden',open?'false':'true');};
-window.openReelsPlayer=async playlistId=>{
- const series=getAllReelsSeries().find(x=>x.playlistId===playlistId);if(!series)return;
- if(!reelsHistoryActive){history.pushState({reelsPlayer:true},'',location.href);reelsHistoryActive=true;}
- reelsCurrentSeries=series;
- $('reelsEpisodeCount').textContent='1/'+series.episodes;$('reelsCleanTitle').textContent=series.title;$('reelsEpisodePanel').classList.remove('open');$('reelsEpisodesToggle')?.setAttribute('aria-expanded','false');$('reelsEpisodePanel').setAttribute('aria-hidden','true');
- $('reelsMiniTitle').textContent=series.title;$('reelsMiniEpisode').textContent='EP 1 / '+series.episodes;
- $('reelsMiniPoster').src=reelsPoster(series)||'';renderReelsEpisodeButtons(0);$('reelsSeekRange').value='0';$('reelsSeekRange').max='0';$('reelsSeekRange').disabled=true;$('reelsCurrentTime').textContent='00:00';$('reelsDuration').textContent='00:00';
- $('reelsMiniPlayer').classList.remove('hidden');$('reelsPlayer').classList.remove('hidden');$('reelsPlayer').style.display='flex';$('reelsPlayer').style.visibility='visible';$('reelsPlayer').style.pointerEvents='auto';$('reelsPlayer').setAttribute('aria-hidden','false');
- $('reelsDrawerTitle').textContent=series.title+' · '+series.episodes+' Episodes';
- const host=$('reelsPlayerFrame');
- if(reelsPlayer&&reelsPlayer.loadPlaylist){reelsPlayer.loadPlaylist({list:playlistId,listType:'playlist',index:0});return;}
- host.innerHTML='<div id="reelsYoutubePlayer" style="width:100%;height:100%"></div>';
- try{
-  await loadYouTubeIframeAPI();
-  reelsPlayer=new YT.Player('reelsYoutubePlayer',{width:'100%',height:'100%',playerVars:{listType:'playlist',list:playlistId,autoplay:1,controls:0,modestbranding:1,rel:0,playsinline:1},events:{
-   onReady:event=>{reelsPlayerReady=true;event.target.loadPlaylist({list:playlistId,listType:'playlist',index:0});startReelsMiniSync();},
-   onStateChange:onReelsPlayerStateChange,
-   onError:onReelsPlayerError
-  }});
- }catch(error){host.innerHTML='<div class="p-5 text-white text-sm">YouTube Player लोड नहीं हुआ। कृपया दोबारा प्रयास करें।</div>';}
-};
-let reelsConsecutiveVideoErrors=0;
-function onReelsPlayerError(event){
- const code=Number(event&&event.data);
- if(code===101||code===150){
-  reelsConsecutiveVideoErrors++;
-  const index=reelsPlayer&&typeof reelsPlayer.getPlaylistIndex==='function'?reelsPlayer.getPlaylistIndex():0;
-  const total=reelsCurrentSeries?Number(reelsCurrentSeries.episodes)||0:0;
-  if(reelsConsecutiveVideoErrors>=Math.max(2,Math.min(total||2,3))){
-   alert('इस प्लेलिस्ट के कई वीडियो YouTube पर उपलब्ध नहीं हैं। कृपया दूसरी सीरीज़ चुनें।');
-   window.closeReelsPlayer();
-   return;
-  }
-  setTimeout(()=>{if(reelsPlayer&&reelsCurrentSeries){try{reelsPlayer.nextVideo();}catch(e){window.closeReelsPlayer();}}},120);
-  return;
+window.openReelsPlayer=function(playlistId){
+ const series=getAllReelsSeries().find(item=>item.playlistId===playlistId);
+ if(!series)return;
+ const box=document.getElementById('reelsPlayer');
+ if(!box)return;
+ box.innerHTML='';
+ box.style.display='block';
+ box.setAttribute('aria-hidden','false');
+ if(!reelsHistoryActive){
+  history.pushState({reelsOpen:true},'');
+  reelsHistoryActive=true;
  }
- // For other player errors, show a short message and close cleanly.
- if(code===2||code===5||code===100){setTimeout(()=>{if(reelsCurrentSeries){alert('यह वीडियो अभी उपलब्ध नहीं है।');window.closeReelsPlayer();}},0);}
-}
-function onReelsPlayerStateChange(event){
- updateReelsMiniState();
- if(event && event.data===YT.PlayerState.ENDED && reelsCurrentSeries && reelsPlayer){
-  const index=typeof reelsPlayer.getPlaylistIndex==='function'?reelsPlayer.getPlaylistIndex():0;
-  const next=index+1;
-  if(next<reelsCurrentSeries.episodes){
-   if(reelsNextTimer) clearTimeout(reelsNextTimer);
-   reelsNextTimer=setTimeout(()=>{if(reelsPlayer&&reelsCurrentSeries)reelsPlayer.playVideoAt(next);},80);
-  }
- }
-}
-function formatReelsTime(seconds){
- const n=Math.max(0,Math.floor(Number(seconds)||0));
- return String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');
-}
-window.beginReelsSeek=()=>{reelsSeeking=true;};
-window.finishReelsSeek=()=>{
- if(!reelsSeeking)return;
- const range=$('reelsSeekRange');
- if(range)window.seekReelsVideo(range.value);
- reelsSeeking=false;
- updateReelsSeekbar();
+ const iframe=document.createElement('iframe');
+ iframe.title=series.title||'YouTube playlist';
+ iframe.width='100%';
+ iframe.height='100%';
+ iframe.style.cssText='width:100%;height:100%;border:0;display:block';
+ iframe.setAttribute('allow','autoplay; encrypted-media; picture-in-picture; fullscreen');
+ iframe.setAttribute('allowfullscreen','');
+ iframe.src='https://www.youtube.com/embed/videoseries?list='+encodeURIComponent(playlistId)+'&autoplay=1&playsinline=1&rel=0';
+ box.appendChild(iframe);
 };
-window.seekReelsVideo=value=>{
- if(!reelsPlayer||typeof reelsPlayer.seekTo!=='function')return;
- const duration=Number(reelsPlayer.getDuration&&reelsPlayer.getDuration())||0;
- if(duration>0)reelsPlayer.seekTo(Math.min(duration,Math.max(0,Number(value)||0)),true);
+window.closeReelsPlayer=function(){
+ const box=document.getElementById('reelsPlayer');
+ if(!box)return;
+ const iframe=box.querySelector('iframe');
+ if(iframe){iframe.src='';iframe.removeAttribute('src');}
+ box.innerHTML='';
+ box.style.display='none';
+ box.setAttribute('aria-hidden','true');
+ reelsHistoryActive=false;
 };
-function updateReelsSeekbar(){
- const range=$('reelsSeekRange');if(!range||reelsSeeking)return;
- if(!reelsPlayer||!reelsPlayerReady){range.disabled=true;return;}
- const duration=Number(reelsPlayer.getDuration&&reelsPlayer.getDuration())||0;
- const current=Number(reelsPlayer.getCurrentTime&&reelsPlayer.getCurrentTime())||0;
- range.disabled=duration<=0;
- range.max=String(Math.max(0,Math.floor(duration)));
- range.value=String(Math.min(Math.floor(current),Math.floor(duration)||0));
- $('reelsCurrentTime').textContent=formatReelsTime(current);
- $('reelsDuration').textContent=formatReelsTime(duration);
-}
-function updateReelsMiniState(){
- if(!reelsPlayer||!reelsCurrentSeries)return;
- updateReelsSeekbar();
- const raw=typeof reelsPlayer.getPlaylistIndex==='function'?reelsPlayer.getPlaylistIndex():0;
- const index=Math.max(0,raw||0);
- $('reelsMiniEpisode').textContent='EP '+(index+1)+' / '+reelsCurrentSeries.episodes;$('reelsEpisodeCount').textContent=(index+1)+'/'+reelsCurrentSeries.episodes;
- $('reelsEpisodeCount').textContent='EP. '+(index+1)+'/'+reelsCurrentSeries.episodes;
- $('reelsMiniPlayIcon').className=reelsPlayer.getPlayerState()===1?'fas fa-pause':'fas fa-play';
- document.querySelectorAll('#reelsEpisodeButtons .reels-ep-btn').forEach((b,i)=>b.classList.toggle('active',i===index));
-}
-function startReelsMiniSync(){if(reelsMiniTimer)clearInterval(reelsMiniTimer);reelsMiniTimer=setInterval(updateReelsMiniState,700);}
-window.toggleReelsPlayback=()=>{if(!reelsPlayer)return;if(reelsPlayer.getPlayerState()===1)reelsPlayer.pauseVideo();else reelsPlayer.playVideo();updateReelsMiniState();};
-let reelsTouchStart=null;
-window.handleReelsTouchStart=event=>{
- const touch=event.touches&&event.touches[0];if(!touch)return;
- reelsTouchStart={x:touch.clientX,y:touch.clientY,time:Date.now()};
+window.onpopstate=function(){
+ if(reelsHistoryActive)window.closeReelsPlayer();
 };
-window.handleReelsTouchEnd=event=>{
- if(!reelsTouchStart)return;
- const touch=event.changedTouches&&event.changedTouches[0];
- if(!touch){reelsTouchStart=null;return;}
- const dx=touch.clientX-reelsTouchStart.x,dy=touch.clientY-reelsTouchStart.y;
- const elapsed=Date.now()-reelsTouchStart.time;reelsTouchStart=null;
- if(Math.abs(dy)>45&&Math.abs(dy)>Math.abs(dx)*1.2){
-  if(!reelsCurrentSeries||!reelsPlayer)return;
-  const current=Math.max(0,reelsPlayer.getPlaylistIndex()||0);
-  const target=dy<0?current+1:current-1;
-  if(target>=0&&target<reelsCurrentSeries.episodes)window.playReelsEpisode(target);
- }else if(Math.abs(dx)<18&&Math.abs(dy)<18&&elapsed<500){
-  window.toggleReelsPlayback();
- }
-};
-
-window.minimizeReelsPlayer=()=>{
- const player=$('reelsPlayer'),panel=player.querySelector('.reels-player-panel'),frame=$('reelsPlayerFrame'),mini=$('reelsMiniPlayer');
- player.classList.remove('hidden');player.classList.add('reels-minimized');
- player.style.cssText='display:block!important;visibility:visible!important;position:fixed!important;inset:0!important;background:transparent!important;pointer-events:none!important;z-index:70!important;';
- panel.style.cssText='position:fixed!important;inset:0!important;width:100%!important;height:100%!important;background:transparent!important;pointer-events:none!important;';
- // Move the live iframe into the single mini-player card so it remains playing in the 90x56 video slot.
- frame.classList.add('reels-mini-video-box');
- frame.style.cssText='position:relative!important;left:auto!important;top:auto!important;inset:auto!important;width:90px!important;height:56px!important;max-width:90px!important;max-height:56px!important;flex:0 0 90px!important;overflow:hidden!important;pointer-events:none!important;z-index:0!important;';
- frame.querySelectorAll('iframe').forEach(function(iframe){iframe.style.setProperty('width','100%','important');iframe.style.setProperty('height','100%','important');iframe.style.setProperty('pointer-events','none','important');iframe.style.setProperty('transform','none','important');});
- mini.insertBefore(frame,mini.firstChild);
- mini.classList.remove('hidden');mini.style.cssText='display:flex!important;flex-direction:row!important;align-items:center!important;gap:10px!important;padding:8px!important;position:fixed!important;left:10px!important;right:10px!important;bottom:calc(10px + env(safe-area-inset-bottom))!important;z-index:99999!important;background:#090909f5!important;border-radius:14px!important;min-height:72px!important;pointer-events:auto!important;';
- $('reelsMiniPoster').style.display='none';
- mini.querySelectorAll('button').forEach(function(button){button.style.setProperty('position','relative','important');button.style.setProperty('z-index','99999','important');button.style.setProperty('pointer-events','auto','important');});
-};
-window.restoreReelsPlayer=()=>{
- if(!reelsHistoryActive){history.pushState({reelsPlayer:true},'',location.href);reelsHistoryActive=true;}
- const player=$('reelsPlayer'),panel=player.querySelector('.reels-player-panel'),frame=$('reelsPlayerFrame'),mini=$('reelsMiniPlayer');
- if(frame.parentElement===mini){panel.insertBefore(frame,panel.firstChild);}
- frame.classList.remove('reels-mini-video-box');
- player.classList.remove('reels-minimized');player.classList.remove('hidden');player.style.cssText='';player.style.display='flex';player.style.visibility='visible';player.style.pointerEvents='auto';
- panel.style.cssText='';frame.style.cssText='';
- mini.classList.add('hidden');mini.style.cssText='';$('reelsMiniPoster').style.display='';
-};
-window.destroyReelsPlayer=function(){
- try{if(reelsMiniTimer)clearInterval(reelsMiniTimer);}catch(e){}
- reelsMiniTimer=null;
- try{if(reelsNextTimer)clearTimeout(reelsNextTimer);}catch(e){}
- reelsNextTimer=null;
- const frame=document.getElementById('reelsPlayerFrame');
- const mini=document.getElementById('reelsMiniPlayer');
- if(frame){
-  frame.querySelectorAll('iframe').forEach(function(iframe){try{iframe.src='';iframe.removeAttribute('src');}catch(e){}});
-  frame.innerHTML='';
- }
- if(mini){mini.querySelectorAll('iframe').forEach(function(iframe){try{iframe.src='';iframe.removeAttribute('src');}catch(e){}});}
- try{if(reelsPlayer&&typeof reelsPlayer.destroy==='function')reelsPlayer.destroy();}catch(e){}
- reelsPlayer=null;reelsPlayerReady=false;reelsConsecutiveVideoErrors=0;reelsCurrentSeries=null;
- const overlay=document.getElementById('reelsPlayer');
-
- if(overlay){overlay.classList.add('hidden');overlay.setAttribute('aria-hidden','true');overlay.classList.remove('reels-minimized');overlay.style.cssText='display:none!important;visibility:hidden!important;pointer-events:none!important;';}
- if(mini){mini.classList.add('hidden');mini.style.cssText='display:none!important;';}
- const panel=overlay&&overlay.querySelector('.reels-player-panel');
- if(panel)panel.style.cssText='';
- const poster=document.getElementById('reelsMiniPoster');if(poster)poster.style.display='';
- const episodes=document.getElementById('reelsEpisodeButtons');if(episodes)episodes.innerHTML='';
- if(reelsHistoryActive){reelsHistoryActive=false;reelsClosingHistory=true;try{history.back();}catch(e){}}
-};
-window.closeReelsPlayer=()=>window.destroyReelsPlayer();
 async function loadReelsFeed(force) {
   if(reelsLoading)return; reelsLoading=true; renderReels();
   // Fetch each playlist's public Atom feed only to obtain an available episode thumbnail.
