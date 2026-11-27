@@ -141,7 +141,7 @@ body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#e5ddd5}
 
 /* ---------------- FREEREELS SERIES CATALOG ---------------- */
 .reels-page{min-height:100%;background:#080b12;color:#f8fafc;padding:14px 12px 94px}
-.reels-hero{position:relative;isolation:isolate;border-radius:22px;padding:18px;background:radial-gradient(circle at 90% 0%,#6d28d9 0,transparent 42%),linear-gradient(135deg,#161b2b,#10131d 65%,#241044);border:1px solid #303044}.reels-hero::before,.reels-hero::after{pointer-events:none}.reels-hero{z-index:1}.reels-hero>*{position:relative;z-index:2}.reels-refresh-btn{position:relative!important;z-index:50!important;pointer-events:auto!important;touch-action:manipulation;isolation:isolate}.reels-hero::before,.reels-hero::after{pointer-events:none!important;z-index:0!important}
+.reels-hero{position:relative;isolation:isolate;border-radius:22px;padding:18px;background:radial-gradient(circle at 90% 0%,#6d28d9 0,transparent 42%),linear-gradient(135deg,#161b2b,#10131d 65%,#241044);border:1px solid #303044}.reels-hero::before,.reels-hero::after{pointer-events:none}.reels-hero{z-index:1}.reels-hero>*{position:relative;z-index:2}.reels-refresh-btn{position:relative!important;z-index:999!important;pointer-events:auto!important;user-select:none!important;-webkit-user-select:none!important;touch-action:manipulation;isolation:isolate}.reels-hero::before,.reels-hero::after{pointer-events:none!important;z-index:0!important}.reels-hero,.reels-hero *{touch-action:manipulation}.reels-hero::before,.reels-hero::after,.reels-card::before,.reels-card::after,.reels-poster-wrap::before,.reels-poster-wrap::after{pointer-events:none!important}
 .reels-title{font-size:25px;font-weight:900;letter-spacing:-.7px}
 .reels-sub{font-size:12px;color:#a8b0c3;margin-top:4px}
 .reels-filters{display:flex;gap:8px;overflow-x:auto;padding:15px 0 12px;scrollbar-width:none}
@@ -167,7 +167,7 @@ body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#e5ddd5}
 .reels-player-backdrop{position:fixed;inset:0;z-index:80;background:#05070d;display:flex;align-items:stretch;justify-content:center;padding:0;overflow:hidden;width:100vw;height:100vh;height:100dvh;pointer-events:auto}.reels-player-backdrop.hidden,#reelsPlayer.hidden{display:none!important;visibility:hidden!important;pointer-events:none!important}.reels-player-backdrop:not(.hidden){visibility:visible;pointer-events:auto}
 .reels-player-panel{position:relative;width:100vw;height:100vh;height:100dvh;max-width:none;min-height:0;background:#090d16;border:0;border-radius:0;overflow:hidden}
 .reels-player-head{display:none!important}
-.reels-player-frame{position:absolute;z-index:0;inset:0;width:100%;height:100%;aspect-ratio:auto;border:0;background:#000;display:block;max-height:none;overflow:hidden}.reels-player-frame{display:flex;align-items:center;justify-content:center;background:#000}.reels-player-frame iframe{position:absolute!important;inset:50% auto auto 50%!important;width:100vw!important;height:80vh!important;max-width:100vw!important;max-height:85vh!important;transform:translate(-50%,-50%) scale(1.35)!important;transform-origin:center center!important;border:0!important}.reels-minimized .reels-touch-overlay{display:none!important;pointer-events:none!important}.reels-minimized .reels-player-frame iframe{transform:translate(0,0)!important;pointer-events:none!important}.reels-touch-overlay{position:absolute;z-index:5;left:0;right:0;top:64px;bottom:118px;background:transparent;touch-action:pan-y;pointer-events:auto}.reels-seekbar{position:absolute;z-index:9998;left:12px;right:12px;bottom:max(9px,env(safe-area-inset-bottom));display:flex;align-items:center;gap:9px;padding:7px 10px;border:1px solid #ffffff35;border-radius:14px;background:#10182766;color:#fff;backdrop-filter:blur(12px);pointer-events:auto}.reels-seek-time{min-width:42px;font-size:10px;font-weight:800;font-variant-numeric:tabular-nums;text-align:center;color:#ffffffdf}.reels-seek-range{flex:1;min-width:0;height:4px;accent-color:#a78bfa;cursor:pointer;touch-action:pan-x}.reels-seek-range:disabled{opacity:.45}.reels-episodes{display:grid;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));gap:7px;padding:10px 12px 18px;max-height:30vh;overflow-y:auto;max-width:1200px;margin:0 auto}.reels-ep-btn{background:#1b2231;color:#cbd5e1;border:1px solid #354052;border-radius:9px;padding:10px 5px;font-size:12px;font-weight:900}.reels-ep-btn.active{background:#7c3aed;border-color:#a78bfa;color:#fff;box-shadow:0 0 0 2px #8b5cf633}.reels-episode-drawer{position:absolute;z-index:25;left:0;right:0;bottom:0;padding:0 0 max(8px,env(safe-area-inset-bottom));background:transparent;pointer-events:none}
+.reels-player-frame{position:absolute;z-index:0;inset:0;width:100%;height:100%;aspect-ratio:auto;border:0;background:#000;display:block;max-height:none;overflow:hidden}.reels-player-frame{display:flex;align-items:center;justify-content:center;background:#000}.reels-player-frame iframe{position:absolute!important;inset:50% auto auto 50%!important;width:100vw!important;height:80vh!important;max-width:100vw!important;max-height:80vh!important;transform:translate(-50%,-50%) scale(1.35)!important;transform-origin:center center!important;border:0!important}.reels-minimized .reels-touch-overlay{display:none!important;pointer-events:none!important}.reels-minimized .reels-player-frame iframe{transform:translate(0,0)!important;pointer-events:none!important}.reels-mini iframe,.reels-minimized iframe{pointer-events:none!important}.reels-mini button{position:relative!important;z-index:99999!important;pointer-events:auto!important}.reels-touch-overlay{position:absolute;z-index:5;left:0;right:0;top:64px;bottom:118px;background:transparent;touch-action:pan-y;pointer-events:auto}.reels-seekbar{position:absolute;z-index:9998;left:12px;right:12px;bottom:max(9px,env(safe-area-inset-bottom));display:flex;align-items:center;gap:9px;padding:7px 10px;border:1px solid #ffffff35;border-radius:14px;background:#10182766;color:#fff;backdrop-filter:blur(12px);pointer-events:auto}.reels-seek-time{min-width:42px;font-size:10px;font-weight:800;font-variant-numeric:tabular-nums;text-align:center;color:#ffffffdf}.reels-seek-range{flex:1;min-width:0;height:4px;accent-color:#a78bfa;cursor:pointer;touch-action:pan-x}.reels-seek-range:disabled{opacity:.45}.reels-episodes{display:grid;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));gap:7px;padding:10px 12px 18px;max-height:30vh;overflow-y:auto;max-width:1200px;margin:0 auto}.reels-ep-btn{background:#1b2231;color:#cbd5e1;border:1px solid #354052;border-radius:9px;padding:10px 5px;font-size:12px;font-weight:900}.reels-ep-btn.active{background:#7c3aed;border-color:#a78bfa;color:#fff;box-shadow:0 0 0 2px #8b5cf633}.reels-episode-drawer{position:absolute;z-index:25;left:0;right:0;bottom:0;padding:0 0 max(8px,env(safe-area-inset-bottom));background:transparent;pointer-events:none}
 .reels-floating-bar{display:flex;position:relative;z-index:26;pointer-events:auto;align-items:center;justify-content:flex-end;gap:0;margin:0 10px;padding:0;border:0;background:transparent;box-shadow:none;backdrop-filter:none}
 .reels-floating-title{display:none}
 .reels-episodes-toggle{display:flex;align-items:center;justify-content:center;min-width:64px;height:34px;padding:0 10px;border-radius:18px;background:#11182766;border:1px solid #ffffff45;color:#fff;font-size:11px;font-weight:900;white-space:nowrap;backdrop-filter:blur(10px);box-shadow:0 2px 12px #0005}
@@ -321,7 +321,7 @@ body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#e5ddd5}
   <div class="reels-mini-info"><div id="reelsMiniTitle" class="reels-mini-title">Series</div><div id="reelsMiniEpisode" class="reels-mini-ep">EP 1</div></div>
   <button onclick="toggleReelsPlayback()" aria-label="Play or pause"><i id="reelsMiniPlayIcon" class="fas fa-pause"></i></button>
   <button onclick="restoreReelsPlayer()" aria-label="Open player"><i class="fas fa-expand"></i></button>
-  <button type="button" onclick="closeReelsPlayer()" aria-label="Close" style="position:relative;z-index:99999;pointer-events:auto;user-select:none;background:#dc2626;border-radius:10px;padding:8px"><i class="fas fa-times"></i></button>
+  <button type="button" onclick="destroyReelsPlayer()" aria-label="Close" style="position:relative;z-index:99999;pointer-events:auto;user-select:none;background:#dc2626;border-radius:10px;padding:8px"><i class="fas fa-times"></i></button>
 </div>
 
 <!-- CHAT ROOM SCREEN -->
@@ -702,35 +702,25 @@ async function fetchAllChannelPlaylists(channel){
   };
  });
 }
-async async function forceRefreshOfficialPlaylists(){
- const button=$('reelsRefreshBtn');
+async function forceRefreshOfficialPlaylists(){
+ const button=document.getElementById('forceRefreshBtn');
  if(reelsLoading)return;
- if(button){button.disabled=true;button.textContent='🔄 लोड हो रहा है…';button.style.userSelect='none';}
+ if(button){button.disabled=true;button.textContent='🔄 लोड हो रहा है...';}
  reelsApiCatalog=[];
  try{
   localStorage.removeItem(REELS_API_CACHE_KEY);
   localStorage.removeItem('chatpro_reels_posters_v1');
- }catch(e){}
- let success=false;
- try{
-  success=await loadOfficialReelsPlaylists(true);
- }catch(error){
-  console.warn('Manual playlist refresh failed',error);
-  reelsApiStatus='प्लेलिस्ट अपडेट नहीं हो सकीं: '+(error.message||'नेटवर्क/API जाँचें।');
- }
- if(success){
-  reelsApiStatus='✅ अपडेट हो गया! · '+reelsApiCatalog.length+' प्लेलिस्ट';
- }else if(!reelsApiStatus.includes('API')&&!reelsApiStatus.includes('नहीं')){
-  reelsApiStatus='प्लेलिस्ट अपडेट नहीं हो सकीं। इंटरनेट और YouTube API Key जाँचें।';
- }
+ }catch(error){console.warn('Could not clear playlist cache',error);}
+ let ok=false;
+ try{ok=await loadOfficialReelsPlaylists(true)===true;}
+ catch(error){console.warn('Playlist refresh failed',error);reelsApiStatus='प्लेलिस्ट अपडेट नहीं हो सकीं।';}
+ if(ok){reelsApiStatus='✅ अपडेट हो गया! · '+reelsApiCatalog.length+' प्लेलिस्ट';}
+ else if(!reelsApiStatus)reelsApiStatus='प्लेलिस्ट अपडेट नहीं हो सकीं।';
  if(activeTab==='reels')renderReels();
- const refreshedButton=$('reelsRefreshBtn');
- if(refreshedButton){
-  refreshedButton.disabled=false;
-  refreshedButton.textContent=success?'✅ अपडेट हो गया!':'↻ फिर कोशिश करें';
-  refreshedButton.style.userSelect='none';
- }
- if(typeof showToast==='function')showToast(success?'✅ अपडेट हो गया!':'प्लेलिस्ट अपडेट नहीं हो सकीं');
+ const currentButton=document.getElementById('forceRefreshBtn');
+ if(currentButton){currentButton.disabled=false;currentButton.textContent=ok?'✅ अपडेट हो गया!':'↻ फिर कोशिश करें';}
+ if(typeof showToast==='function')showToast(ok?'✅ अपडेट हो गया!':'प्लेलिस्ट अपडेट नहीं हो सकीं।');
+ return ok;
 }
 async function loadOfficialReelsPlaylists(force=false){
  if(!YOUTUBE_DATA_API_KEY||YOUTUBE_DATA_API_KEY==='PASTE_RESTRICTED_YOUTUBE_API_KEY_HERE'){
@@ -769,12 +759,18 @@ async function loadOfficialReelsPlaylists(force=false){
  if(activeTab==='reels')renderReels();
  return !reelsApiStatus.startsWith('YouTube API लोड नहीं हुआ');
 }
+document.addEventListener('click',function(event){
+ const button=event.target&&event.target.closest?event.target.closest('#forceRefreshBtn'):null;
+ if(!button)return;
+ event.preventDefault();event.stopPropagation();
+ forceRefreshOfficialPlaylists();
+},true);
 function renderReels() {
   const box=$('listArea'); if(!box || activeTab!=='reels') return;
   const filters=[['all','सभी'],['popular','पॉपुलर'],['hindi-dubbed','हिंदी डब्ड'],['new','नया']];
   const rows=getAllReelsSeries().filter(x=>reelsFilter==='all'||x.category===reelsFilter);
   box.innerHTML=`<section class="reels-page">
-    <div class="reels-hero"><div class="reels-title">FreeReels <span class="text-violet-300">+</span> <span class="text-xs font-bold text-white/70">v5.0</span></div><div class="reels-sub">पूरी वेब सीरीज़ • Episode 1 से आखिरी एपिसोड तक</div><div class="text-[10px] text-gray-400 mt-3">YouTube Playlist Player · ${getAllReelsSeries().length} प्लेलिस्ट</div><div class="text-[10px] text-gray-400 mt-2" id="reelsApiStatus">${reelsEscape(reelsApiStatus)}</div><button type="button" id="reelsRefreshBtn" class="reels-filter reels-refresh-btn mt-2" style="user-select:none;-webkit-user-select:none;position:relative;z-index:50;cursor:pointer;pointer-events:auto;touch-action:manipulation" onclick="forceRefreshOfficialPlaylists()">↻ Refresh official playlists</button></div>
+    <div class="reels-hero"><div class="reels-title">FreeReels <span class="text-violet-300">+</span> <span class="text-xs font-bold text-white/70">v6.0</span></div><div class="reels-sub">पूरी वेब सीरीज़ • Episode 1 से आखिरी एपिसोड तक</div><div class="text-[10px] text-gray-400 mt-3">YouTube Playlist Player · ${getAllReelsSeries().length} प्लेलिस्ट</div><div class="text-[10px] text-gray-400 mt-2" id="reelsApiStatus">${reelsEscape(reelsApiStatus)}</div><button type="button" id="forceRefreshBtn" style="position:relative;z-index:999;pointer-events:auto;user-select:none;-webkit-user-select:none;cursor:pointer;touch-action:manipulation" class="reels-filter mt-2">↻ Refresh official playlists</button></div>
     <div class="reels-filters">${filters.map(([key,label])=>`<button class="reels-filter ${reelsFilter===key?'active':''}" onclick="setReelsFilter('${key}')">${label}</button>`).join('')}</div>
     <div class="reels-grid">${rows.map(series=>{
       const poster=reelsPoster(series);
@@ -946,13 +942,31 @@ window.restoreReelsPlayer=()=>{
  panel.style.cssText='';frame.style.cssText='';
  $('reelsMiniPlayer').classList.add('hidden');$('reelsMiniPlayer').style.cssText='';$('reelsMiniPoster').style.display='';
 };
-window.closeReelsPlayer=()=>{
- if(reelsHistoryActive){reelsHistoryActive=false;reelsClosingHistory=true;history.back();}
- if(reelsMiniTimer)clearInterval(reelsMiniTimer);reelsMiniTimer=null;if(reelsNextTimer)clearTimeout(reelsNextTimer);reelsNextTimer=null;
- if(reelsPlayer&&reelsPlayer.destroy){reelsPlayer.destroy();reelsPlayer=null;}
- reelsPlayerReady=false;reelsConsecutiveVideoErrors=0;reelsCurrentSeries=null;$('reelsPlayerFrame').innerHTML='';$('reelsEpisodeButtons').innerHTML='';$('reelsPlayer').querySelector('.reels-player-panel').style.cssText='';$('reelsPlayerFrame').style.cssText='';$('reelsMiniPlayer').style.cssText='';$('reelsMiniPoster').style.display='';$('reelsPlayer').classList.remove('reels-minimized');
- $('reelsPlayer').classList.add('hidden');$('reelsPlayer').style.display='none';$('reelsPlayer').style.visibility='hidden';$('reelsPlayer').style.pointerEvents='none';$('reelsMiniPlayer').classList.add('hidden');
+window.destroyReelsPlayer=function(){
+ try{if(reelsMiniTimer)clearInterval(reelsMiniTimer);}catch(e){}
+ reelsMiniTimer=null;
+ try{if(reelsNextTimer)clearTimeout(reelsNextTimer);}catch(e){}
+ reelsNextTimer=null;
+ const frame=document.getElementById('reelsPlayerFrame');
+ if(frame){
+  frame.querySelectorAll('iframe').forEach(function(iframe){
+   try{iframe.src='';iframe.removeAttribute('src');}catch(e){}
+  });
+  frame.innerHTML='';
+ }
+ try{if(reelsPlayer&&typeof reelsPlayer.destroy==='function')reelsPlayer.destroy();}catch(e){}
+ reelsPlayer=null;reelsPlayerReady=false;reelsConsecutiveVideoErrors=0;reelsCurrentSeries=null;
+ const overlay=document.getElementById('reelsPlayer');
+ const mini=document.getElementById('reelsMiniPlayer');
+ if(overlay){overlay.classList.add('hidden');overlay.classList.remove('reels-minimized');overlay.style.cssText='display:none!important;visibility:hidden!important;pointer-events:none!important;';}
+ if(mini){mini.classList.add('hidden');mini.style.cssText='display:none!important;';}
+ const panel=overlay&&overlay.querySelector('.reels-player-panel');
+ if(panel)panel.style.cssText='';
+ const poster=document.getElementById('reelsMiniPoster');if(poster)poster.style.display='';
+ const episodes=document.getElementById('reelsEpisodeButtons');if(episodes)episodes.innerHTML='';
+ if(reelsHistoryActive){reelsHistoryActive=false;reelsClosingHistory=true;try{history.back();}catch(e){}}
 };
+window.closeReelsPlayer=()=>window.destroyReelsPlayer();
 async function loadReelsFeed(force) {
   if(reelsLoading)return; reelsLoading=true; renderReels();
   // Fetch each playlist's public Atom feed only to obtain an available episode thumbnail.
