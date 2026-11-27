@@ -213,6 +213,11 @@ body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#e5ddd5}
     </div>
   </div>
 
+  <div class="flex gap-2 px-3 py-2 bg-white dark:bg-[#17232b] border-b dark:border-gray-800">
+    <button onclick="sendLudoInvite()" class="flex-1 py-2 rounded-xl bg-[#075E54] text-white text-xs sm:text-sm font-bold shadow-sm"><i class="fas fa-dice mr-1"></i> Ludo Invite</button>
+    <button onclick="sendMovieInvite()" class="flex-1 py-2 rounded-xl bg-[#7c3aed] text-white text-xs sm:text-sm font-bold shadow-sm"><i class="fas fa-film mr-1"></i> Movie Invite</button>
+  </div>
+
   <div id="replyBar" class="hidden bg-white dark:bg-[#202c33] px-4 py-2 border-l-4 border-[#25D366] flex justify-between items-center text-xs">
     <div class="truncate"><span class="font-bold text-[#075E54] dark:text-[#25D366]">Replying:</span> <span id="replyText"></span></div>
     <button onclick="cancelReply()" class="text-gray-500 text-base ml-2">&times;</button>
@@ -954,7 +959,14 @@ window.openChat = (id, name, isGroup) => {
       let mediaHtml = '';
       if (m.mediaType === 'image') mediaHtml = `<img src="${m.mediaUrl}" class="max-w-full rounded-lg mb-1 max-h-64 object-cover">`;
       if (m.mediaType === 'video') mediaHtml = `<video src="${m.mediaUrl}" controls playsinline class="max-w-full rounded-lg mb-1 max-h-64 bg-black"></video>`;
-      return `<div class="flex ${me?'justify-end':'justify-start'}"><div class="max-w-[80%] px-3 py-2 rounded-xl shadow-sm text-sm ${me?'bg-[#d9fdd3] dark:bg-[#005c4b]':'bg-white dark:bg-[#202c33]'}">${!me && isGroup ? `<div class="text-[11px] font-bold text-[#075E54] dark:text-[#25D366]">${m.senderName}</div>` : ''}${m.reply ? `<div class="text-[11px] bg-black/10 p-1.5 rounded mb-1 border-l-2 border-[#075E54] truncate">${m.reply}</div>` : ''}${mediaHtml}${m.text ? `<div class="break-words">${m.text}</div>` : ''}<div class="flex justify-end items-center gap-2 mt-1 text-[10px] opacity-60"><button onclick="setReply('${(m.text||m.mediaType||'Media').replace(/'/g,'')}')">Reply</button>${me ? `<button onclick="delMsg('${d.id}')" class="text-red-500">Del</button>` : ''}</div></div></div>`;
+      const inviteHtml = m.inviteType && m.inviteCode
+        ? `<div class="mt-2 p-3 rounded-xl border ${m.inviteType==='ludo'?'border-[#25D366] bg-[#25D366]/10':'border-purple-400 bg-purple-500/10'}">
+            <div class="font-bold mb-1">${m.inviteType==='ludo'?'🎲 Ludo Game Invite':'🎬 Movie Watch Invite'}</div>
+            <div class="text-xs opacity-75 mb-2">Room code: <b>${escapeFriendHtml(m.inviteCode)}</b></div>
+            <button onclick="joinChatInvite('${m.inviteType}','${escapeFriendHtml(m.inviteCode)}')" class="px-3 py-2 rounded-lg ${m.inviteType==='ludo'?'bg-[#075E54]':'bg-purple-700'} text-white text-xs font-bold">${m.inviteType==='ludo'?'Join Ludo':'Join Movie'}</button>
+          </div>`
+        : '';
+      return `<div class="flex ${me?'justify-end':'justify-start'}"><div class="max-w-[80%] px-3 py-2 rounded-xl shadow-sm text-sm ${me?'bg-[#d9fdd3] dark:bg-[#005c4b]':'bg-white dark:bg-[#202c33]'}">${!me && isGroup ? `<div class="text-[11px] font-bold text-[#075E54] dark:text-[#25D366]">${m.senderName}</div>` : ''}${m.reply ? `<div class="text-[11px] bg-black/10 p-1.5 rounded mb-1 border-l-2 border-[#075E54] truncate">${m.reply}</div>` : ''}${mediaHtml}${m.text ? `<div class="break-words">${m.text}</div>` : ''}${inviteHtml}<div class="flex justify-end items-center gap-2 mt-1 text-[10px] opacity-60"><button onclick="setReply('${(m.text||m.mediaType||'Media').replace(/'/g,'')}')">Reply</button>${me ? `<button onclick="delMsg('${d.id}')" class="text-red-500">Del</button>` : ''}</div></div></div>`;
     }).join('');
     box.scrollTop = box.scrollHeight;
   });
@@ -964,6 +976,58 @@ window.closeChat = () => { $('chatScreen').classList.add('hidden'); cancelReply(
 window.setReply = txt => { replyData = txt; $('replyText').textContent = txt; $('replyBar').classList.remove('hidden'); };
 window.cancelReply = () => { replyData = null; $('replyBar').classList.add('hidden'); };
 window.delMsg = id => deleteDoc(doc(db, 'rooms', activeChat.roomId, 'messages', id));
+
+window.sendLudoInvite = async () => {
+  if (!activeChat || !currentUser) return;
+  try {
+    const code = Math.random().toString(36).substring(2, 7).toUpperCase();
+    const initData = {
+      code, turn: 'red', dice: 0, rolled: false,
+      players: { red: { uid: currentUser.uid, name: currentUser.displayName || 'Player 1', peerId: myPeerId } },
+      tokens: { red: [-1,-1,-1,-1], green: [-1,-1,-1,-1], yellow: [-1,-1,-1,-1], blue: [-1,-1,-1,-1] }
+    };
+    await setDoc(doc(db, 'ludo_rooms', code), initData);
+    const senderName = currentUser.displayName || 'ChatPro User';
+    await addDoc(collection(db, 'rooms', activeChat.roomId, 'messages'), {
+      senderId: currentUser.uid, senderName, text: 'Invited you to play Ludo!',
+      inviteType: 'ludo', inviteCode: code, createdAt: serverTimestamp()
+    });
+    if (!activeChat.isGroup) sendPushAlert(activeChat.id, senderName, '🎲 Ludo game invitation', false);
+  } catch (e) { alert('Ludo invite नहीं भेजा जा सका: ' + e.message); }
+};
+
+window.sendMovieInvite = async () => {
+  if (!activeChat || !currentUser) return;
+  const url = (prompt('Movie का direct MP4 video link डालें:') || '').trim();
+  if (!url) return;
+  try {
+    const parsed = new URL(url);
+    if (!['http:', 'https:'].includes(parsed.protocol)) return alert('कृपया सही http/https video link डालें।');
+    const code = 'MV' + Math.floor(100 + Math.random() * 900);
+    await setDoc(doc(db, 'watch_rooms', code), {
+      code, url, playing: false, time: 0, hostPeerId: myPeerId,
+      players: { [currentUser.uid]: { uid: currentUser.uid, name: currentUser.displayName || 'Host', peerId: myPeerId } }
+    });
+    const senderName = currentUser.displayName || 'ChatPro User';
+    await addDoc(collection(db, 'rooms', activeChat.roomId, 'messages'), {
+      senderId: currentUser.uid, senderName, text: 'Invited you to a Movie Watch Party!',
+      inviteType: 'movie', inviteCode: code, createdAt: serverTimestamp()
+    });
+    if (!activeChat.isGroup) sendPushAlert(activeChat.id, senderName, '🎬 Movie Watch Party invitation', false);
+  } catch (e) { alert('Movie invite नहीं भेजा जा सका: ' + e.message); }
+};
+
+window.joinChatInvite = async (type, code) => {
+  if (!/^[A-Z0-9]{3,8}$/.test(code || '')) return alert('Invite code सही नहीं है।');
+  closeChat();
+  if (type === 'ludo') {
+    switchTab('ludo');
+    await joinLudoRoom(code);
+  } else if (type === 'movie') {
+    switchTab('movie');
+    await joinWatchRoom(code);
+  }
+};
 
 window.sendMsg = async () => {
   const txt = $('msgInput').value.trim();
