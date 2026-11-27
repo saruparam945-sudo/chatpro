@@ -141,7 +141,7 @@ body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#e5ddd5}
 
 /* ---------------- FREEREELS SERIES CATALOG ---------------- */
 .reels-page{min-height:100%;background:#080b12;color:#f8fafc;padding:14px 12px 94px}
-.reels-hero{position:relative;isolation:isolate;border-radius:22px;padding:18px;background:radial-gradient(circle at 90% 0%,#6d28d9 0,transparent 42%),linear-gradient(135deg,#161b2b,#10131d 65%,#241044);border:1px solid #303044}.reels-hero::before,.reels-hero::after{pointer-events:none}.reels-refresh-btn{position:relative;z-index:20;pointer-events:auto;touch-action:manipulation}
+.reels-hero{position:relative;isolation:isolate;border-radius:22px;padding:18px;background:radial-gradient(circle at 90% 0%,#6d28d9 0,transparent 42%),linear-gradient(135deg,#161b2b,#10131d 65%,#241044);border:1px solid #303044}.reels-hero::before,.reels-hero::after{pointer-events:none}.reels-hero{z-index:1}.reels-hero>*{position:relative;z-index:2}.reels-refresh-btn{position:relative!important;z-index:50!important;pointer-events:auto!important;touch-action:manipulation;isolation:isolate}.reels-hero::before,.reels-hero::after{pointer-events:none!important;z-index:0!important}
 .reels-title{font-size:25px;font-weight:900;letter-spacing:-.7px}
 .reels-sub{font-size:12px;color:#a8b0c3;margin-top:4px}
 .reels-filters{display:flex;gap:8px;overflow-x:auto;padding:15px 0 12px;scrollbar-width:none}
@@ -167,7 +167,7 @@ body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#e5ddd5}
 .reels-player-backdrop{position:fixed;inset:0;z-index:80;background:#05070d;display:flex;align-items:stretch;justify-content:center;padding:0;overflow:hidden;width:100vw;height:100vh;height:100dvh;pointer-events:auto}.reels-player-backdrop.hidden,#reelsPlayer.hidden{display:none!important;visibility:hidden!important;pointer-events:none!important}.reels-player-backdrop:not(.hidden){visibility:visible;pointer-events:auto}
 .reels-player-panel{position:relative;width:100vw;height:100vh;height:100dvh;max-width:none;min-height:0;background:#090d16;border:0;border-radius:0;overflow:hidden}
 .reels-player-head{display:none!important}
-.reels-player-frame{position:absolute;z-index:0;inset:0;width:100%;height:100%;aspect-ratio:auto;border:0;background:#000;display:block;max-height:none;overflow:hidden}.reels-player-frame{display:flex;align-items:center;justify-content:center;background:#000}.reels-player-frame iframe{position:absolute!important;inset:50% auto auto 50%!important;width:100vw!important;height:min(56.25vw,75vh)!important;max-width:100vw!important;max-height:75vh!important;transform:translate(-50%,-50%)!important;transform-origin:center center!important;border:0!important}.reels-touch-overlay{position:absolute;z-index:5;left:0;right:0;top:64px;bottom:118px;background:transparent;touch-action:pan-y;pointer-events:auto}.reels-seekbar{position:absolute;z-index:9998;left:12px;right:12px;bottom:max(9px,env(safe-area-inset-bottom));display:flex;align-items:center;gap:9px;padding:7px 10px;border:1px solid #ffffff35;border-radius:14px;background:#10182766;color:#fff;backdrop-filter:blur(12px);pointer-events:auto}.reels-seek-time{min-width:42px;font-size:10px;font-weight:800;font-variant-numeric:tabular-nums;text-align:center;color:#ffffffdf}.reels-seek-range{flex:1;min-width:0;height:4px;accent-color:#a78bfa;cursor:pointer;touch-action:pan-x}.reels-seek-range:disabled{opacity:.45}.reels-episodes{display:grid;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));gap:7px;padding:10px 12px 18px;max-height:30vh;overflow-y:auto;max-width:1200px;margin:0 auto}.reels-ep-btn{background:#1b2231;color:#cbd5e1;border:1px solid #354052;border-radius:9px;padding:10px 5px;font-size:12px;font-weight:900}.reels-ep-btn.active{background:#7c3aed;border-color:#a78bfa;color:#fff;box-shadow:0 0 0 2px #8b5cf633}.reels-episode-drawer{position:absolute;z-index:25;left:0;right:0;bottom:0;padding:0 0 max(8px,env(safe-area-inset-bottom));background:transparent;pointer-events:none}
+.reels-player-frame{position:absolute;z-index:0;inset:0;width:100%;height:100%;aspect-ratio:auto;border:0;background:#000;display:block;max-height:none;overflow:hidden}.reels-player-frame{display:flex;align-items:center;justify-content:center;background:#000}.reels-player-frame iframe{position:absolute!important;inset:50% auto auto 50%!important;width:100vw!important;height:80vh!important;max-width:100vw!important;max-height:85vh!important;transform:translate(-50%,-50%) scale(1.08)!important;transform-origin:center center!important;border:0!important}.reels-touch-overlay{position:absolute;z-index:5;left:0;right:0;top:64px;bottom:118px;background:transparent;touch-action:pan-y;pointer-events:auto}.reels-seekbar{position:absolute;z-index:9998;left:12px;right:12px;bottom:max(9px,env(safe-area-inset-bottom));display:flex;align-items:center;gap:9px;padding:7px 10px;border:1px solid #ffffff35;border-radius:14px;background:#10182766;color:#fff;backdrop-filter:blur(12px);pointer-events:auto}.reels-seek-time{min-width:42px;font-size:10px;font-weight:800;font-variant-numeric:tabular-nums;text-align:center;color:#ffffffdf}.reels-seek-range{flex:1;min-width:0;height:4px;accent-color:#a78bfa;cursor:pointer;touch-action:pan-x}.reels-seek-range:disabled{opacity:.45}.reels-episodes{display:grid;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));gap:7px;padding:10px 12px 18px;max-height:30vh;overflow-y:auto;max-width:1200px;margin:0 auto}.reels-ep-btn{background:#1b2231;color:#cbd5e1;border:1px solid #354052;border-radius:9px;padding:10px 5px;font-size:12px;font-weight:900}.reels-ep-btn.active{background:#7c3aed;border-color:#a78bfa;color:#fff;box-shadow:0 0 0 2px #8b5cf633}.reels-episode-drawer{position:absolute;z-index:25;left:0;right:0;bottom:0;padding:0 0 max(8px,env(safe-area-inset-bottom));background:transparent;pointer-events:none}
 .reels-floating-bar{display:flex;position:relative;z-index:26;pointer-events:auto;align-items:center;justify-content:flex-end;gap:0;margin:0 10px;padding:0;border:0;background:transparent;box-shadow:none;backdrop-filter:none}
 .reels-floating-title{display:none}
 .reels-episodes-toggle{display:flex;align-items:center;justify-content:center;min-width:64px;height:34px;padding:0 10px;border-radius:18px;background:#11182766;border:1px solid #ffffff45;color:#fff;font-size:11px;font-weight:900;white-space:nowrap;backdrop-filter:blur(10px);box-shadow:0 2px 12px #0005}
@@ -175,12 +175,12 @@ body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#e5ddd5}
 .reels-episode-panel{max-height:0;overflow:hidden;opacity:0;transform:translateY(18px);transition:max-height .28s ease,opacity .22s ease,transform .28s ease;background:#0c1220f2;border:1px solid #ffffff24;border-bottom:0;border-radius:18px 18px 0 0;backdrop-filter:blur(18px);pointer-events:none}
 .reels-episode-drawer.open .reels-episode-panel{max-height:42vh;overflow-y:auto;opacity:1;transform:translateY(0);pointer-events:auto}
 .reels-episode-panel .reels-episodes{max-height:34vh;padding-bottom:12px}.reels-episodes-label{max-width:1200px;margin:0 auto;padding:0 12px 8px;color:#aab4c6;font-size:12px;font-weight:800}
-.reels-mini{position:fixed;z-index:79;left:10px;right:10px;bottom:10px;display:flex;align-items:center;gap:10px;padding:9px 11px;border:1px solid #4b4564;border-radius:14px;background:#171323f5;color:#fff;box-shadow:0 8px 30px #0009;backdrop-filter:blur(12px)}
+.reels-mini{position:fixed;z-index:99999;left:10px;right:10px;bottom:10px;display:flex;align-items:center;gap:10px;padding:9px 11px;border:1px solid #4b4564;border-radius:14px;background:#171323f5;color:#fff;box-shadow:0 8px 30px #0009;backdrop-filter:blur(12px)}
 .reels-mini-poster{width:38px;height:52px;object-fit:cover;border-radius:6px;background:#312e81}
 .reels-mini-info{min-width:0;flex:1}
 .reels-mini-title{font-size:12px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .reels-mini-ep{font-size:10px;color:#b8b2c8;margin-top:3px}
-.reels-mini button{padding:7px;color:#fff;font-size:16px}
+.reels-mini button{position:relative;z-index:99999;pointer-events:auto!important;touch-action:manipulation;padding:7px;color:#fff;font-size:16px}.reels-mini button[aria-label="Close"]{background:#dc2626;border-radius:10px}
 @media(min-width:560px){.reels-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(min-width:850px){.reels-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
 
@@ -816,10 +816,29 @@ window.openReelsPlayer=async playlistId=>{
   await loadYouTubeIframeAPI();
   reelsPlayer=new YT.Player('reelsYoutubePlayer',{width:'100%',height:'100%',playerVars:{listType:'playlist',list:playlistId,autoplay:1,controls:0,modestbranding:1,rel:0,playsinline:1},events:{
    onReady:event=>{reelsPlayerReady=true;event.target.loadPlaylist({list:playlistId,listType:'playlist',index:0});startReelsMiniSync();},
-   onStateChange:onReelsPlayerStateChange
+   onStateChange:onReelsPlayerStateChange,
+   onError:onReelsPlayerError
   }});
  }catch(error){host.innerHTML='<div class="p-5 text-white text-sm">YouTube Player लोड नहीं हुआ। कृपया दोबारा प्रयास करें।</div>';}
 };
+let reelsConsecutiveVideoErrors=0;
+function onReelsPlayerError(event){
+ const code=Number(event&&event.data);
+ if(code===101||code===150){
+  reelsConsecutiveVideoErrors++;
+  const index=reelsPlayer&&typeof reelsPlayer.getPlaylistIndex==='function'?reelsPlayer.getPlaylistIndex():0;
+  const total=reelsCurrentSeries?Number(reelsCurrentSeries.episodes)||0:0;
+  if(reelsConsecutiveVideoErrors>=Math.max(2,Math.min(total||2,3))){
+   alert('इस प्लेलिस्ट के कई वीडियो YouTube पर उपलब्ध नहीं हैं। कृपया दूसरी सीरीज़ चुनें।');
+   window.closeReelsPlayer();
+   return;
+  }
+  setTimeout(()=>{if(reelsPlayer&&reelsCurrentSeries){try{reelsPlayer.nextVideo();}catch(e){window.closeReelsPlayer();}}},120);
+  return;
+ }
+ // For other player errors, show a short message and close cleanly.
+ if(code===2||code===5||code===100){setTimeout(()=>{if(reelsCurrentSeries){alert('यह वीडियो अभी उपलब्ध नहीं है।');window.closeReelsPlayer();}},0);}
+}
 function onReelsPlayerStateChange(event){
  updateReelsMiniState();
  if(event && event.data===YT.PlayerState.ENDED && reelsCurrentSeries && reelsPlayer){
@@ -893,12 +912,15 @@ window.handleReelsTouchEnd=event=>{
 };
 
 window.minimizeReelsPlayer=()=>{
- // Keep the same YouTube iframe alive in a compact floating player rather than display:none.
  const player=$('reelsPlayer'),panel=player.querySelector('.reels-player-panel'),frame=$('reelsPlayerFrame');
- player.classList.remove('hidden');player.classList.add('reels-minimized');player.style.display='block';player.style.visibility='visible';player.style.pointerEvents='none';
- panel.style.cssText='position:fixed!important;left:10px!important;right:10px!important;bottom:calc(68px + env(safe-area-inset-bottom))!important;top:auto!important;width:auto!important;height:110px!important;max-width:none!important;border-radius:14px!important;overflow:hidden!important;box-shadow:0 8px 30px #0009!important;pointer-events:auto!important;';
- frame.style.cssText='position:absolute!important;left:0!important;top:0!important;width:145px!important;height:82px!important;inset:auto!important;overflow:hidden!important;pointer-events:none!important;';
- $('reelsMiniPlayer').classList.remove('hidden');$('reelsMiniPlayer').style.display='flex';$('reelsMiniPlayer').style.position='fixed';$('reelsMiniPlayer').style.left='160px';$('reelsMiniPlayer').style.right='10px';$('reelsMiniPlayer').style.bottom='calc(68px + env(safe-area-inset-bottom))';$('reelsMiniPlayer').style.zIndex='10001';$('reelsMiniPlayer').style.background='#171b29';$('reelsMiniPlayer').style.borderRadius='14px';$('reelsMiniPlayer').style.minHeight='110px';
+ // Make the backdrop transparent and non-interactive so the REELS cards remain visible.
+ player.classList.remove('hidden');player.classList.add('reels-minimized');
+ player.style.cssText='display:block!important;visibility:visible!important;position:fixed!important;inset:0!important;background:transparent!important;pointer-events:none!important;z-index:70!important;';
+ panel.style.cssText='position:fixed!important;left:10px!important;right:10px!important;bottom:calc(10px + env(safe-area-inset-bottom))!important;top:auto!important;width:auto!important;height:112px!important;max-width:none!important;border-radius:14px!important;overflow:hidden!important;box-shadow:0 8px 30px #0009!important;pointer-events:none!important;background:#171b29!important;';
+ frame.style.cssText='position:absolute!important;left:0!important;top:0!important;width:145px!important;height:82px!important;inset:auto!important;overflow:hidden!important;pointer-events:none!important;z-index:0!important;';
+ frame.querySelectorAll('iframe').forEach(function(iframe){iframe.style.setProperty('pointer-events','none','important');});
+ $('reelsMiniPlayer').classList.remove('hidden');$('reelsMiniPlayer').style.cssText='display:flex!important;position:fixed!important;left:160px!important;right:10px!important;bottom:calc(10px + env(safe-area-inset-bottom))!important;z-index:99999!important;background:#171b29!important;border-radius:14px!important;min-height:112px!important;pointer-events:none!important;';
+ $('reelsMiniPlayer').querySelectorAll('button').forEach(function(button){button.style.setProperty('position','relative','important');button.style.setProperty('z-index','99999','important');button.style.setProperty('pointer-events','auto','important');});
  $('reelsMiniPoster').style.display='none';
 };
 window.restoreReelsPlayer=()=>{
@@ -912,7 +934,7 @@ window.closeReelsPlayer=()=>{
  if(reelsHistoryActive){reelsHistoryActive=false;reelsClosingHistory=true;history.back();}
  if(reelsMiniTimer)clearInterval(reelsMiniTimer);reelsMiniTimer=null;if(reelsNextTimer)clearTimeout(reelsNextTimer);reelsNextTimer=null;
  if(reelsPlayer&&reelsPlayer.destroy){reelsPlayer.destroy();reelsPlayer=null;}
- reelsPlayerReady=false;reelsCurrentSeries=null;$('reelsPlayerFrame').innerHTML='';$('reelsEpisodeButtons').innerHTML='';$('reelsPlayer').querySelector('.reels-player-panel').style.cssText='';$('reelsPlayerFrame').style.cssText='';$('reelsMiniPlayer').style.cssText='';$('reelsMiniPoster').style.display='';$('reelsPlayer').classList.remove('reels-minimized');
+ reelsPlayerReady=false;reelsConsecutiveVideoErrors=0;reelsCurrentSeries=null;$('reelsPlayerFrame').innerHTML='';$('reelsEpisodeButtons').innerHTML='';$('reelsPlayer').querySelector('.reels-player-panel').style.cssText='';$('reelsPlayerFrame').style.cssText='';$('reelsMiniPlayer').style.cssText='';$('reelsMiniPoster').style.display='';$('reelsPlayer').classList.remove('reels-minimized');
  $('reelsPlayer').classList.add('hidden');$('reelsPlayer').style.display='none';$('reelsPlayer').style.visibility='hidden';$('reelsPlayer').style.pointerEvents='none';$('reelsMiniPlayer').classList.add('hidden');
 };
 async function loadReelsFeed(force) {
