@@ -333,6 +333,7 @@ let peer = null, myPeerId = null, localStream = null, ludoStream = null, ludoCal
 let roomVoiceStream = null, roomVoiceCalls = [], roomVoiceAudio = new Map(), roomVoiceMode = null, roomVoiceRoomId = null, roomVoicePeerIds = new Set(), roomVoicePendingCalls = [];
 let callTimerInterval = null, callStartedAt = 0;
 let statusMediaData = null, statusMediaType = null;
+let statusFeedUnsubs = [], statusDocsByUid = new Map(), callLogUnsubs = [], callDocsById = new Map();
 
 // SOUND EFFECTS FOR LUDO & CALLS
 function playTone(freq, dur = 0.12, type = 'triangle') {
@@ -454,10 +455,9 @@ function renderChatBlockState(){if(!activeChat||activeChat.isGroup)return;const 
 window.toggleChatBlock=async()=>{if(!activeChat||activeChat.isGroup||!currentUser)return;const uid=activeChat.id;try{if(myBlockedUsers.includes(uid)){await updateDoc(doc(db,'users',currentUser.uid),{blockedUsers:arrayRemove(uid)});myBlockedUsers=myBlockedUsers.filter(x=>x!==uid);alert('यूज़र अनब्लॉक कर दिया गया।');}else{await updateDoc(doc(db,'users',currentUser.uid),{blockedUsers:arrayUnion(uid)});myBlockedUsers=[...new Set([...myBlockedUsers,uid])];if(currentCallDocId)await updateDoc(doc(db,'calls',currentCallDocId),{status:'ended'}).catch(()=>{});alert('यूज़र ब्लॉक कर दिया गया।');}renderChatBlockState();}catch(e){alert('Block/Unblock नहीं हो सका: '+e.message);}};
 
 function listenUsersAndGroups() {
-  onSnapshot(query(collection(db,'friend_requests'),where('senderUid','==',currentUser.uid)), sentSnap => { const sent=sentSnap.docs.map(d=>({id:d.id,...d.data()})); onSnapshot(query(collection(db,'friend_requests'),where('receiverUid','==',currentUser.uid)), recvSnap => { const received=recvSnap.docs.map(d=>({id:d.id,...d.data()})); friendRequests=[...new Map([...sent,...received].map(x=>[x.id,x])).values()]; if(activeTab==='friends'||activeTab==='chats')renderLists(); }); });
-  onSnapshot(collection(db, 'users'), snap => { allUsers = snap.docs.map(d => d.data()).filter(u => u.uid !== currentUser.uid); if(activeTab==='chats') renderLists(); if(activeChat && !activeChat.isGroup) renderChatBlockState(); });
-  onSnapshot(collection(db, 'public_profiles'), snap => { allPublicProfiles = snap.docs.map(d => ({ uid:d.id, ...d.data() })).filter(u => u.uid !== currentUser.uid); if(activeTab==='friends') renderLists(); });
-  onSnapshot(collection(db, 'groups'), snap => { allGroups = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(g => g.members?.includes(currentUser.uid)); if(activeTab==='chats') renderLists(); });
+  onSnapshot(query(collection(db,'friend_requests'),where('senderUid','==',currentUser.uid)), sentSnap => { const sent=sentSnap.docs.map(d=>({id:d.id,...d.data()})); onSnapshot(query(collection(db,'friend_requests'),where('receiverUid','==',currentUser.uid)), recvSnap => { const received=recvSnap.docs.map(d=>({id:d.id,...d.data()})); friendRequests=[...new Map([...sent,...received].map(x=>[x.id,x])).values()]; if(activeTab==='friends'||activeTab==='chats')renderLists(); if(activeTab==='status') startStatusFeed(); }); });
+  onSnapshot(query(collection(db, 'public_profiles'), where('discoverable', '==', true)), snap => { allPublicProfiles = snap.docs.map(d => ({ uid:d.id, ...d.data() })).filter(u => u.uid !== currentUser.uid); allUsers = allPublicProfiles; if(activeTab==='chats'||activeTab==='friends') renderLists(); if(activeChat && !activeChat.isGroup) renderChatBlockState(); });
+  onSnapshot(query(collection(db, 'groups'), where('members', 'array-contains', currentUser.uid)), snap => { allGroups = snap.docs.map(d => ({ id: d.id, ...d.data() })); if(activeTab==='chats') renderLists(); });
 }
 
 window.switchTab = t => {
@@ -947,32 +947,62 @@ window.renderLists = () => {
       <div class="status-section-title">Recent updates</div>
       <div id="statusFeed" class="status-feed"><div class="p-4 text-sm text-gray-500">Loading status updates...</div></div>
     </div>`;
-    if (window.statusUnsub) window.statusUnsub();
-    window.statusUnsub = onSnapshot(query(collection(db, 'statuses'), orderBy('createdAt', 'desc')), snap => {
-      if (activeTab !== 'status' || !$('statusFeed')) return;
-      const docs = snap.docs.map(d => ({id:d.id, ...d.data()}));
-      const groups = new Map();
-      docs.forEach(st => { if (!groups.has(st.uid)) groups.set(st.uid, []); groups.get(st.uid).push(st); });
-      const entries = [...groups.entries()];
-      $('statusFeed').innerHTML = entries.length ? entries.map(([uid,items]) => {
-        const latest = items[0], mine = uid === currentUser.uid;
-        const avatar = (latest.name || 'U').charAt(0).toUpperCase();
-        const preview = latest.mediaType === 'image' ? 'Photo' : latest.mediaType === 'video' ? 'Video' : (latest.text || 'Text update');
-        return `<button class="status-user-row" onclick="openStatusViewer('${uid}')">
-          <span class="status-ring"><span class="status-avatar">${avatar}</span></span>
-          <span class="status-user-meta"><b>${mine ? 'My status' : latest.name || 'User'}</b><small>${mine ? 'Tap to view your updates' : preview}</small></span>
-          <span class="status-time">${items.length} update${items.length===1?'':'s'}</span>
-        </button>`;
-      }).join('') : '<div class="status-empty">No status updates yet. Be the first to share one.</div>';
-      window.statusItems = docs;
-    });
+    startStatusFeed();
   } else {
     box.innerHTML = `<div id="callLogs" class="divide-y dark:divide-gray-800"></div>`;
-    onSnapshot(query(collection(db, 'calls'), orderBy('createdAt', 'desc')), snap => {
-      if ($('callLogs')) $('callLogs').innerHTML = snap.docs.map(d => d.data()).filter(c => c.callerId===currentUser.uid || c.receiverId===currentUser.uid).map(c => `<div class="p-3.5 flex justify-between items-center"><div><div class="font-bold">${c.callerId===currentUser.uid ? 'Outgoing to '+c.receiverName : 'Incoming from '+c.callerName}</div><div class="text-xs text-gray-500 uppercase">${c.type} • ${c.status}</div></div><i class="fas fa-${c.type==='video'?'video':'phone'} text-[#075E54]"></i></div>`).join('');
-    });
+    startCallLogs();
   }
 };
+
+function renderStatusFeed() {
+  if (activeTab !== 'status' || !$('statusFeed')) return;
+  const docs = [...statusDocsByUid.values()].flat().sort((a,b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
+  const groups = new Map();
+  docs.forEach(st => { if (!groups.has(st.uid)) groups.set(st.uid, []); groups.get(st.uid).push(st); });
+  const entries = [...groups.entries()];
+  $('statusFeed').innerHTML = entries.length ? entries.map(([uid,items]) => {
+    const latest = items[0], mine = uid === currentUser.uid;
+    const avatar = (latest.name || 'U').charAt(0).toUpperCase();
+    const preview = latest.mediaType === 'image' ? 'Photo' : latest.mediaType === 'video' ? 'Video' : (latest.text || 'Text update');
+    return `<button class="status-user-row" onclick="openStatusViewer('${uid}')">
+      <span class="status-ring"><span class="status-avatar">${avatar}</span></span>
+      <span class="status-user-meta"><b>${mine ? 'My status' : latest.name || 'User'}</b><small>${mine ? 'Tap to view your updates' : preview}</small></span>
+      <span class="status-time">${items.length} update${items.length===1?'':'s'}</span>
+    </button>`;
+  }).join('') : '<div class="status-empty">No status updates yet. Be the first to share one.</div>';
+  window.statusItems = docs;
+}
+function startStatusFeed() {
+  statusFeedUnsubs.forEach(unsub => unsub());
+  statusFeedUnsubs = [];
+  statusDocsByUid.clear();
+  const friendUids = friendRequests.filter(r => r.status === 'accepted').flatMap(r => [r.senderUid, r.receiverUid]).filter(uid => uid && uid !== currentUser.uid);
+  const uids = [...new Set([currentUser.uid, ...friendUids])];
+  uids.forEach(uid => {
+    const unsub = onSnapshot(query(collection(db, 'statuses'), where('uid', '==', uid)), snap => {
+      statusDocsByUid.set(uid, snap.docs.map(d => ({id:d.id, ...d.data()})));
+      renderStatusFeed();
+    }, err => console.warn('Status feed query failed for user:', uid, err));
+    statusFeedUnsubs.push(unsub);
+  });
+}
+function renderCallLogs() {
+  if (!$('callLogs')) return;
+  const docs = [...callDocsById.values()].sort((a,b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
+  $('callLogs').innerHTML = docs.map(c => `<div class="p-3.5 flex justify-between items-center"><div><div class="font-bold">${c.callerId===currentUser.uid ? 'Outgoing to '+c.receiverName : 'Incoming from '+c.callerName}</div><div class="text-xs text-gray-500 uppercase">${c.type} • ${c.status}</div></div><i class="fas fa-${c.type==='video'?'video':'phone'} text-[#075E54]"></i></div>`).join('');
+}
+function startCallLogs() {
+  callLogUnsubs.forEach(unsub => unsub());
+  callLogUnsubs = [];
+  callDocsById.clear();
+  [['callerId', currentUser.uid], ['receiverId', currentUser.uid]].forEach(([field,uid]) => {
+    const unsub = onSnapshot(query(collection(db, 'calls'), where(field, '==', uid)), snap => {
+      snap.docs.forEach(d => callDocsById.set(d.id, d.data()));
+      renderCallLogs();
+    }, err => console.warn('Call history query failed:', err));
+    callLogUnsubs.push(unsub);
+  });
+}
 
 async function ensurePrivateChatRoom(roomId, otherUid) {
   if (!currentUser || !otherUid || otherUid === currentUser.uid) throw new Error('Invalid private chat participants');
