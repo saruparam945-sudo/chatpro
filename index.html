@@ -974,9 +974,19 @@ window.renderLists = () => {
   }
 };
 
+async function ensurePrivateChatRoom(roomId, otherUid) {
+  if (!currentUser || !otherUid || otherUid === currentUser.uid) throw new Error('Invalid private chat participants');
+  const members = [currentUser.uid, otherUid].sort();
+  await setDoc(doc(db, 'rooms', roomId), { members, roomType: 'private', updatedAt: serverTimestamp() }, { merge: true });
+}
+
 window.openChat = async (id, name, isGroup) => {
   if (!isGroup && !areFriends(id)) { alert('पहले FRIENDS टैब से Add Friend भेजें। चैट शुरू करने के लिए सामने वाले की स्वीकृति जरूरी है।'); switchTab('friends'); return; }
   const roomId = isGroup ? 'grp_' + id : [currentUser.uid, id].sort().join('_');
+  if (!isGroup) {
+    try { await ensurePrivateChatRoom(roomId, id); }
+    catch (e) { alert('Private chat room तैयार नहीं हो सका: ' + e.message); return; }
+  }
   activeChat = { id, name, isGroup, roomId };
   $('blockUserBtn').classList.toggle('hidden', !!isGroup);
   $('chatTitle').textContent = name; $('chatAvatar').textContent = name[0].toUpperCase();
@@ -1071,6 +1081,7 @@ window.sendMsg = async () => {
   if (!activeChat.isGroup && isChatBlocked(activeChat.id)) return alert('Block होने पर message नहीं भेज सकते।');
   $('msgInput').value = ''; const rep = replyData; cancelReply();
   const senderName = currentUser.displayName || 'ChatPro User';
+  if (!activeChat.isGroup) await ensurePrivateChatRoom(activeChat.roomId, activeChat.id);
   await addDoc(collection(db, 'rooms', activeChat.roomId, 'messages'), { senderId: currentUser.uid, senderName, text: txt, reply: rep, createdAt: serverTimestamp() });
   if (!activeChat.isGroup) sendPushAlert(activeChat.id, senderName, txt, false);
 };
@@ -1084,6 +1095,7 @@ window.sendMedia = e => {
   const reader = new FileReader();
   reader.onload = async () => {
     const isVid = file.type.startsWith('video'), senderName = currentUser.displayName || 'ChatPro User';
+    if (!activeChat.isGroup) await ensurePrivateChatRoom(activeChat.roomId, activeChat.id);
     await addDoc(collection(db, 'rooms', activeChat.roomId, 'messages'), { senderId: currentUser.uid, senderName, mediaUrl: reader.result, mediaType: isVid ? 'video' : 'image', text: '', createdAt: serverTimestamp() });
     if (!activeChat.isGroup) sendPushAlert(activeChat.id, senderName, isVid ? '📹 Sent a video' : '📷 Sent a photo', false);
   };
