@@ -139,34 +139,41 @@ body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#e5ddd5}
 .ludo-token.yellow span { background:radial-gradient(circle at 32% 24%,#fff 0 5%,#fff4a8 13%,#f6c900 54%,#a97700 100%); }
 
 
-/* ---------------- REELS / MINI SERIES ---------------- */
-.reels-page{min-height:100%;background:#080b12;color:#f8fafc;padding:14px}
+/* ---------------- FREEREELS SERIES CATALOG ---------------- */
+.reels-page{min-height:100%;background:#080b12;color:#f8fafc;padding:14px 12px 94px}
 .reels-hero{border-radius:22px;padding:18px;background:radial-gradient(circle at 90% 0%,#6d28d9 0,transparent 42%),linear-gradient(135deg,#161b2b,#10131d 65%,#241044);border:1px solid #303044}
 .reels-title{font-size:25px;font-weight:900;letter-spacing:-.7px}
 .reels-sub{font-size:12px;color:#a8b0c3;margin-top:4px}
-.reels-tools{display:flex;gap:8px;margin-top:14px}
-.reels-tool{border:1px solid #35394b;background:#1b2030;color:#e5e7eb;border-radius:12px;padding:9px 12px;font-size:12px;font-weight:800}
 .reels-filters{display:flex;gap:8px;overflow-x:auto;padding:15px 0 12px;scrollbar-width:none}
 .reels-filters::-webkit-scrollbar{display:none}
 .reels-filter{white-space:nowrap;border:1px solid #34394a;color:#b8bfd0;background:#151a26;border-radius:999px;padding:9px 14px;font-size:12px;font-weight:800}
-.reels-filter.active{background:#7c3aed;border-color:#8b5cf6;color:white;box-shadow:0 5px 18px #7c3aed44}
+.reels-filter.active{background:#7c3aed;border-color:#8b5cf6;color:white}
 .reels-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.reels-card{min-width:0;overflow:hidden;border-radius:16px;background:#151a26;border:1px solid #252b3a}
-.reels-poster{width:100%;aspect-ratio:16/10;object-fit:cover;background:#222938;display:block}
-.reels-poster-wrap{position:relative;cursor:pointer}
-.reels-views{position:absolute;right:7px;bottom:7px;background:#080b12dc;color:#fff;border:1px solid #ffffff22;border-radius:7px;padding:4px 7px;font-size:10px;font-weight:800;backdrop-filter:blur(8px)}
-.reels-new{position:absolute;left:7px;top:7px;background:#e11d48;color:#fff;border-radius:6px;padding:4px 7px;font-size:9px;font-weight:900}
-.reels-card-body{padding:10px}
-.reels-card-title{font-size:12px;line-height:1.4;font-weight:800;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:34px}
-.reels-channel{font-size:10px;color:#9ba4b7;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.reels-card-actions{display:flex;gap:7px;margin-top:9px}
-.reels-action{flex:1;border-radius:9px;padding:7px 5px;background:#242b3c;color:#e5e7eb;font-size:10px;font-weight:800}
-.reels-action.play{background:#6d28d9;color:white}
-.reels-empty{grid-column:1/-1;text-align:center;padding:34px 14px;color:#9ca3af;font-size:13px}
-.reels-player-backdrop{position:fixed;inset:0;z-index:80;background:#000e;display:flex;align-items:center;justify-content:center;padding:14px}
+.reels-card{min-width:0;overflow:hidden;border-radius:16px;background:#151a26;border:1px solid #252b3a;cursor:pointer}
+.reels-poster-wrap{position:relative;aspect-ratio:2/3;overflow:hidden;background:linear-gradient(145deg,#312e81,#111827 55%,#701a75)}
+.reels-poster{width:100%;height:100%;object-fit:cover;display:block;opacity:.88}
+.reels-poster-fallback{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:12px;background:linear-gradient(180deg,#0000 25%,#000d 100%)}
+.reels-poster-fallback strong{font-size:20px;line-height:1.05;font-weight:950;text-shadow:0 2px 8px #000}
+.reels-poster-fallback small{font-size:10px;color:#ddd;margin-top:6px}
+.reels-badges{position:absolute;top:8px;left:8px;right:8px;display:flex;justify-content:space-between;gap:4px}
+.reels-badge{background:#080b12d9;color:#fff;border:1px solid #ffffff30;border-radius:6px;padding:4px 6px;font-size:9px;font-weight:900;backdrop-filter:blur(8px)}
+.reels-badge.hot{background:#be123c}
+.reels-views{position:absolute;right:7px;bottom:7px;background:#080b12e8;color:#fff;border:1px solid #ffffff30;border-radius:7px;padding:5px 7px;font-size:10px;font-weight:900}
+.reels-card-body{padding:9px}
+.reels-card-title{font-size:13px;line-height:1.3;font-weight:900;min-height:33px}
+.reels-meta{font-size:10px;color:#9ba4b7;margin-top:5px}
+.reels-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.reels-tag{font-size:9px;color:#c4b5fd;background:#312e81aa;border:1px solid #6d5ca533;border-radius:999px;padding:3px 7px}
+.reels-player-backdrop{position:fixed;inset:0;z-index:80;background:#000e;display:flex;align-items:center;justify-content:center;padding:12px}
 .reels-player-panel{width:100%;max-width:760px;background:#111827;border:1px solid #374151;border-radius:18px;overflow:hidden}
-.reels-player-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;color:white;font-weight:800}
-.reels-player-frame{width:100%;aspect-ratio:16/9;border:0;background:#000}
+.reels-player-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;color:white;font-weight:800;gap:10px}
+.reels-player-frame{width:100%;aspect-ratio:16/9;border:0;background:#000;display:block}
+.reels-mini{position:fixed;z-index:79;left:10px;right:10px;bottom:10px;display:flex;align-items:center;gap:10px;padding:9px 11px;border:1px solid #4b4564;border-radius:14px;background:#171323f5;color:#fff;box-shadow:0 8px 30px #0009;backdrop-filter:blur(12px)}
+.reels-mini-poster{width:38px;height:52px;object-fit:cover;border-radius:6px;background:#312e81}
+.reels-mini-info{min-width:0;flex:1}
+.reels-mini-title{font-size:12px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.reels-mini-ep{font-size:10px;color:#b8b2c8;margin-top:3px}
+.reels-mini button{padding:7px;color:#fff;font-size:16px}
 @media(min-width:560px){.reels-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(min-width:850px){.reels-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
 
@@ -229,11 +236,18 @@ body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#e5ddd5}
   <div id="listArea" class="flex-1 overflow-y-auto"></div>
 </div>
 
-<div id="reelsPlayer" class="reels-player-backdrop hidden" onclick="if(event.target===this)closeReelsPlayer()">
+<div id="reelsPlayer" class="reels-player-backdrop hidden" onclick="if(event.target===this)minimizeReelsPlayer()">
   <div class="reels-player-panel">
-    <div class="reels-player-head"><span id="reelsPlayerTitle">Now Playing</span><button onclick="closeReelsPlayer()" class="text-2xl leading-none px-2" aria-label="Close player">&times;</button></div>
-    <iframe id="reelsPlayerFrame" class="reels-player-frame" src="" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    <div class="reels-player-head"><span id="reelsPlayerTitle">Now Playing</span><div class="flex gap-2"><button onclick="minimizeReelsPlayer()" class="text-sm px-2" aria-label="Minimize player">—</button><button onclick="closeReelsPlayer()" class="text-2xl leading-none px-2" aria-label="Close player">&times;</button></div></div>
+    <div id="reelsPlayerFrame" class="reels-player-frame"></div>
   </div>
+</div>
+<div id="reelsMiniPlayer" class="reels-mini hidden">
+  <img id="reelsMiniPoster" class="reels-mini-poster" src="" alt="">
+  <div class="reels-mini-info"><div id="reelsMiniTitle" class="reels-mini-title">Series</div><div id="reelsMiniEpisode" class="reels-mini-ep">EP 1</div></div>
+  <button onclick="toggleReelsPlayback()" aria-label="Play or pause"><i id="reelsMiniPlayIcon" class="fas fa-pause"></i></button>
+  <button onclick="restoreReelsPlayer()" aria-label="Open player"><i class="fas fa-expand"></i></button>
+  <button onclick="closeReelsPlayer()" aria-label="Close"><i class="fas fa-times"></i></button>
 </div>
 
 <!-- CHAT ROOM SCREEN -->
@@ -512,152 +526,116 @@ function listenUsersAndGroups() {
  * The public RSS endpoint / free CORS proxies can occasionally be unavailable or rate-limited.
  * RSS does not provide reliable view counts, so the poster badge says "YouTube" rather than inventing a count.
  */
-const REELS_SOURCES = [
-  { name: 'The Viral Fever', type: 'channel', id: 'UCNJcSUSzUeFm8W9P7UUlSeQ', category: 'popular' },
-  { name: 'Dice Media', type: 'channel', id: 'UCC89oVFqenaffhBoyqxd6qw', category: 'popular' },
-
-  { name: 'Best Korean Drama Hindi Dubbed (MX Player)', type: 'playlist', id: 'PLilQOU3a19nUOcFs-UuT5VhvJg_UWMJVm', category: 'hindi-dubbed' },
-  { name: 'Best Chinese Drama Hindi Dubbed (MX Player)', type: 'playlist', id: 'PLilQOU3a19nWTjcIabH1A5Feo4SU75qtT', category: 'hindi-dubbed' },
-  { name: 'Latest Chinese Drama Hindi Dubbed', type: 'playlist', id: 'PLilQOU3a19nVikPgZJ2qM6DELQNrWolrw', category: 'hindi-dubbed' },
-  { name: 'Channel K India', type: 'channel', id: 'UCotiVO0_LT5zGPLFMaVnSCg', category: 'hindi-dubbed' }
+// SERIES_CATALOG: add one object per complete YouTube series playlist.
+// playlistId = text after ?list= in the YouTube playlist URL.
+// episodes = verified total episode count shown on the poster (not a live view count).
+// category: 'popular', 'hindi-dubbed', or 'new'. tags are short genre/language labels.
+// posterVideoId is optional; when supplied, its YouTube thumbnail is used as the poster.
+const SERIES_CATALOG = [
+  { title:'Kota Factory', season:'Season 1', playlistId:'PLTB0eCoUXErb7pV0Sj1hXWrxerSZX1qgh', episodes:5, category:'popular', tags:['हिंदी','ड्रामा','एजुकेशन'], badge:'HIT', posterVideoId:'' },
+  { title:'TVF Aspirants', season:'Season 1', playlistId:'PLTB0eCoUXErY_KvRNKOERQtYSDPjOb8jw', episodes:5, category:'popular', tags:['हिंदी','ड्रामा','मोटिवेशन'], badge:'HOT', posterVideoId:'' },
+  { title:'FLAMES', season:'Season 1', playlistId:'PLbZboRRHE3b14pFvT26golxysQKbWGOSg', episodes:5, category:'popular', tags:['हिंदी','रोमांस','युथ'], badge:'HIT', posterVideoId:'' },
+  { title:'Still 17', season:'Hindi Dubbed', playlistId:'PLilQOU3a19nVQtFqPJNxeYsBmWcmpkSnt', episodes:26, category:'hindi-dubbed', tags:['हिंदी डब्ड','रोमांस','कोरियन'], badge:'DUBBED', posterVideoId:'' },
+  { title:'Live On', season:'Hindi Dubbed', playlistId:'PLxOvuZ4TDxLkWk4u5nI_fUiWOLkYV24zz', episodes:16, category:'hindi-dubbed', tags:['हिंदी डब्ड','ड्रामा','कोरियन'], badge:'DUBBED', posterVideoId:'' },
+  { title:'Dhund Mystery Series', season:'Complete Series', playlistId:'PL3rPBXg5x9jlfUE-jro7U7OMTDijg_i1o', episodes:49, category:'new', tags:['हिंदी','मिस्ट्री','थ्रिलर'], badge:'NEW', posterVideoId:'' }
 ];
-const REELS_CACHE_KEY = 'chatpro_reels_feed_v1';
-const REELS_SAVED_KEY = 'chatpro_reels_saved_v1';
-let reelsItems = [], reelsFilter = 'popular', reelsLoading = false, reelsLastLoaded = 0;
-let reelsSaved = new Set(JSON.parse(localStorage.getItem(REELS_SAVED_KEY) || '[]'));
-
-function reelsEscape(value) {
-  return String(value || '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-}
-function reelsFeedUrl(source) {
-  const key = source.type === 'playlist' ? 'playlist_id' : 'channel_id';
-  return 'https://www.youtube.com/feeds/videos.xml?' + key + '=' + encodeURIComponent(source.id);
-}
-async function fetchReelsXml(source) {
-  const target = reelsFeedUrl(source);
-  const proxies = [
-    'https://api.allorigins.win/raw?url=' + encodeURIComponent(target),
-    'https://corsproxy.io/?url=' + encodeURIComponent(target)
-  ];
-  let lastError;
-  for (const url of proxies) {
-    try {
-      const response = await fetch(url, { cache: 'no-store' });
-      if (!response.ok) throw new Error('HTTP ' + response.status);
-      const xmlText = await response.text();
-      if (!xmlText.includes('<feed') && !xmlText.includes(':feed')) throw new Error('RSS/Atom feed नहीं मिला');
-      return xmlText;
-    } catch (error) { lastError = error; }
-  }
-  throw lastError || new Error('Feed unavailable');
-}
-function parseReelsFeed(xmlText, source) {
-  const xml = new DOMParser().parseFromString(xmlText, 'text/xml');
-  if (xml.querySelector('parsererror')) throw new Error('Feed XML पढ़ा नहीं जा सका');
-  return [...xml.getElementsByTagName('entry')].map(entry => {
-    const get = name => entry.getElementsByTagName(name)[0]?.textContent || '';
-    const videoId = get('yt:videoId') || get('videoId') || (entry.querySelector('link[href*="watch"]')?.getAttribute('href') || '').match(/[?&]v=([^&]+)/)?.[1] || '';
-    if (!videoId) return null;
-    const title = get('title');
-    const published = get('published') || get('updated');
-    const author = entry.getElementsByTagName('author')[0]?.getElementsByTagName('name')[0]?.textContent || source.name;
-    const stats = entry.getElementsByTagName('media:statistics')[0];
-    const views = stats?.getAttribute('views') || '';
-    return { id: videoId, title, published, author, source: source.name, category: source.category || 'popular', views };
-  }).filter(Boolean);
-}
-function reelsFormatViews(value) {
-  const n = Number(value);
-  if (!Number.isFinite(n) || n < 0) return '';
-  if (n >= 1e7) return (n/1e7).toFixed(1).replace(/\.0$/,'') + 'Cr';
-  if (n >= 1e5) return (n/1e5).toFixed(1).replace(/\.0$/,'') + 'L';
-  if (n >= 1e3) return (n/1e3).toFixed(1).replace(/\.0$/,'') + 'K';
-  return String(n);
+const REELS_CACHE_KEY = 'chatpro_series_catalog_v2';
+let reelsFilter = 'all', reelsLoading = false, reelsPlayer = null, reelsCurrentSeries = null, reelsPlayerReady = false, reelsMiniTimer = null;
+let reelsPosterMap = {};
+function reelsEscape(value) { return String(value || '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
+function reelsPoster(series) {
+  if (series.posterVideoId) return 'https://i.ytimg.com/vi/'+encodeURIComponent(series.posterVideoId)+'/hqdefault.jpg';
+  return reelsPosterMap[series.playlistId] || '';
 }
 function renderReels() {
-  const box = $('listArea');
-  if (!box || activeTab !== 'reels') return;
-  const now = Date.now(), week = 7 * 24 * 60 * 60 * 1000;
-  const filtered = reelsItems.filter(item => {
-    if (reelsFilter === 'saved') return reelsSaved.has(item.id);
-    if (reelsFilter === 'hindi-dubbed') return item.category === 'hindi-dubbed' || /hindi\s*dub|हिंदी\s*डब|dubbed in hindi/i.test(item.title);
-    if (reelsFilter === 'popular') return item.category === 'popular';
-    if (reelsFilter === 'new') return item.published && now - new Date(item.published).getTime() <= week;
-    return true;
-  }).sort((a,b) => new Date(b.published || 0) - new Date(a.published || 0));
-  const filters = [
-    ['popular','पॉपुलर'],['hindi-dubbed','हिंदी डब्ड'],['new','नया'],['saved','मेरी सूची']
-  ];
-  box.innerHTML = `<section class="reels-page">
-    <div class="reels-hero">
-      <div class="flex items-center justify-between gap-3">
-        <div><div class="reels-title">FreeReels <span class="text-violet-300">+</span></div><div class="reels-sub">हिंदी वेब सीरीज़ • मिनी ड्रामा • नए एपिसोड</div></div>
-        <div class="text-3xl text-violet-300"><i class="fas fa-clapperboard"></i></div>
-      </div>
-      <div class="reels-tools"><button class="reels-tool" onclick="loadReelsFeed(true)"><i class="fas fa-rotate mr-1"></i> Refresh</button><span class="text-[10px] text-gray-400 self-center">${reelsLastLoaded ? 'अपडेट: '+new Date(reelsLastLoaded).toLocaleString() : 'YouTube public feeds'}</span></div>
-    </div>
+  const box=$('listArea'); if(!box || activeTab!=='reels') return;
+  const filters=[['all','सभी'],['popular','पॉपुलर'],['hindi-dubbed','हिंदी डब्ड'],['new','नया']];
+  const rows=SERIES_CATALOG.filter(x=>reelsFilter==='all'||x.category===reelsFilter);
+  box.innerHTML=`<section class="reels-page">
+    <div class="reels-hero"><div class="reels-title">FreeReels <span class="text-violet-300">+</span></div><div class="reels-sub">पूरी वेब सीरीज़ • Episode 1 से आखिरी एपिसोड तक</div><div class="text-[10px] text-gray-400 mt-3">YouTube Playlist Player · 6 सीरीज़</div></div>
     <div class="reels-filters">${filters.map(([key,label])=>`<button class="reels-filter ${reelsFilter===key?'active':''}" onclick="setReelsFilter('${key}')">${label}</button>`).join('')}</div>
-    ${reelsLoading && !reelsItems.length ? '<div class="reels-empty"><i class="fas fa-spinner fa-spin text-2xl mb-3"></i><br>नए एपिसोड लोड हो रहे हैं…</div>' : ''}
-    ${!reelsLoading && !filtered.length ? '<div class="reels-empty"><i class="fas fa-film text-3xl mb-3"></i><br>इस कैटेगरी में अभी वीडियो नहीं मिले।<br><span class="text-xs">ऊपर REELS_SOURCES में चैनल/प्लेलिस्ट ID जोड़ें या Refresh करें।</span></div>' : ''}
-    <div class="reels-grid">${filtered.map(item => {
-      const isNew = item.published && now - new Date(item.published).getTime() < week;
-      const badge = item.views ? '👁 '+reelsFormatViews(item.views) : '▶ YouTube';
-      return `<article class="reels-card">
-        <div class="reels-poster-wrap" onclick="openReelsPlayer('${item.id}')">
-          <img class="reels-poster" loading="lazy" src="https://i.ytimg.com/vi/${item.id}/hqdefault.jpg" alt="${reelsEscape(item.title)}">
-          ${isNew?'<span class="reels-new">NEW</span>':''}
-          <span class="reels-views">${badge}</span>
+    <div class="reels-grid">${rows.map(series=>{
+      const poster=reelsPoster(series);
+      return `<article class="reels-card" onclick="openReelsPlayer('${series.playlistId}')">
+        <div class="reels-poster-wrap">
+          ${poster?`<img class="reels-poster" loading="lazy" src="${reelsEscape(poster)}" alt="${reelsEscape(series.title)} poster">`:''}
+          <div class="reels-poster-fallback"><strong>${reelsEscape(series.title)}</strong><small>${reelsEscape(series.season)}</small></div>
+          <div class="reels-badges"><span class="reels-badge ${series.badge==='HOT'?'hot':''}">${reelsEscape(series.badge)}</span><span class="reels-badge">${series.category==='hindi-dubbed'?'HINDI DUBBED':'HINDI'}</span></div>
+          <span class="reels-views">▶ ${series.episodes} EP</span>
         </div>
-        <div class="reels-card-body">
-          <div class="reels-card-title">${reelsEscape(item.title)}</div>
-          <div class="reels-channel">${reelsEscape(item.source || item.author)} · ${item.published ? new Date(item.published).toLocaleDateString() : ''}</div>
-          <div class="reels-card-actions">
-            <button class="reels-action play" onclick="openReelsPlayer('${item.id}')"><i class="fas fa-play mr-1"></i>चलाएँ</button>
-            <button class="reels-action" onclick="toggleReelSaved('${item.id}')"><i class="fas fa-bookmark mr-1"></i>${reelsSaved.has(item.id)?'Saved':'Save'}</button>
-          </div>
-        </div>
+        <div class="reels-card-body"><div class="reels-card-title">${reelsEscape(series.title)}</div><div class="reels-meta">${reelsEscape(series.season)} · ${series.episodes} Episodes</div><div class="reels-tags">${series.tags.map(tag=>`<span class="reels-tag">${reelsEscape(tag)}</span>`).join('')}</div></div>
       </article>`;
     }).join('')}</div>
   </section>`;
 }
-window.setReelsFilter = key => { reelsFilter = key; renderReels(); };
-window.toggleReelSaved = id => {
-  if (reelsSaved.has(id)) reelsSaved.delete(id); else reelsSaved.add(id);
-  localStorage.setItem(REELS_SAVED_KEY, JSON.stringify([...reelsSaved]));
-  renderReels();
+window.setReelsFilter=key=>{reelsFilter=key;renderReels();};
+function loadYouTubeIframeAPI() {
+  if(window.YT&&window.YT.Player) return Promise.resolve();
+  if(window.reelsYTApiPromise) return window.reelsYTApiPromise;
+  window.reelsYTApiPromise=new Promise(resolve=>{
+    const old=window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady=()=>{if(typeof old==='function')old();resolve();};
+    if(!document.querySelector('script[data-reels-yt-api]')){const tag=document.createElement('script');tag.src='https://www.youtube.com/iframe_api';tag.dataset.reelsYtApi='1';document.head.appendChild(tag);}
+  });
+  return window.reelsYTApiPromise;
+}
+window.openReelsPlayer=async playlistId=>{
+  const series=SERIES_CATALOG.find(x=>x.playlistId===playlistId); if(!series)return;
+  reelsCurrentSeries=series; $('reelsPlayerTitle').textContent=series.title+' · '+series.season;
+  $('reelsMiniTitle').textContent=series.title; $('reelsMiniEpisode').textContent='EP 1 / '+series.episodes;
+  $('reelsMiniPoster').src=reelsPoster(series)||'';
+  $('reelsMiniPlayer').classList.remove('hidden'); $('reelsPlayer').classList.remove('hidden');
+  const host=$('reelsPlayerFrame');
+  if(reelsPlayer&&reelsPlayer.loadPlaylist){reelsPlayer.loadPlaylist({list:playlistId,listType:'playlist',index:0});return;}
+  host.innerHTML='<div id="reelsYoutubePlayer"></div>';
+  try{
+    await loadYouTubeIframeAPI();
+    reelsPlayer=new YT.Player('reelsYoutubePlayer',{width:'100%',height:'100%',playerVars:{listType:'playlist',list:playlistId,autoplay:1,playsinline:1,rel:0},events:{
+      onReady:event=>{reelsPlayerReady=true;event.target.loadPlaylist({list:playlistId,listType:'playlist',index:0});startReelsMiniSync();},
+      onStateChange:updateReelsMiniState
+    }});
+  }catch(error){host.innerHTML='<div class="p-5 text-white text-sm">YouTube Player लोड नहीं हुआ। कृपया दोबारा प्रयास करें।</div>';}
 };
-window.openReelsPlayer = id => {
-  const item = reelsItems.find(x => x.id === id);
-  if (!item) return;
-  $('reelsPlayerTitle').textContent = item.title;
-  $('reelsPlayerFrame').src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(id) + '?autoplay=1&playsinline=1&rel=0';
-  $('reelsPlayer').classList.remove('hidden');
+function updateReelsMiniState(){
+  if(!reelsPlayer||!reelsCurrentSeries)return;
+  const index=typeof reelsPlayer.getPlaylistIndex==='function'?reelsPlayer.getPlaylistIndex():0;
+  $('reelsMiniEpisode').textContent='EP '+(Math.max(0,index)+1)+' / '+reelsCurrentSeries.episodes;
+  const state=reelsPlayer.getPlayerState();
+  $('reelsMiniPlayIcon').className=state===1?'fas fa-pause':'fas fa-play';
+}
+function startReelsMiniSync(){if(reelsMiniTimer)clearInterval(reelsMiniTimer);reelsMiniTimer=setInterval(updateReelsMiniState,1000);}
+window.toggleReelsPlayback=()=>{
+  if(!reelsPlayer)return;
+  if(reelsPlayer.getPlayerState()===1)reelsPlayer.pauseVideo();else reelsPlayer.playVideo();
+  updateReelsMiniState();
 };
-window.closeReelsPlayer = () => {
-  $('reelsPlayerFrame').src = '';
-  $('reelsPlayer').classList.add('hidden');
+window.minimizeReelsPlayer=()=>{$('reelsPlayer').classList.add('hidden');$('reelsMiniPlayer').classList.remove('hidden');};
+window.restoreReelsPlayer=()=>{$('reelsPlayer').classList.remove('hidden');$('reelsMiniPlayer').classList.remove('hidden');};
+window.closeReelsPlayer=()=>{
+  if(reelsMiniTimer)clearInterval(reelsMiniTimer); reelsMiniTimer=null;
+  if(reelsPlayer&&reelsPlayer.destroy){reelsPlayer.destroy();reelsPlayer=null;}
+  reelsPlayerReady=false;reelsCurrentSeries=null;
+  $('reelsPlayerFrame').innerHTML='';$('reelsPlayer').classList.add('hidden');$('reelsMiniPlayer').classList.add('hidden');
 };
 async function loadReelsFeed(force) {
-  if (reelsLoading) return;
-  const cached = JSON.parse(localStorage.getItem(REELS_CACHE_KEY) || '{}');
-  if (!force && cached.items?.length && Date.now() - cached.loadedAt < 24*60*60*1000) {
-    reelsItems = cached.items; reelsLastLoaded = cached.loadedAt; renderReels(); return;
-  }
-  reelsLoading = true; renderReels();
-  const results = await Promise.allSettled(REELS_SOURCES.map(async source => parseReelsFeed(await fetchReelsXml(source), source)));
-  const items = results.flatMap(result => result.status === 'fulfilled' ? result.value : []);
-  if (items.length) {
-    const unique = new Map(items.map(item => [item.id, item]));
-    reelsItems = [...unique.values()];
-    reelsLastLoaded = Date.now();
-    localStorage.setItem(REELS_CACHE_KEY, JSON.stringify({loadedAt:reelsLastLoaded,items:reelsItems}));
-  } else if (cached.items?.length) {
-    reelsItems = cached.items; reelsLastLoaded = cached.loadedAt;
-  } else {
-    reelsItems = [];
-  }
-  reelsLoading = false; renderReels();
-  if (!items.length) console.warn('YouTube RSS feeds unavailable. Check channel IDs or retry later.');
+  if(reelsLoading)return; reelsLoading=true; renderReels();
+  // Fetch each playlist's public Atom feed only to obtain an available episode thumbnail.
+  // Playlist playback itself uses the full YouTube playlist ID, not individual feed entries.
+  await Promise.allSettled(SERIES_CATALOG.map(async series=>{
+    try{
+      const feed='https://www.youtube.com/feeds/videos.xml?playlist_id='+encodeURIComponent(series.playlistId);
+      const proxies=['https://api.allorigins.win/raw?url='+encodeURIComponent(feed),'https://corsproxy.io/?url='+encodeURIComponent(feed)];
+      for(const proxy of proxies){try{
+        const response=await fetch(proxy,{cache:'no-store'});if(!response.ok)continue;
+        const xml=new DOMParser().parseFromString(await response.text(),'text/xml');
+        const entry=xml.getElementsByTagName('entry')[0];if(!entry)continue;
+        const id=entry.getElementsByTagName('yt:videoId')[0]?.textContent||entry.getElementsByTagName('videoId')[0]?.textContent;
+        if(id)reelsPosterMap[series.playlistId]='https://i.ytimg.com/vi/'+encodeURIComponent(id)+'/hqdefault.jpg';
+        break;
+      }catch(e){}}
+    }catch(e){}
+  }));
+  reelsLoading=false;renderReels();
 }
 
 window.switchTab = t => {
