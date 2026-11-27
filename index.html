@@ -801,8 +801,9 @@ window.previewStatusMedia = e => {
 window.submitStatus = async () => {
   const txt = $('statusTextInp').value.trim();
   if (!txt && !statusMediaData) return alert('Write something or select a photo/video!');
+  const visibleTo = [...new Set(friendRequests.filter(r => r.status === 'accepted').flatMap(r => [r.senderUid, r.receiverUid]).filter(uid => uid && uid !== currentUser.uid))];
   await addDoc(collection(db, 'statuses'), {
-    uid: currentUser.uid, name: currentUser.displayName || 'User',
+    uid: currentUser.uid, visibleTo, name: currentUser.displayName || 'User',
     text: txt, mediaUrl: statusMediaData || '', mediaType: statusMediaType || '',
     createdAt: serverTimestamp()
   });
@@ -976,15 +977,18 @@ function startStatusFeed() {
   statusFeedUnsubs.forEach(unsub => unsub());
   statusFeedUnsubs = [];
   statusDocsByUid.clear();
-  const friendUids = friendRequests.filter(r => r.status === 'accepted').flatMap(r => [r.senderUid, r.receiverUid]).filter(uid => uid && uid !== currentUser.uid);
-  const uids = [...new Set([currentUser.uid, ...friendUids])];
-  uids.forEach(uid => {
-    const unsub = onSnapshot(query(collection(db, 'statuses'), where('uid', '==', uid)), snap => {
-      statusDocsByUid.set(uid, snap.docs.map(d => ({id:d.id, ...d.data()})));
-      renderStatusFeed();
-    }, err => console.warn('Status feed query failed for user:', uid, err));
-    statusFeedUnsubs.push(unsub);
-  });
+  const ownUnsub = onSnapshot(query(collection(db, 'statuses'), where('uid', '==', currentUser.uid)), snap => {
+    statusDocsByUid.set(currentUser.uid, snap.docs.map(d => ({id:d.id, ...d.data()})));
+    renderStatusFeed();
+  }, err => console.warn('Own status query failed:', err));
+  statusFeedUnsubs.push(ownUnsub);
+  const friendsUnsub = onSnapshot(query(collection(db, 'statuses'), where('visibleTo', 'array-contains', currentUser.uid)), snap => {
+    const byUid = new Map();
+    snap.docs.forEach(d => { const item = {id:d.id, ...d.data()}; if (!byUid.has(item.uid)) byUid.set(item.uid, []); byUid.get(item.uid).push(item); });
+    byUid.forEach((items, uid) => statusDocsByUid.set(uid, items));
+    renderStatusFeed();
+  }, err => console.warn('Friends status query failed:', err));
+  statusFeedUnsubs.push(friendsUnsub);
 }
 function renderCallLogs() {
   if (!$('callLogs')) return;
