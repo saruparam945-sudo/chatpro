@@ -668,8 +668,8 @@ async function fetchMovieChannelUploads(channel){
 }
 function isRssEligibleTitle(title){
  const t=String(title||'');
- if(/(?:#?shorts?|trailer|teaser|promo|clip|scene|episode|\\bep\\b|\\bpart\\b|\\bpt\\.?\\b|भाग|एपिसोड|\\bai\\b|\\benglish\\b)/i.test(t))return false;
- return /full\\s*(?:movie|drama)|hindi\\s*dubbed/i.test(t);
+ if(/(?:#?shorts?|trailer|teaser|promo|clip|scene|episode|\bep\b|\bpart\b|\bpt\.?\b|भाग|एपिसोड|\bai\b|\benglish\b)/i.test(t))return false;
+ return /full\s*(?:movie|drama)|hindi\s*dubbed/i.test(t);
 }
 function isFullMovieTitle(title){
  return /(full\s*(?:hindi\s*)?(?:movie|film)|complete\s*(?:hindi\s*)?(?:movie|film)|full[- ]length\s*(?:movie|film)|पूरी\s*फिल्म|फुल\s*मूवी|संपूर्ण\s*फिल्म|हिंदी\s*फुल\s*मूवी)/i.test(String(title||''));
@@ -734,7 +734,6 @@ function renderReels(){
  <div class="reels-grid">${rows.map(x=>{const poster=reelsPoster(x);return `<article class="reels-card" onclick="openReelsPlayer('${x.videoId}')"><div class="reels-poster-wrap">${poster?`<img class="reels-poster" loading="lazy" src="${reelsEscape(poster)}" alt="${reelsEscape(x.title)} poster" onerror="reelsFallbackImage(this)">`:''}<div class="reels-poster-fallback"><strong>${reelsEscape(x.title)}</strong><small>${reelsEscape(x.source)}</small></div><div class="reels-badges"><span class="reels-badge">${reelsEscape(x.badge)}</span><span class="reels-badge">${reelsEscape(x.displayDurationLabel||x.durationLabel)}</span></div><span class="reels-views">▶ फुल शो</span></div><div class="reels-card-body"><div class="reels-card-title">${reelsEscape(x.title)}</div><div class="reels-meta">${reelsEscape(x.source)} · ${reelsEscape(x.durationLabel)}</div><div class="reels-tags">${(x.tags||[]).map(t=>`<span class="reels-tag">${reelsEscape(t)}</span>`).join('')}</div></div></article>`;}).join('')}</div></section>`;
 }
 window.setReelsFilter=key=>{reelsFilter=key;renderReels();};
-loadReelsFeed(false);
 let reelsFullscreenYTPlayer=null;
 let reelsFullscreenPlaylistId=null;
 let reelsQueueIndex=-1;
@@ -935,12 +934,12 @@ async function resolveReelsChannelIdNoQuota(channel){
  if(channel.channelId)return channel.channelId;
  const handle=String(channel.handle||'').replace(/^@/,'');
  let ids={};try{ids=JSON.parse(localStorage.getItem(REELS_CHANNEL_ID_CACHE_KEY)||'{}')||{};}catch(e){}
- if(ids[handle]&&/^UC[\\w-]{22}$/.test(ids[handle]))return ids[handle];
+ if(ids[handle]&&/^UC[\w-]{22}$/.test(ids[handle]))return ids[handle];
  const page='https://www.youtube.com/@'+encodeURIComponent(handle);
  const proxies=['https://api.allorigins.win/raw?url='+encodeURIComponent(page),'https://corsproxy.io/?url='+encodeURIComponent(page)];
  for(const proxy of proxies){
   try{const response=await fetch(proxy,{cache:'no-store'});if(!response.ok)continue;const html=await response.text();
-   const matches=[...html.matchAll(/(?:channelId|externalId|browseId)\\?["']?\\s*[:=]\\s*\\?["'](UC[A-Za-z0-9_-]{22})/g)];
+   const matches=[...html.matchAll(/(?:channelId|externalId|browseId)["']?\s*[:=]\s*["'](UC[A-Za-z0-9_-]{22})/g)];
    const id=matches.length?matches[0][1]:(html.match(/"channelId":"(UC[A-Za-z0-9_-]{22})"/)||[])[1];
    if(id){ids[handle]=id;try{localStorage.setItem(REELS_CHANNEL_ID_CACHE_KEY,JSON.stringify(ids));}catch(e){}return id;}
   }catch(e){}
@@ -968,7 +967,7 @@ async function fetchOneChannelRss(channel){
    if(url.includes('rss2json.com')){
     const data=JSON.parse(body);if(data.status!=='ok')continue;
     const items=(data.items||[]).map(item=>{
-     const title=String(item.title||'').trim(),link=String(item.link||item.guid||''),id=(link.match(/[?&]v=([A-Za-z0-9_-]{11})/)||link.match(/youtu\\.be\\/([A-Za-z0-9_-]{11})/)||String(item.guid||'').match(/([A-Za-z0-9_-]{11})$/)||[])[1];
+     const title=String(item.title||'').trim(),link=String(item.link||item.guid||''),id=(link.match(/[?&]v=([A-Za-z0-9_-]{11})/)||link.match(/youtu\.be\/([A-Za-z0-9_-]{11})/)||String(item.guid||'').match(/([A-Za-z0-9_-]{11})$/)||[])[1];
      if(!id||!isRssEligibleTitle(title)||isBlockedMovieTitle(title))return null;
      return {videoId:id,title,source:channel.name,category:channel.category,tags:channel.tags,badge:'Hindi Dubbed',priority:channel.priority,publishedAt:item.pubDate||'',thumbnail:item.thumbnail||'https://i.ytimg.com/vi/'+id+'/hqdefault.jpg',durationSeconds:0,durationLabel:'अवधि जाँची जाएगी',displayDurationLabel:'🎬 Full Drama',origin:'public RSS'};
     }).filter(Boolean);
@@ -980,20 +979,31 @@ async function fetchOneChannelRss(channel){
  throw Error('RSS unavailable: '+channel.name);
 }
 async function loadReelsFeed(force){
- if(reelsLoading)return;reelsLoading=true;
- // Keep cached items visible while feeds refresh in the background.
- try{const cached=JSON.parse(localStorage.getItem('chatpro_reels_rss_catalog_v1')||'null');if(cached&&Array.isArray(cached.items)){const map=new Map([...reelsApiCatalog,...cached.items].filter(x=>x&&x.videoId).map(x=>[x.videoId,x]));reelsApiCatalog=[...map.values()];}}catch(e){}
- renderReels();reelsApiStatus='मुफ़्त सार्वजनिक RSS फ़ीड से चैनल अपडेट हो रहे हैं…';
- const added=[];
- for(const channel of REELS_CHANNELS){
-  try{added.push(...await fetchOneChannelRss(channel));}
-  catch(error){console.warn('RSS channel unavailable:',channel.name,error);}
+ if(reelsLoading)return false;
+ reelsLoading=true;
+ try{
+  // Keep cached items visible while feeds refresh in the background.
+  try{const cached=JSON.parse(localStorage.getItem('chatpro_reels_rss_catalog_v1')||'null');if(cached&&Array.isArray(cached.items)){const map=new Map([...reelsApiCatalog,...cached.items].filter(x=>x&&x.videoId).map(x=>[x.videoId,x]));reelsApiCatalog=[...map.values()];}}catch(e){}
+  reelsApiStatus='मुफ़्त सार्वजनिक RSS फ़ीड से चैनल अपडेट हो रहे हैं…';
+  if(activeTab==='reels')renderReels();
+  const added=[];
+  for(const channel of REELS_CHANNELS){
+   try{added.push(...await fetchOneChannelRss(channel));}
+   catch(error){console.warn('RSS channel unavailable:',channel.name,error);}
+  }
+  const merged=new Map([...reelsApiCatalog,...added].filter(x=>x&&x.videoId).map(x=>[x.videoId,x]));
+  reelsApiCatalog=[...merged.values()].filter(x=>isRssEligibleTitle(x.title)&&!isBlockedMovieTitle(x.title));
+  try{localStorage.setItem('chatpro_reels_rss_catalog_v1',JSON.stringify({savedAt:Date.now(),items:reelsApiCatalog}));}catch(e){}
+  reelsApiStatus=added.length?('RSS अपडेट: '+added.length+' नए योग्य टाइटल मिले। अवधि प्लेयर में जाँची जाएगी।'):'RSS सर्वर/प्रॉक्सी अभी उपलब्ध नहीं—सेव और Built-in कैटलॉग दिख रहा है।';
+  return added.length>0;
+ }catch(error){
+  console.warn('REELS RSS refresh failed:',error);
+  reelsApiStatus='RSS अपडेट असफल—सेव और Built-in कैटलॉग सुरक्षित हैं।';
+  return false;
+ }finally{
+  reelsLoading=false;
+  if(activeTab==='reels')renderReels();
  }
- const merged=new Map([...reelsApiCatalog,...added].filter(x=>x&&x.videoId).map(x=>[x.videoId,x]));
- reelsApiCatalog=[...merged.values()].filter(x=>isRssEligibleTitle(x.title)&&!isBlockedMovieTitle(x.title));
- try{localStorage.setItem('chatpro_reels_rss_catalog_v1',JSON.stringify({savedAt:Date.now(),items:reelsApiCatalog}));}catch(e){}
- reelsApiStatus=added.length?('RSS अपडेट: '+added.length+' नए योग्य टाइटल मिले। अवधि प्लेयर में जाँची जाएगी।'):'RSS सर्वर/प्रॉक्सी अभी उपलब्ध नहीं—सेव और Built-in कैटलॉग दिख रहा है।';
- reelsLoading=false;renderReels();
 }
 
 window.switchTab = t => {
@@ -1751,6 +1761,9 @@ function cleanupCall() { stopRingtone(); stopCallTimer(); $('activeCallScreen').
 window.toggleMute = () => { if (!localStream) return; isMuted = !isMuted; localStream.getAudioTracks().forEach(t => t.enabled = !isMuted); $('muteBtn').innerHTML = isMuted ? '<i class="fas fa-microphone-slash text-red-400"></i>' : '<i class="fas fa-microphone"></i>'; };
 window.openGroupModal = () => { $('grpMembers').innerHTML = allUsers.map(u => `<label class="flex items-center gap-2"><input type="checkbox" value="${u.uid}" class="grpChk"> ${u.name}</label>`).join(''); $('groupModal').classList.remove('hidden'); };
 window.createGroup = async () => { const name = $('grpName').value.trim(), members = [currentUser.uid, ...Array.from(document.querySelectorAll('.grpChk:checked')).map(c => c.value)]; if (!name || members.length < 2) return alert('Enter group name & pick members'); await addDoc(collection(db, 'groups'), { name, members, createdAt: serverTimestamp() }); $('groupModal').classList.add('hidden'); };
+
+// Start the optional RSS refresh only after all module-level bindings and auth handlers exist.
+setTimeout(()=>{loadReelsFeed(false).catch(error=>{console.warn('Initial REELS RSS refresh failed:',error);reelsLoading=false;reelsApiStatus='RSS अपडेट उपलब्ध नहीं—सेव कैटलॉग दिखाया जा रहा है।';if(activeTab==='reels')renderReels();});},0);
 </script>
 
 </body>
