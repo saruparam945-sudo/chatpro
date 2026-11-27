@@ -152,7 +152,7 @@ body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#e5ddd5}
 .reels-card{min-width:0;overflow:hidden;border-radius:16px;background:#151a26;border:1px solid #252b3a;cursor:pointer}
 .reels-poster-wrap{position:relative;aspect-ratio:2/3;overflow:hidden;background:linear-gradient(145deg,#312e81,#111827 55%,#701a75)}
 .reels-poster{width:100%;height:100%;object-fit:cover;display:block;opacity:.88}
-.reels-poster-fallback{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:12px;background:linear-gradient(180deg,#0000 25%,#000d 100%)}
+.reels-poster-fallback{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:12px;background:linear-gradient(145deg,#4338ca 0%,#7e22ce 48%,#be185d 100%);opacity:0;pointer-events:none}.reels-poster-fallback.visible,.reels-poster-wrap:not(:has(.reels-poster)){opacity:1}
 .reels-poster-fallback strong{font-size:20px;line-height:1.05;font-weight:950;text-shadow:0 2px 8px #000}
 .reels-poster-fallback small{font-size:10px;color:#ddd;margin-top:6px}
 .reels-badges{position:absolute;top:8px;left:8px;right:8px;display:flex;justify-content:space-between;gap:4px}
@@ -164,10 +164,10 @@ body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#e5ddd5}
 .reels-meta{font-size:10px;color:#9ba4b7;margin-top:5px}
 .reels-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
 .reels-tag{font-size:9px;color:#c4b5fd;background:#312e81aa;border:1px solid #6d5ca533;border-radius:999px;padding:3px 7px}
-.reels-player-backdrop{position:fixed;inset:0;z-index:80;background:#000e;display:flex;align-items:center;justify-content:center;padding:12px}
-.reels-player-panel{width:100%;max-width:760px;background:#111827;border:1px solid #374151;border-radius:18px;overflow:hidden}
-.reels-player-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;color:white;font-weight:800;gap:10px}
-.reels-player-frame{width:100%;aspect-ratio:16/9;border:0;background:#000;display:block}
+.reels-player-backdrop{position:fixed;inset:0;z-index:80;background:#070910;display:flex;align-items:flex-start;justify-content:center;padding:0;overflow-y:auto}
+.reels-player-panel{width:100%;max-width:none;min-height:100%;background:#090d16;border:0;border-radius:0;overflow:hidden}
+.reels-player-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;color:white;font-weight:800;gap:10px;max-width:1200px;margin:auto}
+.reels-player-frame{width:100%;aspect-ratio:16/9;border:0;background:#000;display:block;max-height:70vh}.reels-episodes{display:grid;grid-template-columns:repeat(auto-fill,minmax(66px,1fr));gap:8px;padding:14px;max-width:1200px;margin:0 auto}.reels-ep-btn{background:#1b2231;color:#cbd5e1;border:1px solid #354052;border-radius:9px;padding:10px 5px;font-size:12px;font-weight:900}.reels-ep-btn.active{background:#7c3aed;border-color:#a78bfa;color:#fff;box-shadow:0 0 0 2px #8b5cf633}.reels-episodes-label{max-width:1200px;margin:12px auto 0;padding:0 14px;color:#aab4c6;font-size:12px;font-weight:800}
 .reels-mini{position:fixed;z-index:79;left:10px;right:10px;bottom:10px;display:flex;align-items:center;gap:10px;padding:9px 11px;border:1px solid #4b4564;border-radius:14px;background:#171323f5;color:#fff;box-shadow:0 8px 30px #0009;backdrop-filter:blur(12px)}
 .reels-mini-poster{width:38px;height:52px;object-fit:cover;border-radius:6px;background:#312e81}
 .reels-mini-info{min-width:0;flex:1}
@@ -240,6 +240,7 @@ body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#e5ddd5}
   <div class="reels-player-panel">
     <div class="reels-player-head"><span id="reelsPlayerTitle">Now Playing</span><div class="flex gap-2"><button onclick="minimizeReelsPlayer()" class="text-sm px-2" aria-label="Minimize player">—</button><button onclick="closeReelsPlayer()" class="text-2xl leading-none px-2" aria-label="Close player">&times;</button></div></div>
     <div id="reelsPlayerFrame" class="reels-player-frame"></div>
+    <div class="reels-episodes-label">एपिसोड चुनें</div><div id="reelsEpisodeButtons" class="reels-episodes"></div>
   </div>
 </div>
 <div id="reelsMiniPlayer" class="reels-mini hidden">
@@ -530,21 +531,21 @@ function listenUsersAndGroups() {
 // playlistId = text after ?list= in the YouTube playlist URL.
 // episodes = verified total episode count shown on the poster (not a live view count).
 // category: 'popular', 'hindi-dubbed', or 'new'. tags are short genre/language labels.
-// posterVideoId is optional; when supplied, its YouTube thumbnail is used as the poster.
+// firstVideoId is the first episode's YouTube ID; its thumbnail becomes the poster.
 const SERIES_CATALOG = [
-  { title:'Kota Factory', season:'Season 1', playlistId:'PLTB0eCoUXErb7pV0Sj1hXWrxerSZX1qgh', episodes:5, category:'popular', tags:['हिंदी','ड्रामा','एजुकेशन'], badge:'HIT', posterVideoId:'' },
-  { title:'TVF Aspirants', season:'Season 1', playlistId:'PLTB0eCoUXErY_KvRNKOERQtYSDPjOb8jw', episodes:5, category:'popular', tags:['हिंदी','ड्रामा','मोटिवेशन'], badge:'HOT', posterVideoId:'' },
-  { title:'FLAMES', season:'Season 1', playlistId:'PLbZboRRHE3b14pFvT26golxysQKbWGOSg', episodes:5, category:'popular', tags:['हिंदी','रोमांस','युथ'], badge:'HIT', posterVideoId:'' },
-  { title:'Still 17', season:'Hindi Dubbed', playlistId:'PLilQOU3a19nVQtFqPJNxeYsBmWcmpkSnt', episodes:26, category:'hindi-dubbed', tags:['हिंदी डब्ड','रोमांस','कोरियन'], badge:'DUBBED', posterVideoId:'' },
-  { title:'Live On', season:'Hindi Dubbed', playlistId:'PLxOvuZ4TDxLkWk4u5nI_fUiWOLkYV24zz', episodes:16, category:'hindi-dubbed', tags:['हिंदी डब्ड','ड्रामा','कोरियन'], badge:'DUBBED', posterVideoId:'' },
-  { title:'Dhund Mystery Series', season:'Complete Series', playlistId:'PL3rPBXg5x9jlfUE-jro7U7OMTDijg_i1o', episodes:49, category:'new', tags:['हिंदी','मिस्ट्री','थ्रिलर'], badge:'NEW', posterVideoId:'' }
+  { title:'Kota Factory', season:'Season 1', playlistId:'PLTB0eCoUXErb7pV0Sj1hXWrxerSZX1qgh', episodes:5, category:'popular', tags:['हिंदी','ड्रामा','एजुकेशन'], badge:'HIT', firstVideoId:'JWbnEt3xuos' },
+  { title:'TVF Aspirants', season:'Season 1', playlistId:'PLTB0eCoUXErY_KvRNKOERQtYSDPjOb8jw', episodes:5, category:'popular', tags:['हिंदी','ड्रामा','मोटिवेशन'], badge:'HOT', firstVideoId:'ViOutJqDI-0' },
+  { title:'FLAMES', season:'Season 1', playlistId:'PLbZboRRHE3b14pFvT26golxysQKbWGOSg', episodes:5, category:'popular', tags:['हिंदी','रोमांस','युथ'], badge:'HIT', firstVideoId:'f8t4S84d9fA' },
+  { title:'Still 17', season:'Hindi Dubbed', playlistId:'PLilQOU3a19nVQtFqPJNxeYsBmWcmpkSnt', episodes:26, category:'hindi-dubbed', tags:['हिंदी डब्ड','रोमांस','कोरियन'], badge:'DUBBED', firstVideoId:'8k_pA0oE1cM' },
+  { title:'Live On', season:'Hindi Dubbed', playlistId:'PLxOvuZ4TDxLkWk4u5nI_fUiWOLkYV24zz', episodes:16, category:'hindi-dubbed', tags:['हिंदी डब्ड','ड्रामा','कोरियन'], badge:'DUBBED', firstVideoId:'z0y_E8Z3-hI' },
+  { title:'Dhund Mystery Series', season:'Complete Series', playlistId:'PL3rPBXg5x9jlfUE-jro7U7OMTDijg_i1o', episodes:49, category:'new', tags:['हिंदी','मिस्ट्री','थ्रिलर'], badge:'NEW', firstVideoId:'b_2P6Y1hH1E' }
 ];
 const REELS_CACHE_KEY = 'chatpro_series_catalog_v2';
 let reelsFilter = 'all', reelsLoading = false, reelsPlayer = null, reelsCurrentSeries = null, reelsPlayerReady = false, reelsMiniTimer = null;
 let reelsPosterMap = {};
 function reelsEscape(value) { return String(value || '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
 function reelsPoster(series) {
-  if (series.posterVideoId) return 'https://i.ytimg.com/vi/'+encodeURIComponent(series.posterVideoId)+'/hqdefault.jpg';
+  if (series.firstVideoId) return 'https://i.ytimg.com/vi/'+encodeURIComponent(series.posterVideoId)+'/hqdefault.jpg';
   return reelsPosterMap[series.playlistId] || '';
 }
 function renderReels() {
@@ -558,7 +559,7 @@ function renderReels() {
       const poster=reelsPoster(series);
       return `<article class="reels-card" onclick="openReelsPlayer('${series.playlistId}')">
         <div class="reels-poster-wrap">
-          ${poster?`<img class="reels-poster" loading="lazy" src="${reelsEscape(poster)}" alt="${reelsEscape(series.title)} poster">`:''}
+          ${poster?`<img class="reels-poster" loading="lazy" src="${reelsEscape(poster)}" alt="${reelsEscape(series.title)} poster" onerror="this.style.display='none';this.nextElementSibling.classList.add('visible')">`:''}
           <div class="reels-poster-fallback"><strong>${reelsEscape(series.title)}</strong><small>${reelsEscape(series.season)}</small></div>
           <div class="reels-badges"><span class="reels-badge ${series.badge==='HOT'?'hot':''}">${reelsEscape(series.badge)}</span><span class="reels-badge">${series.category==='hindi-dubbed'?'HINDI DUBBED':'HINDI'}</span></div>
           <span class="reels-views">▶ ${series.episodes} EP</span>
@@ -579,43 +580,51 @@ function loadYouTubeIframeAPI() {
   });
   return window.reelsYTApiPromise;
 }
+
+function renderReelsEpisodeButtons(activeIndex=0){
+ const box=$('reelsEpisodeButtons');if(!box||!reelsCurrentSeries)return;
+ box.innerHTML=Array.from({length:reelsCurrentSeries.episodes},(_,i)=>'<button type="button" class="reels-ep-btn '+(i===activeIndex?'active':'')+'" onclick="playReelsEpisode('+i+')">EP. '+(i+1)+'</button>').join('');
+}
+window.playReelsEpisode=index=>{
+ if(!reelsPlayer||!reelsCurrentSeries||index<0||index>=reelsCurrentSeries.episodes)return;
+ if(typeof reelsPlayer.playVideoAt==='function')reelsPlayer.playVideoAt(index);
+ else reelsPlayer.loadPlaylist({list:reelsCurrentSeries.playlistId,listType:'playlist',index});
+ updateReelsMiniState();
+};
 window.openReelsPlayer=async playlistId=>{
-  const series=SERIES_CATALOG.find(x=>x.playlistId===playlistId); if(!series)return;
-  reelsCurrentSeries=series; $('reelsPlayerTitle').textContent=series.title+' · '+series.season;
-  $('reelsMiniTitle').textContent=series.title; $('reelsMiniEpisode').textContent='EP 1 / '+series.episodes;
-  $('reelsMiniPoster').src=reelsPoster(series)||'';
-  $('reelsMiniPlayer').classList.remove('hidden'); $('reelsPlayer').classList.remove('hidden');
-  const host=$('reelsPlayerFrame');
-  if(reelsPlayer&&reelsPlayer.loadPlaylist){reelsPlayer.loadPlaylist({list:playlistId,listType:'playlist',index:0});return;}
-  host.innerHTML='<div id="reelsYoutubePlayer"></div>';
-  try{
-    await loadYouTubeIframeAPI();
-    reelsPlayer=new YT.Player('reelsYoutubePlayer',{width:'100%',height:'100%',playerVars:{listType:'playlist',list:playlistId,autoplay:1,playsinline:1,rel:0},events:{
-      onReady:event=>{reelsPlayerReady=true;event.target.loadPlaylist({list:playlistId,listType:'playlist',index:0});startReelsMiniSync();},
-      onStateChange:updateReelsMiniState
-    }});
-  }catch(error){host.innerHTML='<div class="p-5 text-white text-sm">YouTube Player लोड नहीं हुआ। कृपया दोबारा प्रयास करें।</div>';}
+ const series=SERIES_CATALOG.find(x=>x.playlistId===playlistId);if(!series)return;
+ reelsCurrentSeries=series;$('reelsPlayerTitle').textContent=series.title+' · '+series.season;
+ $('reelsMiniTitle').textContent=series.title;$('reelsMiniEpisode').textContent='EP 1 / '+series.episodes;
+ $('reelsMiniPoster').src=reelsPoster(series)||'';renderReelsEpisodeButtons(0);
+ $('reelsMiniPlayer').classList.remove('hidden');$('reelsPlayer').classList.remove('hidden');
+ const host=$('reelsPlayerFrame');
+ if(reelsPlayer&&reelsPlayer.loadPlaylist){reelsPlayer.loadPlaylist({list:playlistId,listType:'playlist',index:0});return;}
+ host.innerHTML='<div id="reelsYoutubePlayer" style="width:100%;height:100%"></div>';
+ try{
+  await loadYouTubeIframeAPI();
+  reelsPlayer=new YT.Player('reelsYoutubePlayer',{width:'100%',height:'100%',playerVars:{listType:'playlist',list:playlistId,autoplay:1,playsinline:1,rel:0},events:{
+   onReady:event=>{reelsPlayerReady=true;event.target.loadPlaylist({list:playlistId,listType:'playlist',index:0});startReelsMiniSync();},
+   onStateChange:updateReelsMiniState
+  }});
+ }catch(error){host.innerHTML='<div class="p-5 text-white text-sm">YouTube Player लोड नहीं हुआ। कृपया दोबारा प्रयास करें।</div>';}
 };
 function updateReelsMiniState(){
-  if(!reelsPlayer||!reelsCurrentSeries)return;
-  const index=typeof reelsPlayer.getPlaylistIndex==='function'?reelsPlayer.getPlaylistIndex():0;
-  $('reelsMiniEpisode').textContent='EP '+(Math.max(0,index)+1)+' / '+reelsCurrentSeries.episodes;
-  const state=reelsPlayer.getPlayerState();
-  $('reelsMiniPlayIcon').className=state===1?'fas fa-pause':'fas fa-play';
+ if(!reelsPlayer||!reelsCurrentSeries)return;
+ const raw=typeof reelsPlayer.getPlaylistIndex==='function'?reelsPlayer.getPlaylistIndex():0;
+ const index=Math.max(0,raw||0);
+ $('reelsMiniEpisode').textContent='EP '+(index+1)+' / '+reelsCurrentSeries.episodes;
+ $('reelsMiniPlayIcon').className=reelsPlayer.getPlayerState()===1?'fas fa-pause':'fas fa-play';
+ document.querySelectorAll('#reelsEpisodeButtons .reels-ep-btn').forEach((b,i)=>b.classList.toggle('active',i===index));
 }
-function startReelsMiniSync(){if(reelsMiniTimer)clearInterval(reelsMiniTimer);reelsMiniTimer=setInterval(updateReelsMiniState,1000);}
-window.toggleReelsPlayback=()=>{
-  if(!reelsPlayer)return;
-  if(reelsPlayer.getPlayerState()===1)reelsPlayer.pauseVideo();else reelsPlayer.playVideo();
-  updateReelsMiniState();
-};
+function startReelsMiniSync(){if(reelsMiniTimer)clearInterval(reelsMiniTimer);reelsMiniTimer=setInterval(updateReelsMiniState,700);}
+window.toggleReelsPlayback=()=>{if(!reelsPlayer)return;if(reelsPlayer.getPlayerState()===1)reelsPlayer.pauseVideo();else reelsPlayer.playVideo();updateReelsMiniState();};
 window.minimizeReelsPlayer=()=>{$('reelsPlayer').classList.add('hidden');$('reelsMiniPlayer').classList.remove('hidden');};
 window.restoreReelsPlayer=()=>{$('reelsPlayer').classList.remove('hidden');$('reelsMiniPlayer').classList.remove('hidden');};
 window.closeReelsPlayer=()=>{
-  if(reelsMiniTimer)clearInterval(reelsMiniTimer); reelsMiniTimer=null;
-  if(reelsPlayer&&reelsPlayer.destroy){reelsPlayer.destroy();reelsPlayer=null;}
-  reelsPlayerReady=false;reelsCurrentSeries=null;
-  $('reelsPlayerFrame').innerHTML='';$('reelsPlayer').classList.add('hidden');$('reelsMiniPlayer').classList.add('hidden');
+ if(reelsMiniTimer)clearInterval(reelsMiniTimer);reelsMiniTimer=null;
+ if(reelsPlayer&&reelsPlayer.destroy){reelsPlayer.destroy();reelsPlayer=null;}
+ reelsPlayerReady=false;reelsCurrentSeries=null;$('reelsPlayerFrame').innerHTML='';$('reelsEpisodeButtons').innerHTML='';
+ $('reelsPlayer').classList.add('hidden');$('reelsMiniPlayer').classList.add('hidden');
 };
 async function loadReelsFeed(force) {
   if(reelsLoading)return; reelsLoading=true; renderReels();
