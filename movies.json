@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "updatedAt": null,
-  "source": "Central ChatPro catalog. Only entries with verified public metadata and durationSeconds >= 3600 are placed in movies.",
-  "minimumDurationSeconds": 3600,
+  "source": "Central ChatPro catalog. Only entries with verified public metadata and durationSeconds >= 1800 are placed in movies.",
+  "minimumDurationSeconds": 1800,
   "movies": [],
   "pendingCandidates": [
     {

@@ -3,6 +3,10 @@ name: Update central Hindi drama catalog
 on:
   schedule:
     - cron: "17 3 * * *"
+  push:
+    paths:
+      - ".github/workflows/update-movies.yml"
+      - "movies.json"
   workflow_dispatch:
 
 permissions:
@@ -44,10 +48,10 @@ jobs:
             { handle: 'WorldMoviesLocalHindi', name: 'World Movies Local Hindi' }
           ];
           const seedIds = ['urmQEUUeEO8', 'xHFZiqjhSs8', 'EysFyDd6CKw'];
-          const blocked = /(?:#?shorts?|trailer|teaser|promo|clip|scene|episode|\\bep\\b|\\bpart\\b|\\bpt\\.?\\b|भाग|एपिसोड|\\bai\\b|\\benglish\\b|explain|explainer)/i;
-          const fullMovie = /full\\s*(?:movie|film|drama)|complete\\s*(?:movie|film)|पूरी\\s*फिल्म|फुल\\s*मूवी/i;
-          const asian = /\\b(korean|korea|k[- ]?drama|chinese|china|c[- ]?drama|cdrama)\\b|कोरियन|कोरियाई|चाइनीज|चीनी/i;
-          const hindi = /hindi\\s*dub(?:bed)?|dubbed\\s*in\\s*hindi|hindi\\s*version|हिंदी\\s*डब|हिन्दी\\s*डब|हिंदी\\s*में/i;
+          const blocked = /(?:#?shorts?|trailer|teaser|promo|clip|scene|episode|\bep\b|\bpart\b|\bpt\.?\b|भाग|एपिसोड|\bai\b|\benglish\b|explain|explainer)/i;
+          const fullMovie = /full\s*(?:movie|film|drama)|complete\s*(?:movie|film)|पूरी\s*फिल्म|फुल\s*मूवी/i;
+          const asian = /\b(korean|korea|k[- ]?drama|chinese|china|c[- ]?drama|cdrama)\b|कोरियन|कोरियाई|चाइनीज|चीनी/i;
+          const hindi = /hindi\s*dub(?:bed)?|dubbed\s*in\s*hindi|hindi\s*version|हिंदी\s*डब|हिन्दी\s*डब|हिंदी\s*में/i;
           async function api(resource, params) {
             const u = new URL('https://www.googleapis.com/youtube/v3/' + resource);
             for (const [k,v] of Object.entries({...params,key:KEY})) u.searchParams.set(k,String(v));
@@ -57,7 +61,7 @@ jobs:
             return j;
           }
           function duration(iso) {
-            const m = String(iso||'').match(/^PT(?:(\\d+)H)?(?:(\\d+)M)?(?:(\\d+)S)?$/);
+            const m = String(iso||'').match(/^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/);
             return m ? (+m[1]||0)*3600 + (+m[2]||0)*60 + (+m[3]||0) : 0;
           }
           async function main() {
@@ -91,7 +95,7 @@ jobs:
                 const desc = v.snippet?.description || '';
                 const text = title+' '+desc;
                 const seconds = duration(v.contentDetails?.duration);
-                if (seconds < 3600 || blocked.test(title) || blocked.test(desc) ||
+                if (seconds < 1800 || blocked.test(title) || blocked.test(desc) ||
                     !fullMovie.test(title) || !asian.test(text) || !hindi.test(text)) continue;
                 const thumbs = v.snippet?.thumbnails || {};
                 const thumb = (thumbs.maxres||thumbs.high||thumbs.medium||thumbs.default||{}).url || '';
@@ -105,10 +109,10 @@ jobs:
                 });
               }
             }
-            const movies=[...found.values()].filter(x=>Number(x.durationSeconds)>=3600 && !blocked.test(x.title||''));
-            const output={schemaVersion:1,updatedAt:new Date().toISOString(),source:'Official channel uploads + verified public video metadata',minimumDurationSeconds:3600,movies,pendingCandidates:old.pendingCandidates||[]};
-            fs.writeFileSync('movies.json',JSON.stringify(output,null,2)+'\\n');
-            console.log('Catalog contains',movies.length,'verified 60+ minute candidates.');
+            const movies=[...found.values()].filter(x=>Number(x.durationSeconds)>=1800 && !blocked.test(x.title||''));
+            const output={schemaVersion:1,updatedAt:new Date().toISOString(),source:'Official channel uploads + verified public video metadata',minimumDurationSeconds:1800,movies,pendingCandidates:old.pendingCandidates||[]};
+            fs.writeFileSync('movies.json',JSON.stringify(output,null,2)+'\n');
+            console.log('Catalog contains',movies.length,'verified 30+ minute candidates.');
           }
           main().catch(e=>{console.error(e);process.exit(1);});
           NODE

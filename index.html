@@ -690,7 +690,7 @@ async function loadOfficialReelsPlaylists(force=false){
   if(!response.ok)throw new Error('movies.json HTTP '+response.status);
   const data=await response.json();
   const incoming=Array.isArray(data.movies)?data.movies:(Array.isArray(data.items)?data.items:[]);
-  const valid=incoming.filter(x=>x&&/^[A-Za-z0-9_-]{11}$/.test(String(x.videoId||''))&&Number(x.durationSeconds)>=3600&&!isBlockedMovieTitle(x.title));
+  const valid=incoming.filter(x=>x&&/^[A-Za-z0-9_-]{11}$/.test(String(x.videoId||''))&&Number(x.durationSeconds)>=1800&&!isBlockedMovieTitle(x.title));
   const map=new Map([...reelsApiCatalog,...valid].map(x=>[x.videoId,x]));
   reelsApiCatalog=[...map.values()];
   try{localStorage.setItem(cacheKey,JSON.stringify({savedAt:Date.now(),movies:reelsApiCatalog}));}catch(e){console.warn('Catalog cache unavailable',e);}
