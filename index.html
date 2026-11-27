@@ -749,6 +749,8 @@ loadOfficialReelsPlaylists(true).then(()=>loadReelsPlaylistPosters());
 let reelsFullscreenYTPlayer=null;
 let reelsFullscreenPlaylistId=null;
 let reelsSwipeStartY=null;
+let reelsTouchStartX=null;
+let reelsTouchStartTime=0;
 let reelsYTApiPromise=null;
 function loadReelsFullscreenAPI(){
  if(window.YT&&window.YT.Player)return Promise.resolve();
@@ -768,7 +770,6 @@ function loadReelsFullscreenAPI(){
  });
  return reelsYTApiPromise;
 }
-// Fit a standard 16:9 video inside the current visual viewport without cropping or stretching.
 function sizeReelsFullscreenPlayer(){
  const box=document.getElementById('reelsPlayer');
  const mount=document.getElementById('reelsFullscreenYTMount');
@@ -777,9 +778,41 @@ function sizeReelsFullscreenPlayer(){
  const height=Math.max(1,window.innerHeight||document.documentElement.clientHeight);
  mount.style.cssText='position:absolute;inset:0;width:'+width+'px;height:'+height+'px;overflow:hidden;background:#000;touch-action:none';
  const frame=reelsFullscreenYTPlayer&&reelsFullscreenYTPlayer.getIframe?reelsFullscreenYTPlayer.getIframe():null;
- if(frame)frame.style.cssText='display:block;width:100vw;height:100vh;border:0;transform:none;pointer-events:none';
+ if(frame)frame.style.cssText='position:absolute;inset:0;display:block;width:100%;height:100%;border:0;transform:scale(1.14);transform-origin:center center;pointer-events:none';
  if(reelsFullscreenYTPlayer&&typeof reelsFullscreenYTPlayer.setSize==='function'){
   try{reelsFullscreenYTPlayer.setSize(width,height);}catch(e){}
+ }
+}
+function handleReelsFullscreenTouchStart(event){
+ if(!event.touches||event.touches.length!==1){reelsSwipeStartY=null;return;}
+ event.preventDefault();
+ reelsSwipeStartY=event.touches[0].clientY;
+ reelsTouchStartX=event.touches[0].clientX;
+ reelsTouchStartTime=Date.now();
+}
+function handleReelsFullscreenTouchEnd(event){
+ if(reelsSwipeStartY===null||!event.changedTouches||event.changedTouches.length!==1)return;
+ event.preventDefault();
+ const touch=event.changedTouches[0];
+ const deltaY=touch.clientY-reelsSwipeStartY;
+ const deltaX=touch.clientX-reelsTouchStartX;
+ const elapsed=Date.now()-reelsTouchStartTime;
+ reelsSwipeStartY=null;
+ reelsTouchStartX=null;
+ if(Math.abs(deltaY)>50&&Math.abs(deltaY)>Math.abs(deltaX)){
+  if(!reelsFullscreenYTPlayer)return;
+  try{
+   if(deltaY < -50)reelsFullscreenYTPlayer.nextVideo();
+   else reelsFullscreenYTPlayer.previousVideo();
+  }catch(error){}
+  return;
+ }
+ if(Math.abs(deltaY)<14&&Math.abs(deltaX)<14&&elapsed<500&&reelsFullscreenYTPlayer){
+  try{
+   const state=reelsFullscreenYTPlayer.getPlayerState();
+   if(state===YT.PlayerState.PLAYING)reelsFullscreenYTPlayer.pauseVideo();
+   else reelsFullscreenYTPlayer.playVideo();
+  }catch(error){}
  }
 }
 window.openReelsPlayer=async function(playlistId){
@@ -789,7 +822,7 @@ window.openReelsPlayer=async function(playlistId){
  if(!box)return;
  window.closeReelsPlayer(false);
  box.innerHTML='';
- box.style.cssText='position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;background:linear-gradient(180deg,#080808 0%,#000 16%,#000 84%,#080808 100%);z-index:999999;overflow:hidden;display:block;touch-action:none;overscroll-behavior:none';
+ box.style.cssText='position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;background:#000;z-index:999999;overflow:hidden;display:block;touch-action:none;overscroll-behavior:none';
  box.setAttribute('aria-hidden','false');
  if(!reelsHistoryActive){
   history.pushState({reelsOpen:true},'');
@@ -798,32 +831,24 @@ window.openReelsPlayer=async function(playlistId){
  reelsFullscreenPlaylistId=playlistId;
  const mount=document.createElement('div');
  mount.id='reelsFullscreenYTMount';
- mount.style.cssText='position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#000;overflow:hidden;touch-action:none';
+ mount.style.cssText='position:absolute;inset:0;width:100%;height:100%;background:#000;overflow:hidden;touch-action:none';
  box.appendChild(mount);
- box.ontouchstart=function(event){
-  if(event.touches&&event.touches.length===1)reelsSwipeStartY=event.touches[0].clientY;
- };
- box.ontouchend=function(event){
-  if(reelsSwipeStartY===null||!event.changedTouches||!event.changedTouches.length)return;
-  const deltaY=event.changedTouches[0].clientY-reelsSwipeStartY;
-  reelsSwipeStartY=null;
-  if(Math.abs(deltaY)<50||!reelsFullscreenYTPlayer)return;
-  try{
-   if(deltaY < -50)reelsFullscreenYTPlayer.nextVideo();
-   else if(deltaY > 50)reelsFullscreenYTPlayer.previousVideo();
-  }catch(error){}
- };
- box.ontouchcancel=function(){reelsSwipeStartY=null;};
+ const touchLayer=document.createElement('div');
+ touchLayer.id='reelsFullscreenTouchLayer';
+ touchLayer.setAttribute('aria-label','Tap to play or pause; swipe up for next episode; swipe down for previous episode');
+ touchLayer.style.cssText='position:absolute;inset:0;z-index:5;background:transparent;touch-action:none;-webkit-tap-highlight-color:transparent';
+ touchLayer.addEventListener('touchstart',handleReelsFullscreenTouchStart,{passive:false});
+ touchLayer.addEventListener('touchend',handleReelsFullscreenTouchEnd,{passive:false});
+ touchLayer.addEventListener('touchcancel',function(){reelsSwipeStartY=null;reelsTouchStartX=null;},{passive:true});
+ box.appendChild(touchLayer);
  try{
   await loadReelsFullscreenAPI();
   if(!document.getElementById('reelsFullscreenYTMount')||!reelsFullscreenPlaylistId)return;
   const width=Math.max(1,window.innerWidth||document.documentElement.clientWidth);
   const height=Math.max(1,window.innerHeight||document.documentElement.clientHeight);
-  const initialHeight=height;
-  const initialWidth=width;
   reelsFullscreenYTPlayer=new YT.Player('reelsFullscreenYTMount',{
-   width:String(Math.floor(initialWidth)),
-   height:String(Math.floor(initialHeight)),
+   width:String(width),
+   height:String(height),
    playerVars:{
     listType:'playlist',
     list:playlistId,
@@ -852,10 +877,12 @@ window.addEventListener('orientationchange',sizeReelsFullscreenPlayer,{passive:t
 window.closeReelsPlayer=function(updateHistory){
  const box=document.getElementById('reelsPlayer');
  if(!box)return;
- box.ontouchstart=null;
- box.ontouchend=null;
- box.ontouchcancel=null;
+ const layer=document.getElementById('reelsFullscreenTouchLayer');
+ if(layer){
+  layer.replaceWith(layer.cloneNode(false));
+ }
  reelsSwipeStartY=null;
+ reelsTouchStartX=null;
  if(reelsFullscreenYTPlayer){
   try{
    const frame=reelsFullscreenYTPlayer.getIframe&&reelsFullscreenYTPlayer.getIframe();
@@ -875,7 +902,7 @@ window.closeReelsPlayer=function(updateHistory){
  const hadHistory=reelsHistoryActive;
  reelsHistoryActive=false;
  if(updateHistory!==false&&hadHistory){
-  // Browser Back has already consumed the player history entry.
+  // The browser Back action consumes the history entry before this closes the player.
  }
 };
 window.onpopstate=function(){
