@@ -1614,5 +1614,23 @@ window.toggleMute = () => { if (!localStream) return; isMuted = !isMuted; localS
 window.openGroupModal = () => { $('grpMembers').innerHTML = allUsers.map(u => `<label class="flex items-center gap-2"><input type="checkbox" value="${u.uid}" class="grpChk"> ${u.name}</label>`).join(''); $('groupModal').classList.remove('hidden'); };
 window.createGroup = async () => { const name = $('grpName').value.trim(), members = [currentUser.uid, ...Array.from(document.querySelectorAll('.grpChk:checked')).map(c => c.value)]; if (!name || members.length < 2) return alert('Enter group name & pick members'); await addDoc(collection(db, 'groups'), { name, members, createdAt: serverTimestamp() }); $('groupModal').classList.add('hidden'); };
 </script>
+
+<!-- ChatPro freshness: check the latest app shell on every online visit. -->
+<script>
+(function () {
+  if (!('serviceWorker' in navigator)) return;
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('/chatpro/service-worker.js', {
+      scope: '/chatpro/',
+      updateViaCache: 'none'
+    }).then(function (registration) {
+      registration.update().catch(function () {});
+    }).catch(function (error) {
+      console.warn('ChatPro service worker registration failed:', error);
+    });
+  });
+})();
+</script>
+
 </body>
 </html>
