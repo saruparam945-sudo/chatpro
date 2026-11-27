@@ -320,7 +320,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 window.$ = id => document.getElementById(id);
-let isSignup = false, currentUser = null, allUsers = [], allGroups = [], activeTab = 'chats', myDiscoveryCity = '', myDiscoverable = false;
+let isSignup = false, currentUser = null, allUsers = [], allGroups = [], activeTab = 'chats', myDiscoveryCity = '', myDiscoverable = false, friendsFilter = 'city';
 let activeChat = null, unsubMsgs = null, replyData = null;
 let peer = null, myPeerId = null, localStream = null, ludoStream = null, ludoCalls = [], currentCallObj = null, currentCallDocId = null, ringInterval = null, audioCtx = null, isMuted = false;
 let roomVoiceStream = null, roomVoiceCalls = [], roomVoiceAudio = new Map(), roomVoiceMode = null, roomVoiceRoomId = null, roomVoicePeerIds = new Set(), roomVoicePendingCalls = [];
@@ -808,6 +808,8 @@ window.previousStatus = () => { if (window.statusViewIndex > 0) { window.statusV
 window.closeStatusViewer = () => { const v=$('statusViewer'); if(v){ v.classList.add('hidden'); v.innerHTML=''; } };
 
 window.escapeFriendHtml = value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+window.setFriendsFilter = filter => { friendsFilter = ['city','india','online'].includes(filter) ? filter : 'city'; renderLists(); };
+
 window.saveFriendDiscovery = async () => {
   if (!currentUser) return;
   const city = ($('friendCityInput')?.value || '').trim().replace(/\s+/g, ' ');
@@ -838,11 +840,24 @@ window.renderLists = () => {
     box.innerHTML = html + '</div>';
   } else if (activeTab === 'friends') {
     const city = myDiscoveryCity || '';
-    const eligible = city ? allUsers.filter(u => u.discoverable === true && (u.city || '').trim().toLocaleLowerCase() === city.trim().toLocaleLowerCase()) : [];
+    const visibleUsers = allUsers.filter(u => u.discoverable === true);
+    const eligible = friendsFilter === 'india'
+      ? visibleUsers
+      : friendsFilter === 'online'
+        ? visibleUsers.filter(u => u.online === true)
+        : city
+          ? visibleUsers.filter(u => (u.city || '').trim().toLocaleLowerCase() === city.trim().toLocaleLowerCase())
+          : [];
+    const filterButton = (key, label, icon) => `<button onclick="setFriendsFilter('${key}')" class="flex-1 min-w-0 px-2 py-3 rounded-xl text-xs sm:text-sm font-bold border ${friendsFilter===key?'bg-[#075E54] text-white border-[#075E54]':'bg-white dark:bg-[#202c33] text-gray-600 dark:text-gray-200 border-gray-200 dark:border-gray-700'}"><i class="fas ${icon} mr-1"></i>${label}</button>`;
     box.innerHTML = `<div class="p-4 space-y-4">
       <div class="rounded-2xl p-5 text-white shadow-lg bg-gradient-to-br from-[#075E54] via-[#087f70] to-[#25D366]">
-        <div class="text-2xl font-extrabold mb-1"><i class="fas fa-location-dot mr-2"></i>शहर से नए दोस्त</div>
-        <p class="text-sm opacity-90">अपने शहर के उन लोगों से जुड़ें जिन्होंने खुद को खोजने योग्य बनाया है।</p>
+        <div class="text-2xl font-extrabold mb-1"><i class="fas fa-user-group mr-2"></i>नए दोस्त खोजें</div>
+        <p class="text-sm opacity-90">शहर, पूरे भारत या अभी ऑनलाइन मौजूद उन सदस्यों को देखें जिन्होंने अपनी प्रोफ़ाइल खोजने योग्य रखी है।</p>
+      </div>
+      <div class="flex gap-2">
+        ${filterButton('city','आपका शहर','fa-location-dot')}
+        ${filterButton('india','All India','fa-earth-asia')}
+        ${filterButton('online','Online','fa-circle')}
       </div>
       <section class="rounded-2xl p-4 bg-white dark:bg-[#202c33] border border-gray-200 dark:border-gray-700 space-y-3">
         <div class="font-bold">आपकी खोज सेटिंग</div>
@@ -852,9 +867,9 @@ window.renderLists = () => {
         <button onclick="saveFriendDiscovery()" class="w-full py-3 rounded-xl bg-[#075E54] text-white font-bold shadow">सेटिंग सेव करें</button>
         <p class="text-[11px] text-gray-500">सुरक्षा: लोकेशन अपने-आप नहीं ली जाती। केवल शहर का नाम उपयोग होता है—घर का पता या लाइव लोकेशन साझा न करें।</p>
       </section>
-      <div class="flex items-center justify-between"><h3 class="font-bold"> ${city?'आपके शहर में':'नए दोस्त'} </h3><span class="text-xs text-gray-500">${eligible.length} मिले</span></div>
+      <div class="flex items-center justify-between"><h3 class="font-bold"> ${friendsFilter==='india'?'पूरे भारत में':friendsFilter==='online'?'अभी ऑनलाइन':city?'आपके शहर में':'नए दोस्त'} </h3><span class="text-xs text-gray-500">${eligible.length} मिले</span></div>
       <div class="space-y-2">
-        ${!city ? '<div class="text-center p-6 text-sm text-gray-500">पहले अपना शहर लिखें और सेव करें।</div>' : !myDiscoverable ? '<div class="text-center p-6 text-sm text-gray-500">दोस्त खोजने के लिए ऊपर “मुझे दिखाएं” चालू करके सेव करें।</div>' : eligible.length ? eligible.map(u => `<div class="flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-[#202c33] border border-gray-100 dark:border-gray-700"><div class="w-11 h-11 rounded-full bg-[#25D366] text-white flex items-center justify-center text-lg font-bold">${escapeFriendHtml((u.name||'U').charAt(0).toUpperCase())}</div><div class="flex-1 min-w-0"><div class="font-bold truncate">${escapeFriendHtml(u.name||'ChatPro user')}</div><div class="text-xs text-gray-500">${escapeFriendHtml(u.city||'')}</div></div><button onclick="openChat('${escapeFriendHtml(u.uid)}','${escapeFriendHtml(u.name||'Friend')}',false)" class="px-3 py-2 rounded-lg bg-[#075E54] text-white text-xs font-bold">Chat</button></div>`).join('') : '<div class="text-center p-6 text-sm text-gray-500">अभी इस शहर में कोई ऐसा सदस्य नहीं मिला जिसने खोज की अनुमति दी हो।</div>'}
+        ${friendsFilter==='city' && !city ? '<div class="text-center p-6 text-sm text-gray-500">शहर वाले फ़िल्टर के लिए पहले अपना शहर लिखें और सेव करें। All India या Online फ़िल्टर चुनकर दूसरे शहरों के सदस्य भी देख सकते हैं।</div>' : eligible.length ? eligible.map(u => `<div class="flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-[#202c33] border border-gray-100 dark:border-gray-700"><div class="w-11 h-11 rounded-full bg-[#25D366] text-white flex items-center justify-center text-lg font-bold">${escapeFriendHtml((u.name||'U').charAt(0).toUpperCase())}</div><div class="flex-1 min-w-0"><div class="font-bold truncate">${escapeFriendHtml(u.name||'ChatPro user')}</div><div class="text-xs text-gray-500">${escapeFriendHtml(u.city||'')}</div></div><button onclick="openChat('${escapeFriendHtml(u.uid)}','${escapeFriendHtml(u.name||'Friend')}',false)" class="px-3 py-2 rounded-lg bg-[#075E54] text-white text-xs font-bold">Chat</button></div>`).join('') : '<div class="text-center p-6 text-sm text-gray-500">इस फ़िल्टर में अभी कोई ऐसा सदस्य नहीं मिला जिसने अपनी प्रोफ़ाइल खोजने योग्य रखी हो।</div>'}
       </div>
     </div>`;
   } else if (activeTab === 'ludo') {
