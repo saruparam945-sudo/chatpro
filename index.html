@@ -185,6 +185,58 @@ body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#e5ddd5}
 @media(min-width:850px){.reels-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
 
 </style>
+<!-- ChatPro SW migration: remove legacy /chatpro/sw.js registrations and app caches before installing the current worker. -->
+<script>
+(function () {
+  var MIGRATION_KEY = 'chatpro_sw_migration_v20261127_3';
+  if (!('serviceWorker' in navigator)) return;
+  var runMigration = async function () {
+    try {
+      if (localStorage.getItem(MIGRATION_KEY) === 'done') {
+        await installCurrentWorker();
+        return;
+      }
+      var registrations = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(registrations.map(function (registration) {
+        var workers = [registration.active, registration.waiting, registration.installing].filter(Boolean);
+        var belongsToChatPro = registration.scope.indexOf(location.origin + '/chatpro/') === 0 ||
+          workers.some(function (worker) {
+            return worker.scriptURL.indexOf(location.origin + '/chatpro/sw.js') === 0 ||
+              worker.scriptURL.indexOf(location.origin + '/chatpro/service-worker.js') === 0;
+          });
+        return belongsToChatPro ? registration.unregister().catch(function () {}) : Promise.resolve();
+      }));
+      if (window.caches && caches.keys) {
+        var keys = await caches.keys();
+        await Promise.all(keys.filter(function (key) {
+          return /chatpro/i.test(key);
+        }).map(function (key) { return caches.delete(key); }));
+      }
+      localStorage.setItem(MIGRATION_KEY, 'done');
+      await installCurrentWorker();
+    } catch (error) {
+      console.warn('ChatPro service-worker migration:', error);
+      await installCurrentWorker();
+    }
+  };
+  async function installCurrentWorker() {
+    try {
+      var registration = await navigator.serviceWorker.register('/chatpro/service-worker.js', {
+        scope: '/chatpro/',
+        updateViaCache: 'none'
+      });
+      await registration.update().catch(function () {});
+    } catch (error) {
+      console.warn('ChatPro current service worker registration failed:', error);
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', runMigration, { once: true });
+  } else {
+    runMigration();
+  }
+})();
+</script>
 </head>
 <body class="h-screen flex flex-col overflow-hidden">
 
@@ -1613,23 +1665,6 @@ function cleanupCall() { stopRingtone(); stopCallTimer(); $('activeCallScreen').
 window.toggleMute = () => { if (!localStream) return; isMuted = !isMuted; localStream.getAudioTracks().forEach(t => t.enabled = !isMuted); $('muteBtn').innerHTML = isMuted ? '<i class="fas fa-microphone-slash text-red-400"></i>' : '<i class="fas fa-microphone"></i>'; };
 window.openGroupModal = () => { $('grpMembers').innerHTML = allUsers.map(u => `<label class="flex items-center gap-2"><input type="checkbox" value="${u.uid}" class="grpChk"> ${u.name}</label>`).join(''); $('groupModal').classList.remove('hidden'); };
 window.createGroup = async () => { const name = $('grpName').value.trim(), members = [currentUser.uid, ...Array.from(document.querySelectorAll('.grpChk:checked')).map(c => c.value)]; if (!name || members.length < 2) return alert('Enter group name & pick members'); await addDoc(collection(db, 'groups'), { name, members, createdAt: serverTimestamp() }); $('groupModal').classList.add('hidden'); };
-</script>
-
-<!-- ChatPro freshness: check the latest app shell on every online visit. -->
-<script>
-(function () {
-  if (!('serviceWorker' in navigator)) return;
-  window.addEventListener('load', function () {
-    navigator.serviceWorker.register('/chatpro/service-worker.js', {
-      scope: '/chatpro/',
-      updateViaCache: 'none'
-    }).then(function (registration) {
-      registration.update().catch(function () {});
-    }).catch(function (error) {
-      console.warn('ChatPro service worker registration failed:', error);
-    });
-  });
-})();
 </script>
 
 </body>
