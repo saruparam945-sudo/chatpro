@@ -45,10 +45,10 @@ jobs:
             { id: 'UCWpl0xU2QoCilabHBfT0YBQ', name: 'CCAP Hindi' },
             { id: 'UCqNZfgKhq6aQgyHX0G1rimA', name: 'Divya Drishti TV Hindi' }
           ];
-          const blocked = /#shorts?|\\bshorts?\\b|trailer|teaser|promo|official\\s*clip|\\bclip\\b/i;
-          const hindi = /hindi|हिंदी|हिन्दी|dubbed|\\bdub\\b/i;
-          const region = /korean|\\bk\\s*[- ]?drama\\b|chinese|\\bc\\s*[- ]?drama\\b|cdrama|kdrama|कोरियन|कोरियाई|चाइनीज|चीनी/i;
-          const fullFeature = /full\\s*(movie|drama|film)|complete\\s*(movie|drama|film)|full[- ]length|पूरी\\s*(फिल्म|मूवी|ड्रामा)|संपूर्ण\\s*(फिल्म|मूवी)/i;
+          const blocked = /#shorts?|\bshorts?\b|trailer|teaser|promo|official\s*clip|\bclip\b/i;
+          const hindi = /hindi|हिंदी|हिन्दी|dubbed|\bdub\b/i;
+          const region = /korean|\bk\s*[- ]?drama\b|chinese|\bc\s*[- ]?drama\b|cdrama|kdrama|कोरियन|कोरियाई|चाइनीज|चीनी/i;
+          const fullFeature = /full\s*(movie|drama|film)|complete\s*(movie|drama|film)|full[- ]length|पूरी\s*(फिल्म|मूवी|ड्रामा)|संपूर्ण\s*(फिल्म|मूवी)/i;
 
           async function api(path, params = {}) {
             const u = new URL('https://www.googleapis.com/youtube/v3/' + path);
@@ -62,7 +62,7 @@ jobs:
           }
 
           function durationSeconds(iso) {
-            const m = String(iso || '').match(/^PT(?:(\\d+)H)?(?:(\\d+)M)?(?:(\\d+)S)?$/);
+            const m = String(iso || '').match(/^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/);
             return m ? Number(m[1]||0)*3600 + Number(m[2]||0)*60 + Number(m[3]||0) : 0;
           }
 
@@ -182,7 +182,7 @@ jobs:
               source: 'YouTube Data API search.list + channel uploads playlists + videos.list metadata verification',
               minimumDurationSeconds: MIN_SECONDS,
               movies: merged
-            }, null, 2) + '\\n');
+            }, null, 2) + '\n');
 
             console.log('New verified embeddable 40+ minute full dramas:', verified.length);
             console.log('Old verified entries retained:', existing.length);
