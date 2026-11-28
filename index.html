@@ -174,7 +174,8 @@ function mountChatproAdFrame(containerId,type,width,height){
   host.dataset.adsMounted="1";
   var frame=document.createElement("iframe");
   frame.className="chatproAdFrame "+(type==="320"?"banner":"rectangle");
-  frame.width=String(width);frame.height=String(height);
+  frame.width=String(width);frame.height=type==="320"?"52":String(height);
+  if(type==="320")frame.setAttribute("style","height: 52px !important; min-height: 52px; width: 320px; border: 0;");
   frame.title="Sponsored display ad";frame.loading="lazy";
   frame.referrerPolicy="strict-origin-when-cross-origin";
   frame.setAttribute("sandbox","allow-scripts allow-same-origin");
