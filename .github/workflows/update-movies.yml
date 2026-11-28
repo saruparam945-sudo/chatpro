@@ -35,11 +35,11 @@ jobs:
           }
           const channels = [{"id":"UCeT3qfOyeMOgRcBhzF4xA7Q","name":"Drama Central - Hindi","trustedHindiDubbed":true},{"id":"UC2lLHs_L-bVRaJvaKLP7gXA","name":"Dyar Entertainment","trustedHindiDubbed":true},{"id":"UCPq5WYTfdvimNtliUDwNI3Q","name":"World Movies Local Hindi","trustedHindiDubbed":true},{"id":"UCWpl0xU2QoCilabHBfT0YBQ","name":"CCAP Hindi","trustedHindiDubbed":true},{"id":"UCqNZfgKhq6aQgyHX0G1rimA","name":"Divya Drishti TV Hindi","trustedHindiDubbed":true}];
           const MIN_SECONDS = 40 * 60;
-          const blocked = /#shorts?|\\bshorts?\\b|trailer|teaser|promo|official\\s*clip|\\bclip\\b/i;
-          const hindi = /hindi|हिंदी|हिन्दी|dubbed|\\bdub\\b/i;
-          const region = /korean|\\bk\\s*[- ]?drama\\b|chinese|\\bc\\s*[- ]?drama\\b|cdrama|kdrama|कोरियन|कोरियाई|चाइनीज|चीनी/i;
+          const blocked = /#shorts?|\bshorts?\b|trailer|teaser|promo|official\s*clip|\bclip\b/i;
+          const hindi = /hindi|हिंदी|हिन्दी|dubbed|\bdub\b/i;
+          const region = /korean|\bk\s*[- ]?drama\b|chinese|\bc\s*[- ]?drama\b|cdrama|kdrama|कोरियन|कोरियाई|चाइनीज|चीनी/i;
           function seconds(iso) {
-            const m = String(iso || '').match(/^PT(?:(\\d+)H)?(?:(\\d+)M)?(?:(\\d+)S)?$/);
+            const m = String(iso || '').match(/^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/);
             return m ? Number(m[1]||0)*3600 + Number(m[2]||0)*60 + Number(m[3]||0) : 0;
           }
           function decode(s) {
@@ -47,7 +47,7 @@ jobs:
           }
           function tag(block,name) {
             const re = new RegExp('<'+name+'(?:\\\\s[^>]*)?>([\\\\s\\\\S]*?)</'+name+'>','i');
-            const m=block.match(re); return m ? decode(m[1].replace(/<!\\[CDATA\\[|\\]\\]>/g,'').trim()) : '';
+            const m=block.match(re); return m ? decode(m[1].replace(/<!\[CDATA\[|\]\]>/g,'').trim()) : '';
           }
           async function main() {
             const old = JSON.parse(fs.readFileSync('movies.json','utf8'));
@@ -91,7 +91,7 @@ jobs:
             verified.sort((a,b)=>Date.parse(b.publishedAt||0)-Date.parse(a.publishedAt||0));
             const seen=new Set();
             const merged=verified.concat(existing).filter(x=>{const id=x.videoId||x.youtubeId;if(!id||seen.has(id))return false;seen.add(id);return true}).slice(0,300);
-            fs.writeFileSync('movies.json',JSON.stringify({schemaVersion:1,updatedAt:new Date().toISOString(),source:'RSS discovery + official YouTube videos.list duration/title verification',minimumDurationSeconds:MIN_SECONDS,movies:merged},null,2)+'\\n');
+            fs.writeFileSync('movies.json',JSON.stringify({schemaVersion:1,updatedAt:new Date().toISOString(),source:'RSS discovery + official YouTube videos.list duration/title verification',minimumDurationSeconds:MIN_SECONDS,movies:merged},null,2)+'\n');
             console.log('New verified videos:',verified.length,'; total retained:',merged.length);
           }
           main().catch(e=>{console.error(e);process.exit(1)});
