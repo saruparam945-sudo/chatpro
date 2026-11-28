@@ -177,9 +177,9 @@ function mountChatproAdFrame(containerId,type,width,height){
   frame.width=String(width);frame.height=String(height);
   frame.title="Sponsored display ad";frame.loading="lazy";
   frame.referrerPolicy="strict-origin-when-cross-origin";
-  frame.setAttribute("sandbox","allow-scripts");
+  frame.setAttribute("sandbox","allow-scripts allow-same-origin");
   frame.scrolling="no";
-  frame.src="./ad-slot.html?type="+encodeURIComponent(type);
+  frame.src="https://saruparam945-sudo.github.io/chatpro-ads/?type="+encodeURIComponent(type);
   host.appendChild(frame);
 }
 /* Refresh the ChatPro PWA shell on launch; do not clear Firestore or unrelated browser data. */
