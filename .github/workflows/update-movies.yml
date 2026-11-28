@@ -1,12 +1,8 @@
-name: Update central Hindi drama catalog
+name: Update verified Korean and Chinese Hindi drama catalog
 
 on:
   schedule:
     - cron: "0 */6 * * *"
-  push:
-    paths:
-      - ".github/workflows/update-movies.yml"
-      - "movies.json"
   workflow_dispatch:
 
 permissions:
@@ -22,60 +18,84 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          persist-credentials: true
-
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-
-      - name: Build movies.json from public YouTube RSS feeds (no API key)
+      - name: Collect RSS candidates and verify official YouTube metadata
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
         run: |
           node <<'NODE'
           const fs = require('fs');
-          const channels = [
-            { id: 'UCeT3qfOyeMOgRcBhzF4xA7Q', name: 'Drama Central - Hindi' },
-            { id: 'UC2lLHs_L-bVRaJvaKLP7gXA', name: 'Dyar Entertainment' },
-            { id: 'UCPq5WYTfdvimNtliUDwNI3Q', name: 'World Movies Local Hindi' }
-          ];
-          const blocked = new RegExp('#shorts?|\\\\bshorts?\\\\b|trailer|teaser|promo|official\\\\s*clip', 'i');
-          const relevant = title => /hindi|हिंदी|हिन्दी|dubbed|dub\\b/i.test(title) &&
-            /korean|k\\s*[- ]?drama|chinese|c\\s*[- ]?drama|cdrama|कोरियन|कोरियाई|चाइनीज|चीनी|drama|movie|film|episode/i.test(title) &&
-            !blocked.test(title);
-          const decode = s => s.replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&#39;|&apos;/g,"'").replace(/&lt;/g,'<').replace(/&gt;/g,'>');
+          const API_KEY = process.env.YOUTUBE_API_KEY;
+          if (!API_KEY) {
+            console.warn('YOUTUBE_API_KEY secret is missing; leaving movies.json unchanged.');
+            process.exit(0);
+          }
+          const channels = [{"id":"UCeT3qfOyeMOgRcBhzF4xA7Q","name":"Drama Central - Hindi","trustedHindiDubbed":true},{"id":"UC2lLHs_L-bVRaJvaKLP7gXA","name":"Dyar Entertainment","trustedHindiDubbed":true},{"id":"UCPq5WYTfdvimNtliUDwNI3Q","name":"World Movies Local Hindi","trustedHindiDubbed":true},{"id":"UCWpl0xU2QoCilabHBfT0YBQ","name":"CCAP Hindi","trustedHindiDubbed":true},{"id":"UCqNZfgKhq6aQgyHX0G1rimA","name":"Divya Drishti TV Hindi","trustedHindiDubbed":true}];
+          const MIN_SECONDS = 40 * 60;
+          const blocked = /#shorts?|\\bshorts?\\b|trailer|teaser|promo|official\\s*clip|\\bclip\\b/i;
+          const hindi = /hindi|हिंदी|हिन्दी|dubbed|\\bdub\\b/i;
+          const region = /korean|\\bk\\s*[- ]?drama\\b|chinese|\\bc\\s*[- ]?drama\\b|cdrama|kdrama|कोरियन|कोरियाई|चाइनीज|चीनी/i;
+          function seconds(iso) {
+            const m = String(iso || '').match(/^PT(?:(\\d+)H)?(?:(\\d+)M)?(?:(\\d+)S)?$/);
+            return m ? Number(m[1]||0)*3600 + Number(m[2]||0)*60 + Number(m[3]||0) : 0;
+          }
+          function decode(s) {
+            return String(s||'').replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&#39;|&apos;/g,"'").replace(/&lt;/g,'<').replace(/&gt;/g,'>');
+          }
+          function tag(block,name) {
+            const re = new RegExp('<'+name+'(?:\\\\s[^>]*)?>([\\\\s\\\\S]*?)</'+name+'>','i');
+            const m=block.match(re); return m ? decode(m[1].replace(/<!\\\\[CDATA\\\\[|\\\\]\\\\]>/g,'').trim()) : '';
+          }
           async function main() {
             const old = JSON.parse(fs.readFileSync('movies.json','utf8'));
-            const byId = new Map((old.movies || []).map(x => [x.videoId || x.youtubeId, x]).filter(x => x[0]));
-            let fresh = [];
+            const existing = (old.movies||[]).filter(x => x && (x.videoId||x.youtubeId) && Number(x.durationSeconds)>=MIN_SECONDS && x.verifiedBy==='YouTube Data API v3 metadata');
+            const candidates = new Map();
             for (const ch of channels) {
+              const url='https://www.youtube.com/feeds/videos.xml?channel_id='+ch.id;
               try {
-                const res = await fetch('https://www.youtube.com/feeds/videos.xml?channel_id=' + ch.id);
-                if (!res.ok) throw new Error('HTTP ' + res.status);
-                const xml = await res.text();
-                const entries = xml.split('<entry>').slice(1).map(x => x.split('</entry>')[0]);
-                for (const block of entries) {
-                  const get = tag => { const re = new RegExp('<' + tag + '(?:\\\\s[^>]*)?>([\\\\s\\\\S]*?)</' + tag + '>'); const m = block.match(re); return m ? decode(m[1].replace(/<!\\\\[CDATA\\\\[|\\\\]\\\\]>/g,'').trim()) : ''; };
-                  const id = get('yt:videoId'), title = get('title'), publishedAt = get('published');
-                  const thumb = block.match(/<media:thumbnail[^>]*url="([^"]+)"/);
-                  if (!id || !title || !relevant(title)) continue;
-                  fresh.push({videoId:id,title,publishedAt,thumbnail:thumb?thumb[1]:'https://i.ytimg.com/vi/'+id+'/hqdefault.jpg',
-                    durationLabel:'▶ YouTube • नया अपलोड',source:ch.name,category:'drama',tags:['Hindi Dubbed','Korean/Chinese'],feedItem:true});
+                const res=await fetch(url,{headers:{'User-Agent':'ChatProCatalogBot/1.0'}});
+                if(!res.ok) throw new Error('RSS HTTP '+res.status);
+                const xml=await res.text();
+                for(const block of xml.split('<entry>').slice(1)) {
+                  const entry=block.split('</entry>')[0];
+                  const id=tag(entry,'yt:videoId'), title=tag(entry,'title'), publishedAt=tag(entry,'published');
+                  if(id && title && !blocked.test(title)) candidates.set(id,{videoId:id,title,publishedAt,source:ch.name});
                 }
-                console.log('Fetched RSS:', ch.name);
-              } catch (e) { console.warn('RSS feed skipped:', ch.name, e.message); }
+                console.log('RSS candidates:',ch.name);
+              } catch(e) { console.warn('RSS unavailable:',ch.name,e.message); }
             }
-            const seen = new Set();
-            fresh.sort((a,b) => Date.parse(b.publishedAt||0)-Date.parse(a.publishedAt||0));
-            const merged = fresh.concat([...byId.values()].sort((a,b) => Date.parse(b.publishedAt||0)-Date.parse(a.publishedAt||0)))
-              .filter(x => { const id=x.videoId||x.youtubeId; if(!id||seen.has(id)) return false; seen.add(id); return true; }).slice(0,300);
-            fs.writeFileSync('movies.json',JSON.stringify({schemaVersion:1,updatedAt:new Date().toISOString(),
-              source:'Public YouTube channel RSS feeds + previous catalog (no API key)',minimumDurationSeconds:0,movies:merged},null,2)+'\\n');
-            console.log('Catalog updated with',fresh.length,'RSS uploads; total',merged.length);
+            const ids=[...candidates.keys()];
+            const verified=[];
+            for(let i=0;i<ids.length;i+=50) {
+              const batch=ids.slice(i,i+50);
+              const url='https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id='+batch.join(',')+'&key='+encodeURIComponent(API_KEY);
+              const res=await fetch(url);
+              if(!res.ok) throw new Error('YouTube videos.list failed: HTTP '+res.status);
+              const body=await res.json();
+              for(const v of body.items||[]) {
+                const c=candidates.get(v.id), s=v.snippet||{}, title=s.title||c?.title||'', description=s.description||'';
+                const combined=title+' '+description;
+                const durationSeconds=seconds(v.contentDetails?.duration);
+                if(!c || durationSeconds<MIN_SECONDS || blocked.test(title) || !hindi.test(combined) || !region.test(combined)) continue;
+                const ch=channels.find(x=>x.id===s.channelId);
+                if(!ch || !ch.trustedHindiDubbed) continue;
+                const thumb=s.thumbnails?.maxres?.url||s.thumbnails?.high?.url||('https://i.ytimg.com/vi/'+v.id+'/hqdefault.jpg');
+                const h=Math.floor(durationSeconds/3600), m=Math.floor((durationSeconds%3600)/60);
+                const label=(h?h+'h ':'')+m+'m';
+                verified.push({videoId:v.id,title,publishedAt:s.publishedAt||c.publishedAt,thumbnail:thumb,durationSeconds,durationLabel:label,displayDurationLabel:'🎬 '+label+' • सत्यापित Full Drama (40+ min)',source:ch.name,category:'drama',tags:['Hindi Dubbed','Korean/Chinese'],verifiedBy:'YouTube Data API v3 metadata',verifiedAt:new Date().toISOString()});
+              }
+            }
+            verified.sort((a,b)=>Date.parse(b.publishedAt||0)-Date.parse(a.publishedAt||0));
+            const seen=new Set();
+            const merged=verified.concat(existing).filter(x=>{const id=x.videoId||x.youtubeId;if(!id||seen.has(id))return false;seen.add(id);return true}).slice(0,300);
+            fs.writeFileSync('movies.json',JSON.stringify({schemaVersion:1,updatedAt:new Date().toISOString(),source:'RSS discovery + official YouTube videos.list duration/title verification',minimumDurationSeconds:MIN_SECONDS,movies:merged},null,2)+'\\n');
+            console.log('New verified videos:',verified.length,'; total retained:',merged.length);
           }
-          main().catch(e => {console.error(e);process.exit(1);});
+          main().catch(e=>{console.error(e);process.exit(1)});
           NODE
-
       - name: Commit updated catalog
         run: |
           if git diff --quiet -- movies.json; then
@@ -85,5 +105,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add movies.json
-          git commit -m "chore: refresh central movie catalog"
+          git commit -m "chore: refresh verified Hindi Korean Chinese drama catalog"
           git push
