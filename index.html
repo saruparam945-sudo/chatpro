@@ -235,6 +235,7 @@ function loadCallRecents(){
       return '<div class="recentRow">'+(x.video?"📹":"📞")+' कॉल • '+esc(x.status||"")+' <small>'+esc(x.when||"")+'</small></div>';
     }).join("")||(settled.caller&&settled.callee?'<div class="empty">अभी कोई कॉल हिस्ट्री नहीं है।</div>':'<div class="empty">कॉल हिस्ट्री लोड हो रही है...</div>');
   }
+  var historyFallbackTimer=setTimeout(function(){settled.caller=true;settled.callee=true;render()},7000);
   function subscribe(field,key){
     try{
       var unsub=db.collection("calls").where(field,"==",me.uid).limit(40).onSnapshot(function(snap){
