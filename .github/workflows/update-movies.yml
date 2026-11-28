@@ -2,7 +2,7 @@ name: Update central Hindi drama catalog
 
 on:
   schedule:
-    - cron: "17 3 * * *"
+    - cron: "0 */6 * * *"
   push:
     paths:
       - ".github/workflows/update-movies.yml"
