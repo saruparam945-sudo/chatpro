@@ -46,6 +46,8 @@
 .chatproAdFrame{display:block;border:0;margin:8px auto;background:#f7f4f6;max-width:100%;overflow:hidden}
 .chatproAdFrame.banner{width:320px;height:50px}
 .chatproAdFrame.rectangle{width:300px;height:250px}
+.chatproBottomAd{position:relative;z-index:5;min-height:50px;padding:2px 0;margin:0 auto 4px;text-align:center}
+.chatproBottomAd:empty{display:none}
 #ludoSponsoredSlot{display:none}
 @media(max-width:340px){.chatproAdFrame.banner{width:100%}}
 .page{padding-bottom:calc(100px + env(safe-area-inset-bottom))}
@@ -98,6 +100,7 @@
 <div class="ludoTurnBar"><b id="ludoTurn">🔴 लाल की बारी</b><span id="ludoTurnHint">पासा फेंकें</span></div><button id="rollDice" class="ludoRoll"><span>🎲 पासा फेंकें (Roll Dice)</span><b id="ludoDice">⚀</b></button>
 <div id="ludoBoard" class="ludoBoard" aria-label="चार रंगों वाला Ludo board"></div><div class="ludoActions"><button id="resetLudo" class="secondary">↻ नया गेम</button><span id="ludoStatus" class="status">6 आने पर गोटी घर से बाहर आएगी। पासे के बाद अपनी गोटी चुनें।</span></div><div class="chatproSponsored" id="ludoSponsoredSlot"><div class="adTag">Sponsored · मैच समाप्त — वैकल्पिक ब्रेक</div><div id="ludoAdFrames"></div></div></section>
 
+ <div id="ad-bottom-320" class="chatproSponsored chatproBottomAd" aria-label="Sponsored advertisement"></div>
  <nav class="bottom"><button class="active" data-page="home"><strong>⌂</strong>Home</button><button data-page="connect"><strong>◎</strong>Connect</button><button data-page="movies"><strong>▣</strong>Live & Movies</button><button data-page="chat"><strong>▤</strong>Chat</button><button data-page="ludo"><strong>🎮</strong>Recents & Ludo</button></nav>
 </main>
 <div id="moviePlayer" class="moviePlayer"><iframe id="youtubeFrame" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe><div class="playerControls"><div style="display:flex;justify-content:space-between;align-items:center"><b id="playingTitle">Movie</b><button id="closePlayer">✕ बंद करें</button></div><div style="display:flex;gap:8px;margin:12px 0"><button id="playPause">Play / Pause</button><span id="movieTime">0:00 / 0:00</span></div><input id="seekBar" type="range" min="0" max="100" value="0"></div></div>
@@ -163,28 +166,21 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
-/* Adsterra display placements. Third-party code runs only in isolated, no-navigation iframes. */
-window.CHATPRO_ADS = window.CHATPRO_ADS || {
- banner320x50: "b1ea34a3b5228c283e486f2cafb7e604",
- rect300x250: "8977a76d02af35c2550aefab1ea1354e"
-};
-function mountChatproAdFrames(containerId){
+/* Adsterra placements load in a separate same-site document with scripts only.
+   Popups, top-level navigation, and parent DOM access remain blocked. */
+function mountChatproAdFrame(containerId,type,width,height){
   var host=document.getElementById(containerId);
   if(!host || host.dataset.adsMounted==="1") return;
   host.dataset.adsMounted="1";
-  function addFrame(kind,width,height,key,url){
-    var frame=document.createElement("iframe");
-    frame.className="chatproAdFrame "+kind;
-    frame.width=String(width);frame.height=String(height);
-    frame.title="Sponsored display ad";frame.loading="lazy";
-    frame.referrerPolicy="no-referrer";
-    frame.setAttribute("sandbox","allow-scripts");
-    frame.scrolling="no";
-    frame.srcdoc='<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body{margin:0;padding:0;width:'+width+'px;height:'+height+'px;overflow:hidden;background:#fff}</style></head><body><script>var atOptions={key:"'+key+'",format:"iframe",height:'+height+',width:'+width+',params:{}};<' + '/script><script src="'+url+'"><' + '/script></body></html>';
-    host.appendChild(frame);
-  }
-  addFrame("banner",320,50,window.CHATPRO_ADS.banner320x50,"https://bicea.org/22/b1ea34a3b5228c283e486f2cafb7e604");
-  addFrame("rectangle",300,250,window.CHATPRO_ADS.rect300x250,"https://bicea.org/22/8977a76d02af35c2550aefab1ea1354e");
+  var frame=document.createElement("iframe");
+  frame.className="chatproAdFrame "+(type==="320"?"banner":"rectangle");
+  frame.width=String(width);frame.height=String(height);
+  frame.title="Sponsored display ad";frame.loading="lazy";
+  frame.referrerPolicy="strict-origin-when-cross-origin";
+  frame.setAttribute("sandbox","allow-scripts");
+  frame.scrolling="no";
+  frame.src="./ad-slot.html?type="+encodeURIComponent(type);
+  host.appendChild(frame);
 }
 /* Refresh the ChatPro PWA shell on launch; do not clear Firestore or unrelated browser data. */
 if ("serviceWorker" in navigator) {
@@ -214,9 +210,9 @@ $("appDialogOk").onclick=function(){var r=appDialogResolve;appDialogResolve=null
 $("appDialogCancel").onclick=function(){var r=appDialogResolve;appDialogResolve=null;$("appDialog").style.display="none";if(r)r(false)};
 $("appDialog").addEventListener("click",function(e){if(e.target===$("appDialog"))$("appDialogCancel").click()});
 function chooseAppLanguage(){var opts=["हिन्दी","राजस्थानी","हरियाणवी","भोजपुरी","पंजाबी","मराठी"],extra='<select id="appDialogSelect" class="field">'+opts.map(function(x){return '<option>'+x+'</option>'}).join("")+'</select>';return showAppDialog("ऐप भाषा चुनें","अपनी पसंदीदा भाषा चुनें।",extra,true).then(function(ok){return ok?$("appDialogSelect").value:null})}
-function setPage(name){document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active")});$(name+"Page").classList.add("active");document.querySelectorAll(".bottom button").forEach(function(b){b.classList.toggle("active",b.dataset.page===name)});msg("topTitle",name==="movies"?"Movies & Drama":name.charAt(0).toUpperCase()+name.slice(1));if(name==="movies")mountChatproAdFrames("movieAdFrames");if(name==="ludo"&&ludo&&ludo.done){$("ludoSponsoredSlot").style.display="block";mountChatproAdFrames("ludoAdFrames")}}
+function setPage(name){document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active")});$(name+"Page").classList.add("active");document.querySelectorAll(".bottom button").forEach(function(b){b.classList.toggle("active",b.dataset.page===name)});msg("topTitle",name==="movies"?"Movies & Drama":name.charAt(0).toUpperCase()+name.slice(1));if(name==="movies")mountChatproAdFrame("movieAdFrames","300",300,250);if(name==="ludo"&&ludo&&ludo.done){$("ludoSponsoredSlot").style.display="block";mountChatproAdFrame("ludoAdFrames","300",300,250)}}
 document.querySelectorAll(".bottom button").forEach(function(b){b.addEventListener("click",function(){setPage(b.dataset.page)})});
-function startApp(user){me=user; $("auth").style.display="none";$("app").style.display="block";resetLudo();loadProfile();loadOnline();loadMovies();listenIncomingCalls();loadCallRecents();loadChatList()}
+function startApp(user){me=user; $("auth").style.display="none";$("app").style.display="block";mountChatproAdFrame("ad-bottom-320","320",320,50);resetLudo();loadProfile();loadOnline();loadMovies();listenIncomingCalls();loadCallRecents();loadChatList()}
 function showAuth(){ $("app").style.display="none";$("auth").style.display="flex" }
 function switchMode(signup){$("signupFields").style.display=signup?"block":"none";$("authSubmit").textContent=signup?"Create account":"Login";$("switchText").textContent=signup?"Already have an account?":"नया अकाउंट बनाना है?";$("switchAuth").textContent=signup?"Login":"Sign Up";$("password").autocomplete=signup?"new-password":"current-password"}
 var signupMode=false;
@@ -413,7 +409,7 @@ cell(6,6,"ludoCenter",'<span>🏠</span>',3,3);
 $("ludoBoard").innerHTML=html;var player=ludoActivePlayers[ludo.turn]||0;msg("ludoTurn",ludoNames[player]+" की बारी");msg("ludoTurnHint",ludo.pendingRoll===null?"पासा फेंकें":("🎲 "+ludo.pendingRoll+" आया • अपनी गोटी चुनें"))}
 function ludoCanMove(p,k,roll){var step=ludo.pawns[p][k];if(step===-1)return roll===6;if(step>=57)return false;return step+roll<=57}
 function ludoAdvanceTurn(extra){if(extra){msg("ludoTurnHint","6 आया — फिर से पासा फेंकें");return}ludo.turn=(ludo.turn+1)%ludoActivePlayers.length;ludo.pendingRoll=null;drawLudo()}
-function ludoMovePawn(p,k){if(ludo.done||ludo.pendingRoll===null||ludoActivePlayers[ludo.turn]!==p||!ludoCanMove(p,k,ludo.pendingRoll))return;var roll=ludo.pendingRoll,old=ludo.pawns[p][k],next=old===-1?0:old+roll;ludo.pawns[p][k]=next;var captured=0;playLudoSound("move",Math.min(roll,6));if(next<51){var pos=ludoPawnLocation(p,k),trackIndex=(ludoStartOffsets[p]+next)%52,safe=[0,8,13,21,26,34,39,47].includes(trackIndex);if(!safe){for(var op=0;op<4;op++)if(op!==p)for(var ok=0;ok<4;ok++){var other=ludo.pawns[op][ok];if(other>=0&&other<51&&(ludoStartOffsets[op]+other)%52===trackIndex){ludo.pawns[op][ok]=-1;captured++;}}}}if(captured)playLudoSound("capture");if(next>=57)playLudoSound("home");if(ludo.pawns[p].every(function(x){return x>=57})){ludo.done=true;playLudoSound("win");msg("ludoStatus",ludoNames[p]+" खिलाड़ी जीत गया! 🏆");var ludoBreak=document.getElementById("ludoSponsoredSlot");if(ludoBreak){ludoBreak.style.display="block";mountChatproAdFrames("ludoAdFrames")}}else{msg("ludoStatus",(old===-1?"गोटी बाहर आई। ":"गोटी चली। ")+(captured?captured+" विरोधी गोटी घर भेजी! ":"")+(next>=57?"गोटी घर पहुँच गई!":""));}ludo.pendingRoll=null;var extra=roll===6||captured>0;if(!ludo.done)ludoAdvanceTurn(extra);else drawLudo();saveLudoRoomState()}
+function ludoMovePawn(p,k){if(ludo.done||ludo.pendingRoll===null||ludoActivePlayers[ludo.turn]!==p||!ludoCanMove(p,k,ludo.pendingRoll))return;var roll=ludo.pendingRoll,old=ludo.pawns[p][k],next=old===-1?0:old+roll;ludo.pawns[p][k]=next;var captured=0;playLudoSound("move",Math.min(roll,6));if(next<51){var pos=ludoPawnLocation(p,k),trackIndex=(ludoStartOffsets[p]+next)%52,safe=[0,8,13,21,26,34,39,47].includes(trackIndex);if(!safe){for(var op=0;op<4;op++)if(op!==p)for(var ok=0;ok<4;ok++){var other=ludo.pawns[op][ok];if(other>=0&&other<51&&(ludoStartOffsets[op]+other)%52===trackIndex){ludo.pawns[op][ok]=-1;captured++;}}}}if(captured)playLudoSound("capture");if(next>=57)playLudoSound("home");if(ludo.pawns[p].every(function(x){return x>=57})){ludo.done=true;playLudoSound("win");msg("ludoStatus",ludoNames[p]+" खिलाड़ी जीत गया! 🏆");var ludoBreak=document.getElementById("ludoSponsoredSlot");if(ludoBreak){ludoBreak.style.display="block";mountChatproAdFrame("ludoAdFrames","300",300,250)}}else{msg("ludoStatus",(old===-1?"गोटी बाहर आई। ":"गोटी चली। ")+(captured?captured+" विरोधी गोटी घर भेजी! ":"")+(next>=57?"गोटी घर पहुँच गई!":""));}ludo.pendingRoll=null;var extra=roll===6||captured>0;if(!ludo.done)ludoAdvanceTurn(extra);else drawLudo();saveLudoRoomState()}
 $("ludoBoard").addEventListener("click",function(e){var b=e.target.closest("[data-ludo-pawn]");if(!b)return;var parts=b.dataset.ludoPawn.split("-");ludoMovePawn(Number(parts[0]),Number(parts[1]))});
 $("rollDice").onclick=function(){if(ludo.done||ludo.pendingRoll!==null)return;var roll=Math.floor(Math.random()*6)+1,p=ludoActivePlayers[ludo.turn];ludo.lastRoll=roll;ludo.pendingRoll=roll;playLudoSound("dice");saveLudoRoomState();msg("ludoDice",["⚀","⚁","⚂","⚃","⚄","⚅"][roll-1]);var legal=[];for(var k=0;k<4;k++)if(ludoCanMove(p,k,roll))legal.push(k);if(!legal.length){msg("ludoStatus",roll+" आया, लेकिन कोई गोटी नहीं चल सकती।");ludo.pendingRoll=null;ludoAdvanceTurn(false);return}msg("ludoStatus",roll+" आया! चमकती गोटी चुनें।");drawLudo()};
 $("resetLudo").onclick=function(){resetLudo();saveLudoRoomState()};

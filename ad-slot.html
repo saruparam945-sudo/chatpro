@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>ChatPro Ad Slot</title>
+<style>
+html,body{margin:0;padding:0;overflow:hidden;background:transparent}
+#ad-root{display:flex;align-items:center;justify-content:center;overflow:hidden}
+</style>
+</head>
+<body>
+<div id="ad-root"></div>
+<script>
+(function(){
+  "use strict";
+  var type=new URLSearchParams(window.location.search).get("type");
+  var config={
+    "320":{key:"b1ea34a3b5228c283e486f2cafb7e604",src:"https://bicea.org/22/b1ea34a3b5228c283e486f2cafb7e604",width:320,height:50},
+    "300":{key:"8977a76d02af35c2550aefab1ea1354e",src:"https://bicea.org/22/8977a76d02af35c2550aefab1ea1354e",width:300,height:250}
+  }[type];
+  if(!config)return;
+  var root=document.getElementById("ad-root");
+  root.style.width=config.width+"px";
+  root.style.height=config.height+"px";
+  window.atOptions={key:config.key,format:"iframe",height:config.height,width:config.width,params:{}};
+  var script=document.createElement("script");
+  script.async=true;
+  script.src=config.src;
+  root.appendChild(script);
+})();
+</script>
+</body>
+</html>
