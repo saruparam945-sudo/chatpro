@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-28T19:53:53.237Z",
-  "source": "Verified public YouTube RSS candidates + videos.list metadata (official API)",
+  "updatedAt": "2026-11-28T20:14:17.329Z",
+  "source": "RSS discovery + official YouTube videos.list duration/title verification",
   "minimumDurationSeconds": 2400,
   "movies": [
     {
