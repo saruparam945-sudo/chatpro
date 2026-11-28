@@ -1,9 +1,9 @@
-/* ChatPro service worker — v2026.11.27.2
+/* ChatPro service worker — v2026.11.28.1
    Network-first for HTML navigation; offline fallback uses the last successful shell.
    Other requests pass through to the network and are not cached here.
 */
 const CACHE_PREFIX = 'chatpro-shell-';
-const CACHE_NAME = CACHE_PREFIX + 'v2026.11.27.2';
+const CACHE_NAME = CACHE_PREFIX + 'v2026.11.28.1';
 const APP_SHELL = '/chatpro/index.html';
 
 self.addEventListener('install', event => {
