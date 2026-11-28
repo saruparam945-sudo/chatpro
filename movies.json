@@ -1,26 +1,9 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-28T18:37:25.444Z",
-  "source": "Official channel uploads + verified public video metadata",
-  "minimumDurationSeconds": 1800,
+  "updatedAt": "2026-11-28T19:28:59.711Z",
+  "source": "Public YouTube channel RSS feeds + previous catalog (no API key)",
+  "minimumDurationSeconds": 0,
   "movies": [
-    {
-      "videoId": "xHFZiqjhSs8",
-      "title": "Don Lee's The Bull | Hindi Dubbed Full movie | Korean Movie | Action Movie | IOF-Hindi",
-      "durationSeconds": 5988,
-      "durationLabel": "1h 39m",
-      "displayDurationLabel": "🎬 1h 39m • Full Movie",
-      "thumbnail": "https://i.ytimg.com/vi/xHFZiqjhSs8/maxresdefault.jpg",
-      "source": "web-discovered candidate",
-      "publishedAt": "2025-07-25T14:01:35Z",
-      "category": "popular",
-      "tags": [
-        "Korean/Chinese",
-        "Hindi Dubbed"
-      ],
-      "verifiedBy": "YouTube Data API v3 metadata",
-      "verifiedAt": "2026-11-28T18:37:24.262Z"
-    },
     {
       "videoId": "EysFyDd6CKw",
       "title": "NOCTURNAL - Hollywood Hindi Dubbed Full Movie | Ha Jung-woo | Korean Action Movie In Hindi",
@@ -54,6 +37,23 @@
       ],
       "verifiedBy": "YouTube Data API v3 metadata",
       "verifiedAt": "2026-11-28T18:37:24.443Z"
+    },
+    {
+      "videoId": "jrYFOTpCodU",
+      "title": "Urban Myths | Hindi Dubbed Full Movie | Horror Movie | Superhit Latest Hindi Dubbed | korean Movie",
+      "durationSeconds": 7219,
+      "durationLabel": "2h 0m",
+      "displayDurationLabel": "🎬 2h 0m • Full Movie",
+      "thumbnail": "https://i.ytimg.com/vi/jrYFOTpCodU/maxresdefault.jpg",
+      "source": "World Movies Local Hindi",
+      "publishedAt": "2026-07-31T10:30:06Z",
+      "category": "popular",
+      "tags": [
+        "Korean/Chinese",
+        "Hindi Dubbed"
+      ],
+      "verifiedBy": "YouTube Data API v3 metadata",
+      "verifiedAt": "2026-11-28T18:37:25.137Z"
     },
     {
       "videoId": "VjPpNazlyEw",
@@ -105,23 +105,6 @@
       ],
       "verifiedBy": "YouTube Data API v3 metadata",
       "verifiedAt": "2026-11-28T18:37:24.443Z"
-    },
-    {
-      "videoId": "jrYFOTpCodU",
-      "title": "Urban Myths | Hindi Dubbed Full Movie | Horror Movie | Superhit Latest Hindi Dubbed | korean Movie",
-      "durationSeconds": 7219,
-      "durationLabel": "2h 0m",
-      "displayDurationLabel": "🎬 2h 0m • Full Movie",
-      "thumbnail": "https://i.ytimg.com/vi/jrYFOTpCodU/maxresdefault.jpg",
-      "source": "World Movies Local Hindi",
-      "publishedAt": "2026-07-31T10:30:06Z",
-      "category": "popular",
-      "tags": [
-        "Korean/Chinese",
-        "Hindi Dubbed"
-      ],
-      "verifiedBy": "YouTube Data API v3 metadata",
-      "verifiedAt": "2026-11-28T18:37:25.137Z"
     },
     {
       "videoId": "ZHldU3HDToA",
@@ -209,6 +192,23 @@
       "verifiedAt": "2026-11-28T18:37:25.341Z"
     },
     {
+      "videoId": "xHFZiqjhSs8",
+      "title": "Don Lee's The Bull | Hindi Dubbed Full movie | Korean Movie | Action Movie | IOF-Hindi",
+      "durationSeconds": 5988,
+      "durationLabel": "1h 39m",
+      "displayDurationLabel": "🎬 1h 39m • Full Movie",
+      "thumbnail": "https://i.ytimg.com/vi/xHFZiqjhSs8/maxresdefault.jpg",
+      "source": "web-discovered candidate",
+      "publishedAt": "2025-07-25T14:01:35Z",
+      "category": "popular",
+      "tags": [
+        "Korean/Chinese",
+        "Hindi Dubbed"
+      ],
+      "verifiedBy": "YouTube Data API v3 metadata",
+      "verifiedAt": "2026-11-28T18:37:24.262Z"
+    },
+    {
       "videoId": "eKwcg4mveTg",
       "title": "Train To Busan | Hindi Dubbed Full Movie | Horror Action Movie | Superhit Korean Hindi Dubbed Movie",
       "durationSeconds": 6646,
@@ -242,28 +242,5 @@
       "verifiedBy": "YouTube Data API v3 metadata",
       "verifiedAt": "2026-11-28T18:37:25.443Z"
     }
-  ],
-  "pendingCandidates": [
-    {
-      "videoId": "urmQEUUeEO8",
-      "title": "Hidden Marriage Love — Hindi Dubbed Full Movie (Chinese Drama)",
-      "sourceUrl": "https://www.youtube.com/watch?v=urmQEUUeEO8",
-      "source": "Yuuki Drama Tv web result",
-      "verification": "pending-duration-and-full-movie-check"
-    },
-    {
-      "videoId": "xHFZiqjhSs8",
-      "title": "Don Lee's The Bull — Hindi Dubbed Full Movie (Korean Movie)",
-      "sourceUrl": "https://www.youtube.com/watch?v=xHFZiqjhSs8",
-      "source": "IOF-Hindi web result",
-      "verification": "pending-duration-and-full-movie-check"
-    },
-    {
-      "videoId": "EysFyDd6CKw",
-      "title": "NOCTURNAL — Hindi Dubbed Full Movie (Korean Movie)",
-      "sourceUrl": "https://www.youtube.com/watch?v=EysFyDd6CKw",
-      "source": "Star Entertainment Hindi web result",
-      "verification": "pending-duration-and-full-movie-check"
-    }
   ]
-}
+}\n
