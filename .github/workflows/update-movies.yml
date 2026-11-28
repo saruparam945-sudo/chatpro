@@ -47,7 +47,7 @@ jobs:
           }
           function tag(block,name) {
             const re = new RegExp('<'+name+'(?:\\\\s[^>]*)?>([\\\\s\\\\S]*?)</'+name+'>','i');
-            const m=block.match(re); return m ? decode(m[1].replace(/<!\\\\[CDATA\\\\[|\\\\]\\\\]>/g,'').trim()) : '';
+            const m=block.match(re); return m ? decode(m[1].replace(/<!\\[CDATA\\[|\\]\\]>/g,'').trim()) : '';
           }
           async function main() {
             const old = JSON.parse(fs.readFileSync('movies.json','utf8'));
